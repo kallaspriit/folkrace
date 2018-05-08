@@ -1,33 +1,120 @@
 #include "Commander.hpp"
+#include "Util.hpp"
 
 #include <Callback.h>
 
 Commander::Commander(Serial *serial) : serial(serial)
 {
+  // listen for receive events
   serial->attach(callback(this, &Commander::handleSerialRx), Serial::RxIrq);
+}
+
+void Commander::registerCommandHandler(std::string name, CommandHandlerCallback handler)
+{
+  commandHandlerMap[name] = handler;
 }
 
 void Commander::handleSerialRx()
 {
+  // get next character
   char receivedChar = serial->getc();
 
+  // consider linefeed as the end of command
   if (receivedChar == '\n')
   {
-    // commandManager.handleCommand(CommandSource::SERIAL, commandBuffer, commandLength);
+    // handle the command
+    handleCommand(commandBuffer);
 
-    serial->printf("> %s\n", commandBuffer);
-
+    // reset the buffer
     commandBuffer[0] = '\0';
     commandLength = 0;
   }
   else
   {
+    // make sure we don't overflow our buffer
     if (commandLength > MAX_COMMAND_LENGTH - 1)
     {
-      serial->printf("# maximum command length is %d characters, stopping at %s", MAX_COMMAND_LENGTH, commandBuffer);
+      serial->printf("@ maximum command length is %d characters, stopping at %s\n", MAX_COMMAND_LENGTH, commandBuffer);
+
+      return;
     }
 
+    // append to the command buffer
     commandBuffer[commandLength++] = receivedChar;
     commandBuffer[commandLength] = '\0';
+  }
+}
+
+void Commander::handleCommand(char *buffer)
+{
+  // ignore empty commands
+  if (commandLength == 0)
+  {
+    return;
+  }
+
+  // convert the command buffer to a string and split into token
+  std::string command(buffer, commandLength);
+  tokens = split(command, ':');
+
+  // name is the first token
+  std::string name = tokens.at(0);
+
+  // attempt to find the command handler
+  CommandHandlerMap::iterator handlerIt = commandHandlerMap.find(name);
+
+  if (handlerIt != commandHandlerMap.end())
+  {
+    serial->printf("< %s\n", buffer);
+
+    // call the command handler if it exists
+    handlerIt->second();
+  }
+  else
+  {
+    // log missing command handler
+    serial->printf("@ command \"%s\" not found (%s)\n", name.c_str(), buffer);
+  }
+}
+
+unsigned int Commander::getArgumentCount()
+{
+  unsigned int tokenCount = tokens.size();
+
+  return tokenCount > 0 ? tokens.size() - 1 : 0;
+}
+
+std::string Commander::getStringArgument(unsigned int index)
+{
+  unsigned int argumentCount = getArgumentCount();
+
+  if (index > getArgumentCount() - 1)
+  {
+    serial->printf("@ commander argument with index of %d requested but there are only %d arguments\n", index, argumentCount);
+
+    return "";
+  }
+
+  return tokens.at(index + 1);
+}
+
+int Commander::getIntArgument(unsigned int index)
+{
+  std::string arg = getStringArgument(index);
+
+  if (arg.length() == 0)
+  {
+    return 0;
+  }
+
+  try
+  {
+    return std::stoi(arg);
+  }
+  catch (...)
+  {
+    serial->printf("@ commander argument with index of %d - \"%s\" could not be converted to integer, returning 0\n", index, arg.c_str());
+
+    return 0;
   }
 }

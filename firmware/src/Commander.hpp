@@ -3,20 +3,37 @@
 
 #include <mbed.h>
 
+#include <string>
+#include <map>
+#include <vector>
+
+typedef Callback<void()> CommandHandlerCallback;
+typedef std::map<std::string, CommandHandlerCallback> CommandHandlerMap;
+
 class Commander
 {
 public:
   Commander(Serial *serial);
 
-  void handleSerialRx();
+  void registerCommandHandler(std::string name, CommandHandlerCallback handler);
+  void handleCommand(char *command);
+
+  unsigned int getArgumentCount();
+  std::string getStringArgument(unsigned int index);
+  int getIntArgument(unsigned int index);
+
+  Serial *serial;
 
 private:
+  void handleSerialRx();
+
   static const int MAX_COMMAND_LENGTH = 128;
   static const int COMMAND_BUFFER_SIZE = MAX_COMMAND_LENGTH + 1;
 
-  Serial *serial;
   char commandBuffer[COMMAND_BUFFER_SIZE];
   int commandLength = 0;
+  CommandHandlerMap commandHandlerMap;
+  std::vector<std::string> tokens;
 };
 
 #endif
