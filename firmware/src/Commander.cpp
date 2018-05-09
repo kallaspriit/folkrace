@@ -23,7 +23,7 @@ void Commander::handleSerialRx()
   if (receivedChar == '\n')
   {
     // handle the command
-    handleCommand(commandBuffer);
+    handleCommand(commandBuffer, commandLength);
 
     // reset the buffer
     commandBuffer[0] = '\0';
@@ -45,16 +45,16 @@ void Commander::handleSerialRx()
   }
 }
 
-void Commander::handleCommand(char *buffer)
+void Commander::handleCommand(const char *buffer, int length)
 {
   // ignore empty commands
-  if (commandLength == 0)
+  if (length == 0)
   {
     return;
   }
 
   // convert the command buffer to a string and split into token
-  std::string command(buffer, commandLength);
+  std::string command(buffer, length);
   tokens = split(command, ':');
 
   // name is the first token

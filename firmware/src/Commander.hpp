@@ -16,7 +16,7 @@ public:
   Commander(Serial *serial);
 
   void registerCommandHandler(std::string name, CommandHandlerCallback handler);
-  void handleCommand(char *command);
+  void handleCommand(const char *command, int length);
 
   unsigned int getArgumentCount();
   std::string getStringArgument(unsigned int index);
