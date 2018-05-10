@@ -141,7 +141,7 @@ public:
     * @note Read speed in ticks per second
     */
   uint32_t ReadEncM1(uint8_t *status, bool *valid);
-  int32_t ReadEncM2();
+  uint32_t ReadEncM2(uint8_t *status, bool *valid);
   int32_t ReadSpeedM1();
   int32_t ReadSpeedM2();
 

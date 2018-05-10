@@ -173,6 +173,11 @@ uint32_t RoboClaw::ReadEncM1(uint8_t *status, bool *valid)
   return Read4_1(address, GETM1ENC, status, valid);
 }
 
+uint32_t RoboClaw::ReadEncM2(uint8_t *status, bool *valid)
+{
+  return Read4_1(address, GETM2ENC, status, valid);
+}
+
 void RoboClaw::flush()
 {
   while (_roboclaw.readable())
@@ -372,27 +377,27 @@ uint16_t RoboClaw::read(int timeout)
 //   return false;
 // }
 
-int32_t RoboClaw::ReadEncM2()
-{
-  int32_t enc2;
-  uint16_t read_byte2[7];
-  write_(GETM2ENC, 0x00, true, false);
+// int32_t RoboClaw::ReadEncM2()
+// {
+//   int32_t enc2;
+//   uint16_t read_byte2[7];
+//   write_(GETM2ENC, 0x00, true, false);
 
-  read_byte2[0] = (uint16_t)_roboclaw.getc();
-  read_byte2[1] = (uint16_t)_roboclaw.getc();
-  read_byte2[2] = (uint16_t)_roboclaw.getc();
-  read_byte2[3] = (uint16_t)_roboclaw.getc();
-  read_byte2[4] = (uint16_t)_roboclaw.getc();
-  read_byte2[5] = (uint16_t)_roboclaw.getc();
-  read_byte2[6] = (uint16_t)_roboclaw.getc();
+//   read_byte2[0] = (uint16_t)_roboclaw.getc();
+//   read_byte2[1] = (uint16_t)_roboclaw.getc();
+//   read_byte2[2] = (uint16_t)_roboclaw.getc();
+//   read_byte2[3] = (uint16_t)_roboclaw.getc();
+//   read_byte2[4] = (uint16_t)_roboclaw.getc();
+//   read_byte2[5] = (uint16_t)_roboclaw.getc();
+//   read_byte2[6] = (uint16_t)_roboclaw.getc();
 
-  enc2 = read_byte2[1] << 24;
-  enc2 |= read_byte2[2] << 16;
-  enc2 |= read_byte2[3] << 8;
-  enc2 |= read_byte2[4];
+//   enc2 = read_byte2[1] << 24;
+//   enc2 |= read_byte2[2] << 16;
+//   enc2 |= read_byte2[3] << 8;
+//   enc2 |= read_byte2[4];
 
-  return enc2;
-}
+//   return enc2;
+// }
 
 int32_t RoboClaw::ReadSpeedM1()
 {
