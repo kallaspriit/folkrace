@@ -1,7 +1,9 @@
 #include <mbed.h>
+// #include <USBSerial.h>
 
 #include "Commander.hpp"
 #include "RoboClaw.hpp"
+#include "Lidar.hpp"
 
 // timing configuration
 const int REPORT_ENCODER_VALUES_INTERVAL_MS = 1000; // larger interval for testing
@@ -13,6 +15,9 @@ const PinName APP_SERIAL_TX_PIN = p9;
 const PinName APP_SERIAL_RX_PIN = p10;
 const PinName MOTOR_SERIAL_TX_PIN = p13;
 const PinName MOTOR_SERIAL_RX_PIN = p14;
+const PinName LIDAR_PWM_PIN = p21;
+const PinName LIDAR_TX_PIN = p28;
+const PinName LIDAR_RX_PIN = p27;
 
 // baud rates configuration
 const int LOG_SERIAL_BAUDRATE = 115200;
@@ -24,6 +29,7 @@ const uint8_t MOTOR_SERIAL_ADDRESS = 128;
 
 // setup serials
 Serial logSerial(LOG_SERIAL_TX_PIN, USBRX, LOG_SERIAL_BAUDRATE);
+// USBSerial logSerial;
 Serial appSerial(APP_SERIAL_TX_PIN, APP_SERIAL_RX_PIN, APP_SERIAL_BAUDRATE);
 
 // setup commanders
@@ -32,6 +38,9 @@ Commander appCommander(&appSerial);
 
 // setup motor controller
 RoboClaw motors(MOTOR_SERIAL_ADDRESS, MOTOR_SERIAL_BAUDRATE, MOTOR_SERIAL_RX_PIN, MOTOR_SERIAL_TX_PIN);
+
+// setup lidar
+Lidar lidar(LIDAR_TX_PIN, LIDAR_RX_PIN, LIDAR_PWM_PIN);
 
 // setup timers
 Timer reportEncoderValuesTimer;
@@ -147,15 +156,46 @@ int main()
   // start timers
   reportEncoderValuesTimer.start();
 
+  // set lidar duty cycle (TODO: simple speed controller)
+  lidar.SetPWMDuty(0.65f);
+  // lidar.StartData();
+
+  // bool isLidarStarted = false;
+
   // // main loop
   while (true)
   {
+    // update commanders
+    logCommander.update();
+    appCommander.update();
+
+    // update lidar
+    lidar.update();
+
     // report encoder values at certain interval
     int msSinceLastEncoderValuesReport = reportEncoderValuesTimer.read_ms();
 
     if (msSinceLastEncoderValuesReport >= REPORT_ENCODER_VALUES_INTERVAL_MS)
     {
-      reportEncoderValues();
+      // reportEncoderValues();
+
+      // float speed = lidar.GetSpeed();
+
+      logSerial.printf("# rpm: %f\n", lidar.getRpm());
+
+      // for (int i = 0; i < 360; i += 45)
+      // {
+      //   int distance = lidar.GetData(i);
+
+      //   logSerial.printf("# distance at %d: %d\n", i, distance);
+      // }
+
+      // if (!isLidarStarted)
+      // {
+      //   lidar.StartData();
+
+      //   isLidarStarted = true;
+      // }
 
       reportEncoderValuesTimer.reset();
     }

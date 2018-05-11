@@ -5,13 +5,21 @@
 
 Commander::Commander(Serial *serial) : serial(serial)
 {
-  // listen for receive events
-  serial->attach(callback(this, &Commander::handleSerialRx), Serial::RxIrq);
+  // listen for receive events (can cause concurrency issues?)
+  // serial->attach(callback(this, &Commander::handleSerialRx), Serial::RxIrq);
 }
 
 void Commander::registerCommandHandler(std::string name, CommandHandlerCallback handler)
 {
   commandHandlerMap[name] = handler;
+}
+
+void Commander::update()
+{
+  while (serial->readable())
+  {
+    handleSerialRx();
+  }
 }
 
 void Commander::handleSerialRx()

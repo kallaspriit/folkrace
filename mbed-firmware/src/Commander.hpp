@@ -22,6 +22,8 @@ public:
   std::string getStringArgument(unsigned int index);
   int getIntArgument(unsigned int index);
 
+  void update();
+
   Serial *serial;
 
 private:
@@ -34,6 +36,7 @@ private:
   int commandLength = 0;
   CommandHandlerMap commandHandlerMap;
   std::vector<std::string> tokens;
+  std::vector<std::string>
 };
 
 #endif
