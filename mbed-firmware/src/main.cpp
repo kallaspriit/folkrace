@@ -156,11 +156,8 @@ int main()
   // start timers
   reportEncoderValuesTimer.start();
 
-  // set lidar duty cycle (TODO: simple speed controller)
-  lidar.SetPWMDuty(0.65f);
-  // lidar.StartData();
-
-  // bool isLidarStarted = false;
+  // start the lidar
+  lidar.start();
 
   // // main loop
   while (true)
@@ -179,23 +176,10 @@ int main()
     {
       // reportEncoderValues();
 
-      // float speed = lidar.GetSpeed();
-
-      logSerial.printf("# rpm: %f\n", lidar.getRpm());
-
-      // for (int i = 0; i < 360; i += 45)
-      // {
-      //   int distance = lidar.GetData(i);
-
-      //   logSerial.printf("# distance at %d: %d\n", i, distance);
-      // }
-
-      // if (!isLidarStarted)
-      // {
-      //   lidar.StartData();
-
-      //   isLidarStarted = true;
-      // }
+      if (lidar.isStarted())
+      {
+        logSerial.printf("# rpm: %d (%s)\n", lidar.getMotorRpm(), lidar.isValid() ? "valid" : "invalid");
+      }
 
       reportEncoderValuesTimer.reset();
     }

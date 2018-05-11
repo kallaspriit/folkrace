@@ -36,7 +36,6 @@ private:
   int commandLength = 0;
   CommandHandlerMap commandHandlerMap;
   std::vector<std::string> tokens;
-  std::vector<std::string>
 };
 
 #endif
