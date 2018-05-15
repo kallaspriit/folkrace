@@ -46,8 +46,8 @@ Lidar lidar(LIDAR_TX_PIN, LIDAR_RX_PIN, LIDAR_PWM_PIN);
 Timer reportEncoderValuesTimer;
 
 // keep track of encoder values
-int encoderDeltaM1 = 0;
-int encoderDeltaM2 = 0;
+int lastEncoderDeltaM1 = 0;
+int lastEncoderDeltaM2 = 0;
 
 // handles set-speed:A:B command where A and B are the target speeds for motor 1 and 2
 void handleSetSpeedCommand(Commander *commander)
@@ -57,7 +57,7 @@ void handleSetSpeedCommand(Commander *commander)
   // make sure we got the right number of parameters
   if (argumentCount != 2)
   {
-    commander->serial->printf("@ set-speed:A:B expects exactly two parameters (where A is motor 1 speed and B is motor 2 speed)");
+    commander->serial->printf("@ set-speed:A:B expects exactly two parameters (where A is motor 1 speed and B is motor 2 speed)\n");
 
     // stop the motors when receiving invalid command
     motors.SpeedM1(0);
@@ -87,7 +87,7 @@ void handleSetLidarRpmCommand(Commander *commander)
   // make sure we got the right number of parameters
   if (argumentCount != 1)
   {
-    commander->serial->printf("@ set-lidar-rpm:RPM expects exactly one parameter (where RPM is the new target lidar rpm)");
+    commander->serial->printf("@ set-lidar-rpm:RPM expects exactly one parameter (where RPM is the new target lidar rpm)\n");
 
     // stop the lidar when receiving invalid command
     lidar.setTargetRpm(0);
@@ -135,7 +135,7 @@ void handleProxyCommand(Commander *commander)
   commander->serial->printf("# proxying \"%s\" to %s commander\n", command.c_str(), commander == &logCommander ? "robot" : "pc");
 
   // forward the command to the other serial
-  otherCommander->handleCommand(command.c_str(), command.length());
+  otherCommander->handleCommand(command);
 }
 
 // reports encoder values
@@ -146,22 +146,18 @@ void reportEncoderValues()
   bool validM1, validM2;
 
   // read encoder values
-  uint32_t encoderValueM1 = motors.ReadEncM1(&statusM1, &validM1);
-  uint32_t encoderValueM2 = motors.ReadEncM2(&statusM2, &validM2);
-
-  // keep track of last values
-  int lastEncoderDeltaM1 = encoderDeltaM1;
-  int lastEncoderDeltaM2 = encoderDeltaM2;
-
-  // converting from unsigned to signed gives us absolute signed value
-  encoderDeltaM1 = (int)encoderValueM1;
-  encoderDeltaM2 = (int)encoderValueM2;
+  int encoderDeltaM1 = (int)motors.ReadEncM1(&statusM1, &validM1);
+  int encoderDeltaM2 = (int)motors.ReadEncM2(&statusM2, &validM2);
 
   // don't bother sending the update if the speeds have not changed
   if (abs(encoderDeltaM1 - lastEncoderDeltaM1) == 0 && abs(encoderDeltaM2 - lastEncoderDeltaM2) == 0)
   {
     return;
   }
+
+  // keep track of last values
+  lastEncoderDeltaM1 = encoderDeltaM1;
+  lastEncoderDeltaM2 = encoderDeltaM2;
 
   // send the encoder values (TODO: only the app needs these)
   logSerial.printf("e:%d:%d\n", encoderDeltaM1, encoderDeltaM2);
@@ -203,9 +199,8 @@ int main()
   while (true)
   {
     // update commanders
-    // TODO: implement command queues
-    logCommander.update();
-    appCommander.update();
+    logCommander.handleAllQueuedCommands();
+    appCommander.handleAllQueuedCommands();
 
     // report encoder values at certain interval
     int msSinceLastEncoderValuesReport = reportEncoderValuesTimer.read_ms();

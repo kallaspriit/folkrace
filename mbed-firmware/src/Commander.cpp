@@ -6,7 +6,7 @@
 Commander::Commander(Serial *serial) : serial(serial)
 {
   // listen for receive events (can cause concurrency issues?)
-  // serial->attach(callback(this, &Commander::handleSerialRx), Serial::RxIrq);
+  serial->attach(callback(this, &Commander::handleSerialRx), Serial::RxIrq);
 }
 
 void Commander::registerCommandHandler(std::string name, CommandHandlerCallback handler)
@@ -14,11 +14,17 @@ void Commander::registerCommandHandler(std::string name, CommandHandlerCallback 
   commandHandlerMap[name] = handler;
 }
 
-void Commander::update()
+void Commander::handleAllQueuedCommands()
 {
-  while (serial->readable())
+  // handle all queued commands
+  while (commandQueue.size() > 0)
   {
-    handleSerialRx();
+    // get the queued command
+    std::string command = commandQueue.front();
+    commandQueue.pop();
+
+    // handle the command
+    handleCommand(command);
   }
 }
 
@@ -30,8 +36,15 @@ void Commander::handleSerialRx()
   // consider linefeed as the end of command
   if (receivedChar == '\n')
   {
-    // handle the command
-    handleCommand(commandBuffer, commandLength);
+    // queue the command
+    std::string command(commandBuffer, commandLength);
+    commandQueue.push(command);
+
+    // remove commands exceeding max queue length
+    while (commandQueue.size() > MAX_COMMAND_QUEUE_LENGTH)
+    {
+      commandQueue.pop();
+    }
 
     // reset the buffer
     commandBuffer[0] = '\0';
@@ -53,16 +66,15 @@ void Commander::handleSerialRx()
   }
 }
 
-void Commander::handleCommand(const char *buffer, int length)
+void Commander::handleCommand(std::string command)
 {
   // ignore empty commands
-  if (length == 0)
+  if (command.length() == 0)
   {
     return;
   }
 
   // convert the command buffer to a string and split into token
-  std::string command(buffer, length);
   tokens = split(command, ':');
 
   // name is the first token
@@ -73,7 +85,7 @@ void Commander::handleCommand(const char *buffer, int length)
 
   if (handlerIt != commandHandlerMap.end())
   {
-    serial->printf("< %s\n", buffer);
+    serial->printf("< %s\n", command.c_str());
 
     // call the command handler if it exists
     handlerIt->second();
@@ -81,7 +93,7 @@ void Commander::handleCommand(const char *buffer, int length)
   else
   {
     // log missing command handler
-    serial->printf("@ command \"%s\" not found (%s)\n", name.c_str(), buffer);
+    serial->printf("@ command \"%s\" not found (%s)\n", name.c_str(), command.c_str());
   }
 }
 
