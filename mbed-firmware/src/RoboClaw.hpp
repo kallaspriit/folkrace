@@ -108,6 +108,8 @@ public:
   int32_t getSpeedM1();
   int32_t getSpeedM2();
 
+  float getMainBatteryVoltage();
+
   void resetEncoders();
 
   void setSpeedM1(int32_t speed);
@@ -125,8 +127,9 @@ public:
 
 private:
   void flush();
-  uint32_t readCommand(uint8_t address, uint8_t cmd, uint8_t *status, bool *valid);
-  uint16_t read(int timeout = 1000);
+  uint32_t read4(uint8_t address, uint8_t cmd, uint8_t *status, bool *valid);
+  uint16_t read2(uint8_t address, uint8_t cmd, bool *valid);
+  uint16_t read(int timeoutUs = 2000);
 
   Serial serial;
   Timer readTimer;

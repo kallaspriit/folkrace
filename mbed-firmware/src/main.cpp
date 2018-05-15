@@ -45,6 +45,9 @@ Lidar lidar(LIDAR_TX_PIN, LIDAR_RX_PIN, LIDAR_PWM_PIN);
 // setup timers
 Timer reportEncoderValuesTimer;
 
+// setup status leds
+DigitalOut led1(LED1);
+
 // keep track of encoder values
 int lastEncoderDeltaM1 = 0;
 int lastEncoderDeltaM2 = 0;
@@ -107,7 +110,16 @@ void handleSetLidarRpmCommand(Commander *commander)
 // handles get-lidar-state command, sends back lidar RPM, whether lidar is running and valid, queued command count
 void handleGetLidarStateCommand(Commander *commander)
 {
-  commander->serial->printf("get-lidar-state:%f:%d:%d:%f\n", lidar.getRpm(), lidar.isStarted() ? 1 : 0, lidar.isValid() ? 1 : 0, lidar.getMotorPwm());
+  commander->serial->printf("get-lidar-state:%.1f:%d:%d:%.2f\n", lidar.getRpm(), lidar.isStarted() ? 1 : 0, lidar.isValid() ? 1 : 0, lidar.getMotorPwm());
+}
+
+// handles get-voltage command, responds with main battery voltage
+void handleGetVoltageCommand(Commander *commander)
+{
+  // apparently the reported values is slightly off
+  float voltage = motors.getMainBatteryVoltage() * 1.02;
+
+  commander->serial->printf("get-voltage:%.1f\n", voltage);
 }
 
 // handles proxy:xxx:yyy etc command where xxx:yyy gets handled by the other commander
@@ -149,6 +161,14 @@ void reportEncoderValues()
   int encoderDeltaM1 = (int)motors.getEncoderDeltaM1(&statusM1, &validM1);
   int encoderDeltaM2 = (int)motors.getEncoderDeltaM2(&statusM2, &validM2);
 
+  // make sure we got valid results
+  if (!validM1 || !validM2)
+  {
+    logSerial.printf("@ reading motor encoders failed, is the power supply to the motor controller missing?\n");
+
+    return;
+  }
+
   // don't bother sending the update if the speeds have not changed
   if (abs(encoderDeltaM1 - lastEncoderDeltaM1) == 0 && abs(encoderDeltaM2 - lastEncoderDeltaM2) == 0)
   {
@@ -181,6 +201,10 @@ int main()
   // reports lidar state
   logCommander.registerCommandHandler("get-lidar-state", callback(handleGetLidarStateCommand, &logCommander));
   appCommander.registerCommandHandler("get-lidar-state", callback(handleGetLidarStateCommand, &appCommander));
+
+  // reports battery voltage
+  logCommander.registerCommandHandler("get-voltage", callback(handleGetVoltageCommand, &logCommander));
+  appCommander.registerCommandHandler("get-voltage", callback(handleGetVoltageCommand, &appCommander));
 
   // proxy forwards the command to the other commander, useful for remote control etc
   logCommander.registerCommandHandler("proxy", callback(handleProxyCommand, &logCommander));
@@ -227,5 +251,8 @@ int main()
       // make sure to delete it afterwards
       delete measurement;
     }
+
+    // blink the led on every main loop
+    led1 = !led1;
   }
 }

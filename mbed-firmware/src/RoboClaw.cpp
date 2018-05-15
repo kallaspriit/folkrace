@@ -160,12 +160,26 @@ void RoboClaw::backward(int speed)
 
 uint32_t RoboClaw::getEncoderDeltaM1(uint8_t *status, bool *valid)
 {
-  return readCommand(address, GETM1ENC, status, valid);
+  return read4(address, GETM1ENC, status, valid);
 }
 
 uint32_t RoboClaw::getEncoderDeltaM2(uint8_t *status, bool *valid)
 {
-  return readCommand(address, GETM2ENC, status, valid);
+  return read4(address, GETM2ENC, status, valid);
+}
+
+float RoboClaw::getMainBatteryVoltage()
+{
+  bool valid = false;
+
+  uint16_t value = read2(address, GETMBATT, &valid);
+
+  if (!valid)
+  {
+    return -1.0f;
+  }
+
+  return (float)value / 10.0f;
 }
 
 void RoboClaw::flush()
@@ -178,91 +192,156 @@ void RoboClaw::flush()
   return;
 }
 
-uint32_t RoboClaw::readCommand(uint8_t address, uint8_t cmd, uint8_t *status, bool *valid)
+uint32_t RoboClaw::read4(uint8_t address, uint8_t cmd, uint8_t *status, bool *valid)
 {
   // uint8_t crc;
 
   if (valid)
+  {
     *valid = false;
+  }
 
   uint32_t value = 0;
   // uint8_t trys = MAXRETRY;
-  uint8_t trys = 2;
+  // uint8_t trys = 2;
   int16_t data;
-  do
+  // do
+  // {
+  flush();
+
+  clearCrc();
+  serial.putc(address);
+  updateCrc(address);
+  serial.putc(cmd);
+  updateCrc(cmd);
+
+  data = read();
+  updateCrc(data);
+  value = (uint32_t)data << 24;
+
+  if (data != -1)
   {
-    flush();
-
-    clearCrc();
-    serial.putc(address);
-    updateCrc(address);
-    serial.putc(cmd);
-    updateCrc(cmd);
-
     data = read();
     updateCrc(data);
-    value = (uint32_t)data << 24;
+    value |= (uint32_t)data << 16;
+  }
 
+  if (data != -1)
+  {
+    data = read();
+    updateCrc(data);
+    value |= (uint32_t)data << 8;
+  }
+
+  if (data != -1)
+  {
+    data = read();
+    updateCrc(data);
+    value |= (uint32_t)data;
+  }
+
+  if (data != -1)
+  {
+    data = read();
+    updateCrc(data);
+    if (status)
+      *status = data;
+  }
+
+  // printf("value before crc %lu\n", value);
+
+  if (data != -1)
+  {
+    // does not work without for whatever reason
+    // TODO: seems to work without it after all, add back if not working at some point
+    // Thread::wait(1);
+    // wait(0.001f);
+
+    uint16_t ccrc;
+    data = read();
     if (data != -1)
     {
-      data = read();
-      updateCrc(data);
-      value |= (uint32_t)data << 16;
-    }
-
-    if (data != -1)
-    {
-      data = read();
-      updateCrc(data);
-      value |= (uint32_t)data << 8;
-    }
-
-    if (data != -1)
-    {
-      data = read();
-      updateCrc(data);
-      value |= (uint32_t)data;
-    }
-
-    if (data != -1)
-    {
-      data = read();
-      updateCrc(data);
-      if (status)
-        *status = data;
-    }
-
-    // printf("value before crc %lu\n", value);
-
-    if (data != -1)
-    {
-      // does not work without for whatever reason
-      // Thread::wait(1);
-      wait(0.001f);
-
-      uint16_t ccrc;
+      ccrc = data << 8;
       data = read();
       if (data != -1)
       {
-        ccrc = data << 8;
-        data = read();
-        if (data != -1)
+        ccrc |= data;
+        if (getCrc() == ccrc)
         {
-          ccrc |= data;
-          if (getCrc() == ccrc)
-          {
-            *valid = true;
-            return value;
-          }
+          *valid = true;
+          return value;
         }
       }
     }
-  } while (trys--);
+  }
+
+  printf("@ RoboClaw read4 #%u failed\n", cmd);
+  // } while (trys--);
 
   return false;
 }
 
-uint16_t RoboClaw::read(int timeout)
+uint16_t RoboClaw::read2(uint8_t address, uint8_t cmd, bool *valid)
+{
+  // uint8_t crc;
+
+  if (valid)
+  {
+    *valid = false;
+  }
+
+  uint16_t value = 0;
+  // uint8_t trys = MAXRETRY;
+  // uint8_t trys = 2;
+  int16_t data;
+  // do
+  // {
+  flush();
+
+  clearCrc();
+  serial.putc(address);
+  updateCrc(address);
+  serial.putc(cmd);
+  updateCrc(cmd);
+
+  data = read();
+  updateCrc(data);
+  value = (uint16_t)data << 8;
+
+  if (data != -1)
+  {
+    data = read();
+    updateCrc(data);
+    value |= (uint16_t)data;
+  }
+
+  if (data != -1)
+  {
+    uint16_t ccrc;
+    data = read();
+    if (data != -1)
+    {
+      ccrc = data << 8;
+      data = read();
+      if (data != -1)
+      {
+        ccrc |= data;
+        if (getCrc() == ccrc)
+        {
+          *valid = true;
+          return value;
+        }
+      }
+    }
+  }
+
+  printf("@ RoboClaw read2 #%u failed\n", cmd);
+  // } while (trys--);
+
+  return false;
+}
+
+uint16_t RoboClaw::read(int timeoutUs)
 {
   // Timer timer;
   readTimer.reset();
@@ -274,16 +353,21 @@ uint16_t RoboClaw::read(int timeout)
   {
     cycles++;
 
-    if (readTimer.read_ms() >= timeout)
+    int waitedTimeUs = readTimer.read_us();
+
+    if (waitedTimeUs >= timeoutUs)
     {
-      // printf("GIVE UP %d\n", cycles);
+      printf("@ RoboClaw read gave up after %d/%d us (%d cycles)\n", waitedTimeUs, timeoutUs, cycles);
+
       return -1;
     }
   }
 
   if (cycles > 0)
   {
-    // printf("WAITED %d\n", cycles);
+    // int waitedTimeUs = readTimer.read_us();
+
+    // printf("# RoboClaw read waited for %d/%d us (%d cycles)\n", waitedTimeUs, timeoutUs, cycles);
   }
 
   return (uint16_t)serial.getc();
