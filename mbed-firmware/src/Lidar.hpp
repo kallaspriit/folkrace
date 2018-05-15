@@ -1,6 +1,8 @@
 #ifndef MBED_LIDAR_H
 #define MBED_LIDAR_H
 
+#include "PID.h"
+
 #include <mbed.h>
 
 #include <queue>
@@ -31,13 +33,13 @@ public:
   bool isStarted();
   bool isValid();
 
-  void setTargetRpm(int targetRpm);
-  int getRpm();
+  void setTargetRpm(float targetRpm);
+  float getRpm();
+
+  float getMotorPwm();
 
   unsigned int getQueuedMeasurementCount();
   LidarMeasurement *popQueuedMeasurement();
-
-  // void update();
 
 private:
   void setMotorPwm(float duty);
@@ -56,8 +58,11 @@ private:
   Serial serial;
   PwmOut motorPwm;
   Timer cycleTimer;
+  Timer pidTimer;
   MeasurementsQueue measurementsQueue;
+  PID motorPid;
 
+  static const int PID_INTERVAL_MS = 100;
   static const uint8_t PACKET_START_BYTE = 0xFA;
 
   static const int N_DATA_QUADS = 4;
@@ -101,8 +106,8 @@ private:
   uint16_t packetDistance[N_DATA_QUADS] = {0, 0, 0, 0};
   uint16_t packetSignalStrength[N_DATA_QUADS] = {0, 0, 0, 0};
   float motorPwmDuty = 0.0f;
-  int targetRpm = 250;
-  int lastMotorRpm = 0;
+  float targetRpm = 250.0f;
+  float lastMotorRpm = 0.0f;
   int expectedCycleDuration = 0;
 };
 

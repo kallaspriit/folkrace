@@ -107,7 +107,7 @@ void handleSetLidarRpmCommand(Commander *commander)
 // handles get-lidar-state command, sends back lidar RPM, whether lidar is running and valid, queued command count
 void handleGetLidarStateCommand(Commander *commander)
 {
-  commander->serial->printf("get-lidar-state:%d:%d:%d\n", lidar.getRpm(), lidar.isStarted() ? 1 : 0, lidar.isValid() ? 1 : 0);
+  commander->serial->printf("get-lidar-state:%f:%d:%d:%f\n", lidar.getRpm(), lidar.isStarted() ? 1 : 0, lidar.isValid() ? 1 : 0, lidar.getMotorPwm());
 }
 
 // handles proxy:xxx:yyy etc command where xxx:yyy gets handled by the other commander
@@ -226,7 +226,7 @@ int main()
       // only send valid and strong measurements
       if (measurement->isValid && measurement->isStrong)
       {
-        appSerial.printf("l:%d:%d:%d\n", measurement->angle, measurement->distance / 10, measurement->quality);
+        appSerial.printf("m:%d:%d:%d\n", measurement->angle, measurement->distance / 10, measurement->quality);
       }
 
       // make sure to delete it afterwards
