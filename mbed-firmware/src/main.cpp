@@ -21,7 +21,7 @@ const PinName LIDAR_RX_PIN = p27;
 
 // baud rates configuration
 const int LOG_SERIAL_BAUDRATE = 115200;
-const int APP_SERIAL_BAUDRATE = 115200;
+const int APP_SERIAL_BAUDRATE = 1382400; // 115200
 const int MOTOR_SERIAL_BAUDRATE = 115200;
 
 // component configuration
@@ -57,7 +57,7 @@ void handleSetSpeedCommand(Commander *commander)
   // make sure we got the right number of parameters
   if (argumentCount != 2)
   {
-    commander->serial->printf("@ set-speed expects exactly two parameters, set-speed:1000-2000 sets M1 speed to 1000 and M2 speed to -2000");
+    commander->serial->printf("@ set-speed:A:B expects exactly two parameters (where A is motor 1 speed and B is motor 2 speed)");
 
     // stop the motors when receiving invalid command
     motors.SpeedM1(0);
@@ -75,10 +75,42 @@ void handleSetSpeedCommand(Commander *commander)
   motors.SpeedM2(targetSpeedM2);
 
   // report new target speeds
-  commander->serial->printf("target-speed:%d:%d\n", targetSpeedM1, targetSpeedM2);
+  logSerial.printf("set-speed:%d:%d\n", targetSpeedM1, targetSpeedM2);
+  appSerial.printf("set-speed:%d:%d\n", targetSpeedM1, targetSpeedM2);
 }
 
-// handles proxy:
+// handles set-lidar-rpm:RPM command, starts or stops the lidar setting target RPM
+void handleSetLidarRpmCommand(Commander *commander)
+{
+  unsigned int argumentCount = commander->getArgumentCount();
+
+  // make sure we got the right number of parameters
+  if (argumentCount != 1)
+  {
+    commander->serial->printf("@ set-lidar-rpm:RPM expects exactly one parameter (where RPM is the new target lidar rpm)");
+
+    // stop the lidar when receiving invalid command
+    lidar.setTargetRpm(0);
+
+    return;
+  }
+
+  int targetRpm = commander->getIntArgument(0);
+
+  lidar.setTargetRpm(targetRpm);
+
+  // report new target rpm
+  logSerial.printf("set-lidar-rpm:%d\n", targetRpm);
+  appSerial.printf("set-lidar-rpm:%d\n", targetRpm);
+}
+
+// handles get-lidar-state command, sends back lidar RPM, whether lidar is running and valid, queued command count
+void handleGetLidarStateCommand(Commander *commander)
+{
+  commander->serial->printf("get-lidar-state:%d:%d:%d\n", lidar.getRpm(), lidar.isStarted() ? 1 : 0, lidar.isValid() ? 1 : 0);
+}
+
+// handles proxy:xxx:yyy etc command where xxx:yyy gets handled by the other commander
 void handleProxyCommand(Commander *commander)
 {
   unsigned int argumentCount = commander->getArgumentCount();
@@ -131,7 +163,7 @@ void reportEncoderValues()
     return;
   }
 
-  // send the encoder values
+  // send the encoder values (TODO: only the app needs these)
   logSerial.printf("e:%d:%d\n", encoderDeltaM1, encoderDeltaM2);
   appSerial.printf("e:%d:%d\n", encoderDeltaM1, encoderDeltaM2);
 }
@@ -142,9 +174,17 @@ int main()
   logSerial.printf("reset\n");
   appSerial.printf("reset\n");
 
-  // set-speed:1000-2000 sets M1 speed to 1000 and M2 speed to -2000
+  // sets target motor speeds
   logCommander.registerCommandHandler("set-speed", callback(handleSetSpeedCommand, &logCommander));
   appCommander.registerCommandHandler("set-speed", callback(handleSetSpeedCommand, &appCommander));
+
+  // sets target lidar rpm
+  logCommander.registerCommandHandler("set-lidar-rpm", callback(handleSetLidarRpmCommand, &logCommander));
+  appCommander.registerCommandHandler("set-lidar-rpm", callback(handleSetLidarRpmCommand, &appCommander));
+
+  // reports lidar state
+  logCommander.registerCommandHandler("get-lidar-state", callback(handleGetLidarStateCommand, &logCommander));
+  appCommander.registerCommandHandler("get-lidar-state", callback(handleGetLidarStateCommand, &appCommander));
 
   // proxy forwards the command to the other commander, useful for remote control etc
   logCommander.registerCommandHandler("proxy", callback(handleProxyCommand, &logCommander));
@@ -157,31 +197,40 @@ int main()
   reportEncoderValuesTimer.start();
 
   // start the lidar
-  lidar.start();
+  // lidar.start();
 
   // // main loop
   while (true)
   {
     // update commanders
+    // TODO: implement command queues
     logCommander.update();
     appCommander.update();
-
-    // update lidar
-    lidar.update();
 
     // report encoder values at certain interval
     int msSinceLastEncoderValuesReport = reportEncoderValuesTimer.read_ms();
 
     if (msSinceLastEncoderValuesReport >= REPORT_ENCODER_VALUES_INTERVAL_MS)
     {
-      // reportEncoderValues();
-
-      if (lidar.isStarted())
-      {
-        logSerial.printf("# rpm: %d (%s)\n", lidar.getMotorRpm(), lidar.isValid() ? "valid" : "invalid");
-      }
+      reportEncoderValues();
 
       reportEncoderValuesTimer.reset();
+    }
+
+    // output the queued lidar measurements
+    while (lidar.getQueuedMeasurementCount() > 0)
+    {
+      // pop next measurement
+      LidarMeasurement *measurement = lidar.popQueuedMeasurement();
+
+      // only send valid and strong measurements
+      if (measurement->isValid && measurement->isStrong)
+      {
+        appSerial.printf("l:%d:%d:%d\n", measurement->angle, measurement->distance / 10, measurement->quality);
+      }
+
+      // make sure to delete it afterwards
+      delete measurement;
     }
   }
 }

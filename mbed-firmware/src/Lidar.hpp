@@ -3,29 +3,44 @@
 
 #include <mbed.h>
 
+#include <queue>
+
+class LidarMeasurement
+{
+public:
+  int angle;
+  int distance;
+  int quality;
+  bool isValid;
+  bool isStrong;
+
+  LidarMeasurement(int angle, int distance, int quality, bool isValid, bool isStrong) : angle(angle),
+                                                                                        distance(distance),
+                                                                                        quality(quality), isValid(isValid),
+                                                                                        isStrong(isStrong) {}
+};
+
+typedef std::queue<LidarMeasurement *> MeasurementsQueue;
+
 class Lidar
 {
 
 public:
   Lidar(PinName txPin, PinName rxPin, PinName motorPwmPin);
 
-  void start(int targetMotorRpm = 300);
-  void stop();
-
   bool isStarted();
   bool isValid();
 
-  void setMotorPwm(float duty);
-  void setMotorTargetRpm(int targetMotorRpm);
-  int getMotorRpm();
+  void setTargetRpm(int targetRpm);
+  int getRpm();
 
-  void update();
+  unsigned int getQueuedMeasurementCount();
+  LidarMeasurement *popQueuedMeasurement();
+
+  // void update();
 
 private:
-  Serial serial;
-  PwmOut motorPwm;
-  Timer cycleTimer;
-
+  void setMotorPwm(float duty);
   void handleSerialRx();
   void processWaitingForStartByte(uint8_t inByte);
   void processBuildPacket(uint8_t inByte);
@@ -38,10 +53,16 @@ private:
   void resetPacket();
   bool isPacketValid();
 
+  Serial serial;
+  PwmOut motorPwm;
+  Timer cycleTimer;
+  MeasurementsQueue measurementsQueue;
+
   static const uint8_t PACKET_START_BYTE = 0xFA;
 
   static const int N_DATA_QUADS = 4;
   static const int N_ELEMENTS_PER_QUAD = 4;
+  static const int MAX_LIDAR_MEASUREMENTS_QUEUE_LENGTH = 360;
 
   static const int OFFSET_TO_START = 0;
   static const int OFFSET_TO_INDEX = OFFSET_TO_START + 1;
@@ -73,16 +94,16 @@ private:
   bool wasLastPacketValid = false;
 
   State state = BUILDING_PACKET;
-  int packet[PACKET_LENGTH]; // an input packet
+  int packet[PACKET_LENGTH];
   int packetByteIndex = 0;
   uint16_t packetStartAngle = 0;
   uint8_t packetInvalidFlag[N_DATA_QUADS] = {0, 0, 0, 0};
   uint16_t packetDistance[N_DATA_QUADS] = {0, 0, 0, 0};
   uint16_t packetSignalStrength[N_DATA_QUADS] = {0, 0, 0, 0};
   float motorPwmDuty = 0.0f;
-  int targetMotorRpm = 300;
+  int targetRpm = 250;
   int lastMotorRpm = 0;
-  int expectedCycleDuration = 200; // 1000 / (300 / 60)
+  int expectedCycleDuration = 0;
 };
 
 #endif

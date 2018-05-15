@@ -6,45 +6,7 @@
 Lidar::Lidar(PinName txPin, PinName rxPin, PinName motorPwmPin) : serial(txPin, rxPin, 115200), motorPwm(motorPwmPin)
 {
   // stop the motor initially
-  motorPwm.period_us(100);
-  motorPwm.write(0.0);
-
-  // start the timer
-  cycleTimer.start();
-}
-
-void Lidar::start(int targetMotorRpm)
-{
-  // always update the target rpm
-  setMotorTargetRpm(targetMotorRpm);
-
-  // ignore if already running
-  if (isRunning)
-  {
-    return;
-  }
-
-  // start the cycle timer that gets reset after each rotation
-  cycleTimer.start();
-
-  isRunning = true;
-
-  // listen for serial data
-  // serial.attach(callback(this, &Lidar::handleSerialRx), Serial::RxIrq);
-}
-
-void Lidar::stop()
-{
-  // ignore if not running
-  if (!isRunning)
-  {
-    return;
-  }
-
-  // stop listening for serial data
-  // serial.attach(NULL, Serial::RxIrq);
-
-  isRunning = false;
+  setMotorPwm(0);
 }
 
 bool Lidar::isStarted()
@@ -71,14 +33,6 @@ bool Lidar::isValid()
   return true;
 }
 
-void Lidar::update()
-{
-  while (serial.readable())
-  {
-    handleSerialRx();
-  }
-}
-
 void Lidar::setMotorPwm(float duty)
 {
   motorPwm.write(duty);
@@ -86,16 +40,54 @@ void Lidar::setMotorPwm(float duty)
   motorPwmDuty = duty;
 }
 
-void Lidar::setMotorTargetRpm(int newTargetMotorRpm)
+void Lidar::setTargetRpm(int newTargetRpm)
 {
-  targetMotorRpm = newTargetMotorRpm;
-  expectedCycleDuration = 1000 / (targetMotorRpm / 60);
+  if (newTargetRpm < 0)
+  {
+    newTargetRpm = 0;
+  }
 
-  // TODO: implement real speed controller
-  setMotorPwm((float)newTargetMotorRpm / 300.0f * 0.7f);
+  targetRpm = newTargetRpm;
+
+  if (newTargetRpm > 0)
+  {
+    expectedCycleDuration = 1000 / (targetRpm / 60);
+
+    // TODO: implement real speed controller
+    setMotorPwm((float)newTargetRpm / 300.0f * 0.65f);
+
+    // start the lidar if it was not already running
+    if (!isRunning)
+    {
+      // listen for serial data
+      serial.attach(callback(this, &Lidar::handleSerialRx), Serial::RxIrq);
+
+      // start the cycle timer that gets reset after each rotation
+      cycleTimer.start();
+
+      // lidar is now running
+      isRunning = true;
+    }
+  }
+  else
+  {
+    expectedCycleDuration = 0;
+
+    setMotorPwm(0);
+
+    // check whether the lidar was previously running
+    if (isRunning)
+    {
+      // stop listening for serial data
+      serial.attach(NULL, Serial::RxIrq);
+
+      // lidar is now stopped
+      isRunning = false;
+    }
+  }
 }
 
-int Lidar::getMotorRpm()
+int Lidar::getRpm()
 {
   // return zero if not valid
   if (!isValid())
@@ -104,6 +96,26 @@ int Lidar::getMotorRpm()
   }
 
   return lastMotorRpm;
+}
+
+unsigned int Lidar::getQueuedMeasurementCount()
+{
+  return measurementsQueue.size();
+}
+
+LidarMeasurement *Lidar::popQueuedMeasurement()
+{
+  // return null if there are no more measurements in the queue
+  if (measurementsQueue.size() == 0)
+  {
+    return NULL;
+  }
+
+  // get the queued measurement and remove it from the queue, make sure to delete it!
+  LidarMeasurement *measurement = measurementsQueue.front();
+  measurementsQueue.pop();
+
+  return measurement;
 }
 
 void Lidar::handleSerialRx()
@@ -183,23 +195,33 @@ void Lidar::processPacket()
       }
     }
 
-    // TODO: queue the measurements?
-    // if (showDistances)
-    // { // the 'ShowDistance' command is active
-    //   for (int ix = 0; ix < N_DATA_QUADS; ix++)
-    //   {
-    //     bool isBadData = packetInvalidFlag[ix] & BAD_DATA_MASK;
-    //     bool isInvalidData = isBadData && packetInvalidFlag[ix] & INVALID_DATA_FLAG;
-    //     bool isPoorSignalStrength = isBadData && packetInvalidFlag[ix] & STRENGTH_WARNING_FLAG;
-    //     int distance = int(packetDistance[ix]);
-    //     int quality = packetSignalStrength[ix];
+    // queue the lidar measurements
+    for (int ix = 0; ix < N_DATA_QUADS; ix++)
+    {
+      int angle = packetStartAngle + ix;
+      int distance = int(packetDistance[ix]);
+      int quality = packetSignalStrength[ix];
+      bool isBadData = packetInvalidFlag[ix] & BAD_DATA_MASK;
+      bool isValid = !isBadData || !(packetInvalidFlag[ix] & INVALID_DATA_FLAG);
+      bool isStrong = !isBadData || !(packetInvalidFlag[ix] & STRENGTH_WARNING_FLAG);
 
-    //     printf("lidar:%d:%d:%d:%d:%d\n", packetStartAngle + ix, isInvalidData ? 0 : 1, isPoorSignalStrength ? 0 : 1, distance, quality);
-    //     // printf("l:%d:%d:%d\n", packetStartAngle + ix, distance, quality);
+      LidarMeasurement *measurement = new LidarMeasurement(angle, distance, quality, isValid, isStrong);
 
-    //     // } // if (xv_config.aryAngles[packetStartAngle + ix])
-    //   }
-    // }
+      measurementsQueue.push(measurement);
+    }
+
+    // remove measurements from the queue if there are too many to avoid running out of memory
+    while (measurementsQueue.size() > MAX_LIDAR_MEASUREMENTS_QUEUE_LENGTH)
+    {
+      LidarMeasurement *measurement = measurementsQueue.front();
+      measurementsQueue.pop();
+
+      delete measurement;
+    }
+  }
+  else
+  {
+    printf("# CRC\n");
   }
 
   resetPacket();
