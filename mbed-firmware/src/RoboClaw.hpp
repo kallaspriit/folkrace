@@ -90,6 +90,18 @@
 #define SETPWMMODE 148
 #define GETPWMMODE 149
 
+class CurrentMeasurement
+{
+public:
+  bool isValid;
+  float currentM1;
+  float currentM2;
+
+  CurrentMeasurement(bool isValid, float currentM1, float currentM2) : isValid(isValid),
+                                                                       currentM1(currentM1),
+                                                                       currentM2(currentM2) {}
+};
+
 class RoboClaw
 {
 
@@ -108,7 +120,8 @@ public:
   int32_t getSpeedM1();
   int32_t getSpeedM2();
 
-  float getMainBatteryVoltage();
+  float getMainBatteryVoltage(bool *valid);
+  CurrentMeasurement getCurrents();
 
   void resetEncoders();
 
@@ -127,7 +140,8 @@ public:
 
 private:
   void flush();
-  uint32_t read4(uint8_t address, uint8_t cmd, uint8_t *status, bool *valid);
+  uint32_t read4_1(uint8_t address, uint8_t cmd, uint8_t *status, bool *valid);
+  uint32_t read4(uint8_t address, uint8_t cmd, bool *valid);
   uint16_t read2(uint8_t address, uint8_t cmd, bool *valid);
   uint16_t read(int timeoutUs = 2000);
 

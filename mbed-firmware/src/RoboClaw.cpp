@@ -160,26 +160,41 @@ void RoboClaw::backward(int speed)
 
 uint32_t RoboClaw::getEncoderDeltaM1(uint8_t *status, bool *valid)
 {
-  return read4(address, GETM1ENC, status, valid);
+  return read4_1(address, GETM1ENC, status, valid);
 }
 
 uint32_t RoboClaw::getEncoderDeltaM2(uint8_t *status, bool *valid)
 {
-  return read4(address, GETM2ENC, status, valid);
+  return read4_1(address, GETM2ENC, status, valid);
 }
 
-float RoboClaw::getMainBatteryVoltage()
+float RoboClaw::getMainBatteryVoltage(bool *valid)
 {
-  bool valid = false;
-
-  uint16_t value = read2(address, GETMBATT, &valid);
+  uint16_t value = read2(address, GETMBATT, valid);
 
   if (!valid)
   {
-    return -1.0f;
+    return 0.0f;
   }
 
   return (float)value / 10.0f;
+}
+
+CurrentMeasurement RoboClaw::getCurrents()
+{
+  int16_t currentM1 = 0;
+  int16_t currentM2 = 0;
+  bool valid;
+
+  uint32_t value = read4(address, GETCURRENTS, &valid);
+
+  if (valid)
+  {
+    currentM1 = value >> 16;
+    currentM2 = value & 0xFFFF;
+  }
+
+  return CurrentMeasurement(valid, (float)currentM1 / 100.0f, (float)currentM2 / 100.0f);
 }
 
 void RoboClaw::flush()
@@ -192,7 +207,7 @@ void RoboClaw::flush()
   return;
 }
 
-uint32_t RoboClaw::read4(uint8_t address, uint8_t cmd, uint8_t *status, bool *valid)
+uint32_t RoboClaw::read4_1(uint8_t address, uint8_t cmd, uint8_t *status, bool *valid)
 {
   // uint8_t crc;
 
@@ -275,7 +290,77 @@ uint32_t RoboClaw::read4(uint8_t address, uint8_t cmd, uint8_t *status, bool *va
     }
   }
 
-  printf("@ RoboClaw read4 #%u failed\n", cmd);
+  printf("@ RoboClaw read4_1 #%u failed\n", cmd);
+  // } while (trys--);
+
+  return false;
+}
+
+uint32_t RoboClaw::read4(uint8_t address, uint8_t cmd, bool *valid)
+{
+  // uint8_t crc;
+
+  if (valid)
+    *valid = false;
+
+  uint32_t value = 0;
+  // uint8_t trys = MAXRETRY;
+  // uint8_t trys = 2;
+  int16_t data;
+  // do
+  // {
+  flush();
+
+  clearCrc();
+  serial.putc(address);
+  updateCrc(address);
+  serial.putc(cmd);
+  updateCrc(cmd);
+
+  data = read();
+  updateCrc(data);
+  value = (uint32_t)data << 24;
+
+  if (data != -1)
+  {
+    data = read();
+    updateCrc(data);
+    value |= (uint32_t)data << 16;
+  }
+
+  if (data != -1)
+  {
+    data = read();
+    updateCrc(data);
+    value |= (uint32_t)data << 8;
+  }
+
+  if (data != -1)
+  {
+    data = read();
+    updateCrc(data);
+    value |= (uint32_t)data;
+  }
+
+  if (data != -1)
+  {
+    uint16_t ccrc;
+    data = read();
+    if (data != -1)
+    {
+      ccrc = data << 8;
+      data = read();
+      if (data != -1)
+      {
+        ccrc |= data;
+        if (getCrc() == ccrc)
+        {
+          *valid = true;
+          return value;
+        }
+      }
+    }
+  }
   // } while (trys--);
 
   return false;

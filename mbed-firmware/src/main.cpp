@@ -117,9 +117,19 @@ void handleGetLidarStateCommand(Commander *commander)
 void handleGetVoltageCommand(Commander *commander)
 {
   // apparently the reported values is slightly off
-  float voltage = motors.getMainBatteryVoltage() * 1.02;
+  bool isValid;
+  float voltage = motors.getMainBatteryVoltage(&isValid) * 1.02;
 
-  commander->serial->printf("get-voltage:%.1f\n", voltage);
+  // report the voltage
+  commander->serial->printf("get-voltage:%.1f:%d\n", voltage, isValid ? 1 : 0);
+}
+
+// handles get-current command, responds with current draws of both motors
+void handleGetCurrentCommand(Commander *commander)
+{
+  CurrentMeasurement currents = motors.getCurrents();
+
+  logSerial.printf("get-current:%.2f:%.2f:%d\n", currents.currentM1, currents.currentM2, currents.isValid ? 1 : 0);
 }
 
 // handles proxy:xxx:yyy etc command where xxx:yyy gets handled by the other commander
@@ -205,6 +215,10 @@ int main()
   // reports battery voltage
   logCommander.registerCommandHandler("get-voltage", callback(handleGetVoltageCommand, &logCommander));
   appCommander.registerCommandHandler("get-voltage", callback(handleGetVoltageCommand, &appCommander));
+
+  // reports motor currents
+  logCommander.registerCommandHandler("get-current", callback(handleGetCurrentCommand, &logCommander));
+  appCommander.registerCommandHandler("get-current", callback(handleGetCurrentCommand, &appCommander));
 
   // proxy forwards the command to the other commander, useful for remote control etc
   logCommander.registerCommandHandler("proxy", callback(handleProxyCommand, &logCommander));
