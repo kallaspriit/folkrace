@@ -140,8 +140,8 @@ public:
     * @note Read encoder in ticks
     * @note Read speed in ticks per second
     */
-  uint32_t ReadEncM1(uint8_t *status, bool *valid);
-  uint32_t ReadEncM2(uint8_t *status, bool *valid);
+  uint32_t getEncoderDeltaM1(uint8_t *status, bool *valid);
+  uint32_t getEncoderDeltaM2(uint8_t *status, bool *valid);
   int32_t ReadSpeedM1();
   int32_t ReadSpeedM2();
 
@@ -152,7 +152,7 @@ public:
   /** Set both encoders to zero
     * @param address address of the device
     */
-  void ResetEnc();
+  void resetEncoders();
 
   /** Set speed of Motor with different parameter (only in ticks)
     * @param address address of the device
@@ -162,8 +162,8 @@ public:
     * @note Set the Speed, Accel and Distance
     * @note Set the Speed, Accel, Decceleration and Position
     */
-  void SpeedM1(int32_t speed);
-  void SpeedM2(int32_t speed);
+  void setSpeedM1(int32_t speed);
+  void setSpeedM2(int32_t speed);
   void SpeedAccelM1(int32_t accel, int32_t speed);
   void SpeedAccelM2(int32_t accel, int32_t speed);
   void SpeedAccelM1M2(int32_t accel, int32_t speed1, int32_t speed2);

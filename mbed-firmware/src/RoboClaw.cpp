@@ -141,7 +141,7 @@ void RoboClaw::ReadFirm()
   write_(GETVERSION, 0x00, true, false);
 }
 
-// int32_t RoboClaw::ReadEncM1()
+// int32_t RoboClaw::getEncoderDeltaM1()
 // {
 //   uint16_t read_byte[7];
 //   write_n(2, address, GETM1ENC);
@@ -168,12 +168,12 @@ void RoboClaw::ReadFirm()
 //   return enc1;
 // }
 
-uint32_t RoboClaw::ReadEncM1(uint8_t *status, bool *valid)
+uint32_t RoboClaw::getEncoderDeltaM1(uint8_t *status, bool *valid)
 {
   return Read4_1(address, GETM1ENC, status, valid);
 }
 
-uint32_t RoboClaw::ReadEncM2(uint8_t *status, bool *valid)
+uint32_t RoboClaw::getEncoderDeltaM2(uint8_t *status, bool *valid)
 {
   return Read4_1(address, GETM2ENC, status, valid);
 }
@@ -377,7 +377,7 @@ uint16_t RoboClaw::read(int timeout)
 //   return false;
 // }
 
-// int32_t RoboClaw::ReadEncM2()
+// int32_t RoboClaw::getEncoderDeltaM2()
 // {
 //   int32_t enc2;
 //   uint16_t read_byte2[7];
@@ -443,17 +443,17 @@ int32_t RoboClaw::ReadSpeedM2()
   return speed2;
 }
 
-void RoboClaw::ResetEnc()
+void RoboClaw::resetEncoders()
 {
   write_n(2, address, RESETENC);
 }
 
-void RoboClaw::SpeedM1(int32_t speed)
+void RoboClaw::setSpeedM1(int32_t speed)
 {
   write_n(6, address, M1SPEED, SetDWORDval(speed));
 }
 
-void RoboClaw::SpeedM2(int32_t speed)
+void RoboClaw::setSpeedM2(int32_t speed)
 {
   write_n(6, address, M2SPEED, SetDWORDval(speed));
 }

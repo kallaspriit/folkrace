@@ -60,8 +60,8 @@ void handleSetSpeedCommand(Commander *commander)
     commander->serial->printf("@ set-speed:A:B expects exactly two parameters (where A is motor 1 speed and B is motor 2 speed)\n");
 
     // stop the motors when receiving invalid command
-    motors.SpeedM1(0);
-    motors.SpeedM2(0);
+    motors.setSpeedM1(0);
+    motors.setSpeedM2(0);
 
     return;
   }
@@ -71,8 +71,8 @@ void handleSetSpeedCommand(Commander *commander)
   int targetSpeedM2 = commander->getIntArgument(1);
 
   // set motor speeds
-  motors.SpeedM1(targetSpeedM1);
-  motors.SpeedM2(targetSpeedM2);
+  motors.setSpeedM1(targetSpeedM1);
+  motors.setSpeedM2(targetSpeedM2);
 
   // report new target speeds
   logSerial.printf("set-speed:%d:%d\n", targetSpeedM1, targetSpeedM2);
@@ -146,8 +146,8 @@ void reportEncoderValues()
   bool validM1, validM2;
 
   // read encoder values
-  int encoderDeltaM1 = (int)motors.ReadEncM1(&statusM1, &validM1);
-  int encoderDeltaM2 = (int)motors.ReadEncM2(&statusM2, &validM2);
+  int encoderDeltaM1 = (int)motors.getEncoderDeltaM1(&statusM1, &validM1);
+  int encoderDeltaM2 = (int)motors.getEncoderDeltaM2(&statusM2, &validM2);
 
   // don't bother sending the update if the speeds have not changed
   if (abs(encoderDeltaM1 - lastEncoderDeltaM1) == 0 && abs(encoderDeltaM2 - lastEncoderDeltaM2) == 0)
@@ -187,7 +187,7 @@ int main()
   appCommander.registerCommandHandler("proxy", callback(handleProxyCommand, &appCommander));
 
   // reset motor encoders
-  motors.ResetEnc();
+  motors.resetEncoders();
 
   // start timers
   reportEncoderValuesTimer.start();
