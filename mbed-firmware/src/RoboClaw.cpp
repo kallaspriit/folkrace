@@ -6,18 +6,18 @@
 #define SetDWORDval(arg) (uint8_t)(arg >> 24), (uint8_t)(arg >> 16), (uint8_t)(arg >> 8), (uint8_t)arg
 #define SetWORDval(arg) (uint8_t)(arg >> 8), (uint8_t)arg
 
-RoboClaw::RoboClaw(uint8_t adr, int baudrate, PinName rx, PinName tx) : _roboclaw(tx, rx)
+RoboClaw::RoboClaw(uint8_t adr, int baudrate, PinName rx, PinName tx) : serial(tx, rx)
 {
-  _roboclaw.baud(baudrate);
+  serial.baud(baudrate);
   address = adr;
 }
 
-void RoboClaw::crc_clear()
+void RoboClaw::clearCrc()
 {
   crc = 0;
 }
 
-void RoboClaw::crc_update(uint8_t data)
+void RoboClaw::updateCrc(uint8_t data)
 {
   int i;
   crc = crc ^ ((uint16_t)data << 8);
@@ -30,35 +30,35 @@ void RoboClaw::crc_update(uint8_t data)
   }
 }
 
-uint16_t RoboClaw::crc_get()
+uint16_t RoboClaw::getCrc()
 {
   return crc;
 }
 
-void RoboClaw::write_n(uint8_t cnt, ...)
+void RoboClaw::write(uint8_t cnt, ...)
 {
   //uint8_t retry = MAXTRY;
   //do {
-  crc_clear();
+  clearCrc();
   va_list marker;
   va_start(marker, cnt);
   for (uint8_t index = 0; index < cnt; index++)
   {
     uint8_t data = va_arg(marker, unsigned int);
-    crc_update(data);
-    _roboclaw.putc(data);
+    updateCrc(data);
+    serial.putc(data);
   }
   va_end(marker);
-  uint16_t crc = crc_get();
-  _roboclaw.putc(crc >> 8);
-  _roboclaw.putc(crc);
-  //} while(_roboclaw.getc() != 0xFF);
+  uint16_t crc = getCrc();
+  serial.putc(crc >> 8);
+  serial.putc(crc);
+  //} while(serial.getc() != 0xFF);
 }
 
-void RoboClaw::write_(uint8_t command, uint8_t data, bool reading, bool crcon)
+void RoboClaw::writeCommand(uint8_t command, uint8_t data, bool reading, bool crcon)
 {
-  _roboclaw.putc(address);
-  _roboclaw.putc(command);
+  serial.putc(address);
+  serial.putc(command);
 
   if (reading == false)
   {
@@ -66,16 +66,16 @@ void RoboClaw::write_(uint8_t command, uint8_t data, bool reading, bool crcon)
     {
       uint8_t packet[2] = {address, command};
       uint16_t checksum = crc16(packet, 2);
-      _roboclaw.putc(checksum >> 8);
-      _roboclaw.putc(checksum);
+      serial.putc(checksum >> 8);
+      serial.putc(checksum);
     }
     else
     {
       uint8_t packet[3] = {address, command, data};
       uint16_t checksum = crc16(packet, 3);
-      _roboclaw.putc(data);
-      _roboclaw.putc(checksum >> 8);
-      _roboclaw.putc(checksum);
+      serial.putc(data);
+      serial.putc(checksum >> 8);
+      serial.putc(checksum);
     }
   }
 }
@@ -101,58 +101,48 @@ uint16_t RoboClaw::crc16(uint8_t *packet, int nBytes)
   return crc_;
 }
 
-uint8_t RoboClaw::read_(void)
+void RoboClaw::forwardM1(int speed)
 {
-  return (_roboclaw.getc());
+  writeCommand(M1FORWARD, speed, false, false);
 }
 
-void RoboClaw::ForwardM1(int speed)
+void RoboClaw::backwardM1(int speed)
 {
-  write_(M1FORWARD, speed, false, false);
+  writeCommand(M1BACKWARD, speed, false, false);
 }
 
-void RoboClaw::BackwardM1(int speed)
+void RoboClaw::forwardM2(int speed)
 {
-  write_(M1BACKWARD, speed, false, false);
+  writeCommand(M2FORWARD, speed, false, false);
 }
 
-void RoboClaw::ForwardM2(int speed)
+void RoboClaw::backwardM2(int speed)
 {
-  write_(M2FORWARD, speed, false, false);
+  writeCommand(M2BACKWARD, speed, false, false);
 }
 
-void RoboClaw::BackwardM2(int speed)
+void RoboClaw::forward(int speed)
 {
-  write_(M2BACKWARD, speed, false, false);
+  writeCommand(MIXEDFORWARD, speed, false, false);
 }
 
-void RoboClaw::Forward(int speed)
+void RoboClaw::backward(int speed)
 {
-  write_(MIXEDFORWARD, speed, false, false);
-}
-
-void RoboClaw::Backward(int speed)
-{
-  write_(MIXEDBACKWARD, speed, false, false);
-}
-
-void RoboClaw::ReadFirm()
-{
-  write_(GETVERSION, 0x00, true, false);
+  writeCommand(MIXEDBACKWARD, speed, false, false);
 }
 
 // int32_t RoboClaw::getEncoderDeltaM1()
 // {
 //   uint16_t read_byte[7];
-//   write_n(2, address, GETM1ENC);
+//   write(2, address, GETM1ENC);
 
-//   read_byte[0] = (uint16_t)_roboclaw.getc();
-//   read_byte[1] = (uint16_t)_roboclaw.getc();
-//   read_byte[2] = (uint16_t)_roboclaw.getc();
-//   read_byte[3] = (uint16_t)_roboclaw.getc();
-//   read_byte[4] = (uint16_t)_roboclaw.getc();
-//   read_byte[5] = (uint16_t)_roboclaw.getc();
-//   read_byte[6] = (uint16_t)_roboclaw.getc();
+//   read_byte[0] = (uint16_t)serial.getc();
+//   read_byte[1] = (uint16_t)serial.getc();
+//   read_byte[2] = (uint16_t)serial.getc();
+//   read_byte[3] = (uint16_t)serial.getc();
+//   read_byte[4] = (uint16_t)serial.getc();
+//   read_byte[5] = (uint16_t)serial.getc();
+//   read_byte[6] = (uint16_t)serial.getc();
 
 //   int32_t enc1;
 
@@ -170,25 +160,25 @@ void RoboClaw::ReadFirm()
 
 uint32_t RoboClaw::getEncoderDeltaM1(uint8_t *status, bool *valid)
 {
-  return Read4_1(address, GETM1ENC, status, valid);
+  return readCommand(address, GETM1ENC, status, valid);
 }
 
 uint32_t RoboClaw::getEncoderDeltaM2(uint8_t *status, bool *valid)
 {
-  return Read4_1(address, GETM2ENC, status, valid);
+  return readCommand(address, GETM2ENC, status, valid);
 }
 
 void RoboClaw::flush()
 {
-  while (_roboclaw.readable())
+  while (serial.readable())
   {
-    _roboclaw.getc();
+    serial.getc();
   }
 
   return;
 }
 
-uint32_t RoboClaw::Read4_1(uint8_t address, uint8_t cmd, uint8_t *status, bool *valid)
+uint32_t RoboClaw::readCommand(uint8_t address, uint8_t cmd, uint8_t *status, bool *valid)
 {
   // uint8_t crc;
 
@@ -203,41 +193,41 @@ uint32_t RoboClaw::Read4_1(uint8_t address, uint8_t cmd, uint8_t *status, bool *
   {
     flush();
 
-    crc_clear();
-    _roboclaw.putc(address);
-    crc_update(address);
-    _roboclaw.putc(cmd);
-    crc_update(cmd);
+    clearCrc();
+    serial.putc(address);
+    updateCrc(address);
+    serial.putc(cmd);
+    updateCrc(cmd);
 
     data = read();
-    crc_update(data);
+    updateCrc(data);
     value = (uint32_t)data << 24;
 
     if (data != -1)
     {
       data = read();
-      crc_update(data);
+      updateCrc(data);
       value |= (uint32_t)data << 16;
     }
 
     if (data != -1)
     {
       data = read();
-      crc_update(data);
+      updateCrc(data);
       value |= (uint32_t)data << 8;
     }
 
     if (data != -1)
     {
       data = read();
-      crc_update(data);
+      updateCrc(data);
       value |= (uint32_t)data;
     }
 
     if (data != -1)
     {
       data = read();
-      crc_update(data);
+      updateCrc(data);
       if (status)
         *status = data;
     }
@@ -259,7 +249,7 @@ uint32_t RoboClaw::Read4_1(uint8_t address, uint8_t cmd, uint8_t *status, bool *
         if (data != -1)
         {
           ccrc |= data;
-          if (crc_get() == ccrc)
+          if (getCrc() == ccrc)
           {
             *valid = true;
             return value;
@@ -280,7 +270,7 @@ uint16_t RoboClaw::read(int timeout)
 
   int cycles = 0;
 
-  while (!_roboclaw.readable())
+  while (!serial.readable())
   {
     cycles++;
 
@@ -296,7 +286,7 @@ uint16_t RoboClaw::read(int timeout)
     // printf("WAITED %d\n", cycles);
   }
 
-  return (uint16_t)_roboclaw.getc();
+  return (uint16_t)serial.getc();
 }
 
 // uint32_t RoboClaw::read4_1(uint8_t address, uint8_t cmd, uint8_t *status, bool *valid)
@@ -310,45 +300,45 @@ uint16_t RoboClaw::read(int timeout)
 //   do
 //   {
 //     // flush();
-//     // _roboclaw.flush();
+//     // serial.flush();
 
-//     crc_clear();
-//     // _roboclaw.putc(address);
-//     _roboclaw.putc(address);
-//     crc_update(address);
+//     clearCrc();
+//     // serial.putc(address);
+//     serial.putc(address);
+//     updateCrc(address);
 //     // write(cmd);
-//     _roboclaw.putc(cmd);
-//     crc_update(cmd);
+//     serial.putc(cmd);
+//     updateCrc(cmd);
 
-//     data = (uint16_t)_roboclaw.getc();
-//     crc_update(data);
+//     data = (uint16_t)serial.getc();
+//     updateCrc(data);
 //     value = (uint16_t)data << 24;
 
 //     if (data != -1)
 //     {
-//       data = (uint16_t)_roboclaw.getc();
-//       crc_update(data);
+//       data = (uint16_t)serial.getc();
+//       updateCrc(data);
 //       value = (uint16_t)data << 16;
 //     }
 
 //     if (data != -1)
 //     {
-//       data = (uint16_t)_roboclaw.getc();
-//       crc_update(data);
+//       data = (uint16_t)serial.getc();
+//       updateCrc(data);
 //       value = (uint16_t)data << 8;
 //     }
 
 //     if (data != -1)
 //     {
-//       data = (uint16_t)_roboclaw.getc();
-//       crc_update(data);
+//       data = (uint16_t)serial.getc();
+//       updateCrc(data);
 //       value |= (uint16_t)data;
 //     }
 
 //     if (data != -1)
 //     {
-//       data = (uint16_t)_roboclaw.getc();
-//       crc_update(data);
+//       data = (uint16_t)serial.getc();
+//       updateCrc(data);
 //       if (status)
 //         *status = data;
 //     }
@@ -356,15 +346,15 @@ uint16_t RoboClaw::read(int timeout)
 //     if (data != -1)
 //     {
 //       uint16_t ccrc;
-//       data = (uint16_t)_roboclaw.getc();
+//       data = (uint16_t)serial.getc();
 //       if (data != -1)
 //       {
 //         ccrc = data << 8;
-//         data = (uint16_t)_roboclaw.getc();
+//         data = (uint16_t)serial.getc();
 //         if (data != -1)
 //         {
 //           ccrc |= data;
-//           if (crc_get() == ccrc)
+//           if (getCrc() == ccrc)
 //           {
 //             *valid = true;
 //             return value;
@@ -381,15 +371,15 @@ uint16_t RoboClaw::read(int timeout)
 // {
 //   int32_t enc2;
 //   uint16_t read_byte2[7];
-//   write_(GETM2ENC, 0x00, true, false);
+//   writeCommand(GETM2ENC, 0x00, true, false);
 
-//   read_byte2[0] = (uint16_t)_roboclaw.getc();
-//   read_byte2[1] = (uint16_t)_roboclaw.getc();
-//   read_byte2[2] = (uint16_t)_roboclaw.getc();
-//   read_byte2[3] = (uint16_t)_roboclaw.getc();
-//   read_byte2[4] = (uint16_t)_roboclaw.getc();
-//   read_byte2[5] = (uint16_t)_roboclaw.getc();
-//   read_byte2[6] = (uint16_t)_roboclaw.getc();
+//   read_byte2[0] = (uint16_t)serial.getc();
+//   read_byte2[1] = (uint16_t)serial.getc();
+//   read_byte2[2] = (uint16_t)serial.getc();
+//   read_byte2[3] = (uint16_t)serial.getc();
+//   read_byte2[4] = (uint16_t)serial.getc();
+//   read_byte2[5] = (uint16_t)serial.getc();
+//   read_byte2[6] = (uint16_t)serial.getc();
 
 //   enc2 = read_byte2[1] << 24;
 //   enc2 |= read_byte2[2] << 16;
@@ -399,19 +389,19 @@ uint16_t RoboClaw::read(int timeout)
 //   return enc2;
 // }
 
-int32_t RoboClaw::ReadSpeedM1()
+int32_t RoboClaw::getSpeedM1()
 {
   int32_t speed1;
   uint16_t read_byte[7];
-  write_n(2, address, GETM1SPEED);
+  write(2, address, GETM1SPEED);
 
-  read_byte[0] = (uint16_t)_roboclaw.getc();
-  read_byte[1] = (uint16_t)_roboclaw.getc();
-  read_byte[2] = (uint16_t)_roboclaw.getc();
-  read_byte[3] = (uint16_t)_roboclaw.getc();
-  read_byte[4] = (uint16_t)_roboclaw.getc();
-  read_byte[5] = (uint16_t)_roboclaw.getc();
-  read_byte[6] = (uint16_t)_roboclaw.getc();
+  read_byte[0] = (uint16_t)serial.getc();
+  read_byte[1] = (uint16_t)serial.getc();
+  read_byte[2] = (uint16_t)serial.getc();
+  read_byte[3] = (uint16_t)serial.getc();
+  read_byte[4] = (uint16_t)serial.getc();
+  read_byte[5] = (uint16_t)serial.getc();
+  read_byte[6] = (uint16_t)serial.getc();
 
   speed1 = read_byte[1] << 24;
   speed1 |= read_byte[2] << 16;
@@ -421,19 +411,19 @@ int32_t RoboClaw::ReadSpeedM1()
   return speed1;
 }
 
-int32_t RoboClaw::ReadSpeedM2()
+int32_t RoboClaw::getSpeedM2()
 {
   int32_t speed2;
   uint16_t read_byte2[7];
-  write_n(2, address, GETM2SPEED);
+  write(2, address, GETM2SPEED);
 
-  read_byte2[0] = (uint16_t)_roboclaw.getc();
-  read_byte2[1] = (uint16_t)_roboclaw.getc();
-  read_byte2[2] = (uint16_t)_roboclaw.getc();
-  read_byte2[3] = (uint16_t)_roboclaw.getc();
-  read_byte2[4] = (uint16_t)_roboclaw.getc();
-  read_byte2[5] = (uint16_t)_roboclaw.getc();
-  read_byte2[6] = (uint16_t)_roboclaw.getc();
+  read_byte2[0] = (uint16_t)serial.getc();
+  read_byte2[1] = (uint16_t)serial.getc();
+  read_byte2[2] = (uint16_t)serial.getc();
+  read_byte2[3] = (uint16_t)serial.getc();
+  read_byte2[4] = (uint16_t)serial.getc();
+  read_byte2[5] = (uint16_t)serial.getc();
+  read_byte2[6] = (uint16_t)serial.getc();
 
   speed2 = read_byte2[1] << 24;
   speed2 |= read_byte2[2] << 16;
@@ -445,65 +435,65 @@ int32_t RoboClaw::ReadSpeedM2()
 
 void RoboClaw::resetEncoders()
 {
-  write_n(2, address, RESETENC);
+  write(2, address, RESETENC);
 }
 
 void RoboClaw::setSpeedM1(int32_t speed)
 {
-  write_n(6, address, M1SPEED, SetDWORDval(speed));
+  write(6, address, M1SPEED, SetDWORDval(speed));
 }
 
 void RoboClaw::setSpeedM2(int32_t speed)
 {
-  write_n(6, address, M2SPEED, SetDWORDval(speed));
+  write(6, address, M2SPEED, SetDWORDval(speed));
 }
 
-void RoboClaw::SpeedAccelM1(int32_t accel, int32_t speed)
+void RoboClaw::setSpeedAccelerationM1(int32_t accel, int32_t speed)
 {
-  write_n(10, address, M1SPEEDACCEL, SetDWORDval(accel), SetDWORDval(speed));
+  write(10, address, M1SPEEDACCEL, SetDWORDval(accel), SetDWORDval(speed));
 }
 
-void RoboClaw::SpeedAccelM2(int32_t accel, int32_t speed)
+void RoboClaw::setSpeedAccelerationM2(int32_t accel, int32_t speed)
 {
-  write_n(10, address, M2SPEEDACCEL, SetDWORDval(accel), SetDWORDval(speed));
+  write(10, address, M2SPEEDACCEL, SetDWORDval(accel), SetDWORDval(speed));
 }
 
-void RoboClaw::SpeedAccelM1M2(int32_t accel, int32_t speed1, int32_t speed2)
+void RoboClaw::setSpeedAccelerationM1M2(int32_t accel, int32_t speed1, int32_t speed2)
 {
-  write_n(14, address, MIXEDSPEEDACCEL, SetDWORDval(accel), SetDWORDval(speed1), SetDWORDval(speed2));
+  write(14, address, MIXEDSPEEDACCEL, SetDWORDval(accel), SetDWORDval(speed1), SetDWORDval(speed2));
 }
 
-void RoboClaw::SpeedDistanceM1(int32_t speed, uint32_t distance, uint8_t buffer)
+void RoboClaw::setSpeedDistanceM1(int32_t speed, uint32_t distance, uint8_t buffer)
 {
-  write_n(11, address, M1SPEEDDIST, SetDWORDval(speed), SetDWORDval(distance), buffer);
+  write(11, address, M1SPEEDDIST, SetDWORDval(speed), SetDWORDval(distance), buffer);
 }
 
-void RoboClaw::SpeedDistanceM2(int32_t speed, uint32_t distance, uint8_t buffer)
+void RoboClaw::setSpeedDistanceM2(int32_t speed, uint32_t distance, uint8_t buffer)
 {
-  write_n(11, address, M2SPEEDDIST, SetDWORDval(speed), SetDWORDval(distance), buffer);
+  write(11, address, M2SPEEDDIST, SetDWORDval(speed), SetDWORDval(distance), buffer);
 }
 
-void RoboClaw::SpeedAccelDistanceM1(int32_t accel, int32_t speed, uint32_t distance, uint8_t buffer)
+void RoboClaw::setSpeedAccelerationDistanceM1(int32_t accel, int32_t speed, uint32_t distance, uint8_t buffer)
 {
-  write_n(15, address, M1SPEEDACCELDIST, SetDWORDval(accel), SetDWORDval(speed), SetDWORDval(distance), buffer);
+  write(15, address, M1SPEEDACCELDIST, SetDWORDval(accel), SetDWORDval(speed), SetDWORDval(distance), buffer);
 }
 
-void RoboClaw::SpeedAccelDistanceM2(int32_t accel, int32_t speed, uint32_t distance, uint8_t buffer)
+void RoboClaw::setSpeedAccelerationDistanceM2(int32_t accel, int32_t speed, uint32_t distance, uint8_t buffer)
 {
-  write_n(15, address, M2SPEEDACCELDIST, SetDWORDval(accel), SetDWORDval(speed), SetDWORDval(distance), buffer);
+  write(15, address, M2SPEEDACCELDIST, SetDWORDval(accel), SetDWORDval(speed), SetDWORDval(distance), buffer);
 }
 
-void RoboClaw::SpeedAccelDeccelPositionM1(uint32_t accel, int32_t speed, uint32_t deccel, int32_t position, uint8_t flag)
+void RoboClaw::setSpeedAccelerationDeaccelerationPositionM1(uint32_t accel, int32_t speed, uint32_t deccel, int32_t position, uint8_t flag)
 {
-  write_n(19, address, M1SPEEDACCELDECCELPOS, SetDWORDval(accel), SetDWORDval(speed), SetDWORDval(deccel), SetDWORDval(position), flag);
+  write(19, address, M1SPEEDACCELDECCELPOS, SetDWORDval(accel), SetDWORDval(speed), SetDWORDval(deccel), SetDWORDval(position), flag);
 }
 
-void RoboClaw::SpeedAccelDeccelPositionM2(uint32_t accel, int32_t speed, uint32_t deccel, int32_t position, uint8_t flag)
+void RoboClaw::setSpeedAccelerationDeaccelerationPositionM2(uint32_t accel, int32_t speed, uint32_t deccel, int32_t position, uint8_t flag)
 {
-  write_n(19, address, M2SPEEDACCELDECCELPOS, SetDWORDval(accel), SetDWORDval(speed), SetDWORDval(deccel), SetDWORDval(position), flag);
+  write(19, address, M2SPEEDACCELDECCELPOS, SetDWORDval(accel), SetDWORDval(speed), SetDWORDval(deccel), SetDWORDval(position), flag);
 }
 
-void RoboClaw::SpeedAccelDeccelPositionM1M2(uint32_t accel1, uint32_t speed1, uint32_t deccel1, int32_t position1, uint32_t accel2, uint32_t speed2, uint32_t deccel2, int32_t position2, uint8_t flag)
+void RoboClaw::setSpeedAccelerationDeaccelerationPositionM1M2(uint32_t accel1, uint32_t speed1, uint32_t deccel1, int32_t position1, uint32_t accel2, uint32_t speed2, uint32_t deccel2, int32_t position2, uint8_t flag)
 {
-  write_n(35, address, MIXEDSPEEDACCELDECCELPOS, SetDWORDval(accel1), SetDWORDval(speed1), SetDWORDval(deccel1), SetDWORDval(position1), SetDWORDval(accel2), SetDWORDval(speed2), SetDWORDval(deccel2), SetDWORDval(position2), flag);
+  write(35, address, MIXEDSPEEDACCELDECCELPOS, SetDWORDval(accel1), SetDWORDval(speed1), SetDWORDval(deccel1), SetDWORDval(position1), SetDWORDval(accel2), SetDWORDval(speed2), SetDWORDval(deccel2), SetDWORDval(position2), flag);
 }
