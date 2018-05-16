@@ -1,5 +1,6 @@
 type Loggable = string | number;
 
+const app = window.app;
 const ip = app.getIpAddress();
 const port = 8000;
 const wsUrl = `ws://${ip}:${port}`;
@@ -13,7 +14,7 @@ let ws = new WebSocket(wsUrl);
 ws.onopen = () => {
   log("established WebSocket connection");
 
-  app.showToast("Established WebSocket connection");
+  showToast("Established WebSocket connection");
 
   send("hello from JavaScript!");
 };
@@ -21,7 +22,7 @@ ws.onopen = () => {
 ws.onerror = () => {
   log("establishing WebSocket connection failed");
 
-  app.showToast("Establishing WebSocket connection failed");
+  showToast("Establishing WebSocket connection failed");
 };
 
 ws.onclose = () => {
@@ -56,4 +57,16 @@ function send(message: string) {
   ws.send(message);
 
   log(`&gt ${message}`);
+}
+
+function showToast(message: string) {
+  app.showToast(message);
+
+  log(`# ${message}`);
+}
+
+function reload() {
+  log(`reloading`);
+
+  app.reload();
 }

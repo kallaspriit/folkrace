@@ -3,7 +3,7 @@
   "execMap": {
     "ts": "node -r ts-node/register"
   },
-  "watch": ["src/**/*", "example/**/*", ".env"],
+  "watch": ["src/**/*", "server/**/*", ".env"],
   "ignore": [".git", "node_modules/**/node_modules", "build"],
   "verbose": false,
   "env": {

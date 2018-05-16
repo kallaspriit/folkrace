@@ -4,4 +4,6 @@ interface IApp {
   reload(): void;
 }
 
-declare var app: IApp;
+interface Window {
+  app: IApp;
+}
