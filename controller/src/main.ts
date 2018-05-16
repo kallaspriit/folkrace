@@ -10,7 +10,9 @@ const wsUrl = `ws://${wsIp}:${wsPort}`;
 // resolve app configuration
 const appIp = app.getIpAddress();
 const appPort = 8080;
-const appUrl = `http://${appIp}:${appPort}/`;
+const appUrl = `http://${appIp}:${appPort}`;
+
+let lastLogMessageTime = 0;
 
 // log important info
 log("app url", appUrl);
@@ -44,6 +46,10 @@ function log(...args: Loggable[]) {
     throw new Error("Log wrap could not be found");
   }
 
+  const deltaTime = lastLogMessageTime > 0 ? Date.now() - lastLogMessageTime : 0;
+
+  logWrap.innerHTML += `[${pad(deltaTime, 5)}] `;
+
   args.forEach((arg, index) => {
     if (index > 0) {
       logWrap.innerHTML += "  ";
@@ -55,6 +61,8 @@ function log(...args: Loggable[]) {
   logWrap.innerHTML += "\n";
 
   console.log.apply(console, args);
+
+  lastLogMessageTime = Date.now();
 }
 
 function send(message: string) {
@@ -79,4 +87,15 @@ function promptWebSocketIp() {
   localStorage.wsIp = prompt("Enter web-socket ip");
 
   reload();
+}
+
+function pad(value: string | number, padding: number) {
+  const str = typeof value === "string" ? value : value.toString();
+  const padLength = padding - str.length;
+
+  if (padLength < 1) {
+    return str;
+  }
+
+  return `${new Array(padLength + 1).join(" ")}${str}`;
 }
