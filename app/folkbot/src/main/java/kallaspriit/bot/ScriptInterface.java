@@ -3,10 +3,10 @@ package kallaspriit.bot;
 import android.webkit.JavascriptInterface;
 import android.widget.Toast;
 
-public class WebAppInterface {
+public class ScriptInterface {
     MainActivity mainActivity;
 
-    WebAppInterface(MainActivity activity) {
+    ScriptInterface(MainActivity activity) {
         mainActivity = activity;
     }
 

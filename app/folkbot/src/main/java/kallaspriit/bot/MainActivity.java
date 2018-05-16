@@ -14,9 +14,12 @@ import java.io.IOException;
 public class MainActivity extends Activity {
 
     private static final String LOG_TAG = "MainActivity";
+    private static final int HTTP_SERVER_PORT = 8080;
+    private static final int WEB_SOCKET_SERVER_PORT = 8000;
 
     public WebView webView;
-    Server server;
+    WebSocketServer webSocketServer;
+    HttpServer httpServer;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -39,30 +42,48 @@ public class MainActivity extends Activity {
         WebView.setWebContentsDebuggingEnabled(true);
 
         // add javascript interface
-        webView.addJavascriptInterface(new WebAppInterface(this), "app");
+        webView.addJavascriptInterface(new ScriptInterface(this), "app");
     }
 
     protected void onStart() {
         super.onStart();
 
-        Log.i(LOG_TAG, "starting main activity and the web socket server");
+        Log.i(LOG_TAG, "starting main activity");
+
+        // create http server
+        try {
+            httpServer = new HttpServer(this, HTTP_SERVER_PORT);
+
+            Log.i(LOG_TAG, "http server started on port " + HTTP_SERVER_PORT);
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "starting http server failed");
+
+            e.printStackTrace();
+        }
 
         // create web-socket server
-        server = new Server(8000, new Draft_6455());
-        server.setConnectionLostTimeout( 0 );
-        server.start();
+        webSocketServer = new WebSocketServer(WEB_SOCKET_SERVER_PORT, new Draft_6455());
+        webSocketServer.setConnectionLostTimeout(1000);
+        webSocketServer.start();
+
+        Log.i(LOG_TAG, "web socket server started on port " + HTTP_SERVER_PORT);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
 
-        Log.i(LOG_TAG, "stopping main activity and the web socket server");
+        Log.i(LOG_TAG, "stopping main activity");
+
+        // stop the http server
+        httpServer.stop();
 
         // attempt to stop the server
         try {
-            server.stop();
+            webSocketServer.stop();
         } catch (IOException | InterruptedException e) {
+            Log.e(LOG_TAG, "stopping web-socket server failed");
+
             e.printStackTrace();
         }
     }

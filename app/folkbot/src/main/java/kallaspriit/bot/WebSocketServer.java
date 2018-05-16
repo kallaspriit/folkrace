@@ -5,17 +5,16 @@ import android.util.Log;
 import org.java_websocket.WebSocket;
 import org.java_websocket.drafts.Draft;
 import org.java_websocket.handshake.ClientHandshake;
-import org.java_websocket.server.WebSocketServer;
 
 import java.net.InetSocketAddress;
 import java.util.Collections;
 
-public class Server extends WebSocketServer {
-    private static final String LOG_TAG = "Server";
+public class WebSocketServer extends org.java_websocket.server.WebSocketServer {
+    private static final String LOG_TAG = "WebSocketServer";
 
     private static int counter = 0;
 
-    public Server(int port, Draft d) {
+    public WebSocketServer(int port, Draft d) {
         super(new InetSocketAddress(port), Collections.singletonList(d));
     }
 
