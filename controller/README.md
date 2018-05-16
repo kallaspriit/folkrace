@@ -2,9 +2,8 @@
 
 ## Commands
 
+* `yarn start` - to start watchers that re-compile everything one file changes
 * `yarn build` - to generate the production build
-* `yarn watch` - to recompile on file changes
-* `yarn start` - to start the test server locally
 * `yarn lint` - to run the linter
 * `yarn prettier` - to run prettier
 * `yarn test` - to run tests without coverage

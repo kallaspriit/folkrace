@@ -1,29 +1,29 @@
 import chalk from "chalk";
 import * as chokidar from "chokidar";
-import * as fs from "fs";
+import * as fs from "fs-extra";
 import { debounce } from "lodash";
-import * as sass from "node-sass";
 import * as path from "path";
 
-export interface ICompileError extends Error {
-  formatted?: string;
-  file?: string;
-  line?: string;
-}
+// files to sync
+const fileMap: { [x: string]: string } = {
+  "src/index.html": "../app/folkbot/src/main/res/raw/index.html",
+  "build/src/main.js": "../app/folkbot/src/main/res/raw/main.js",
+  "build/src/app.js": "../app/folkbot/src/main/res/raw/app.js",
+  "build/src/style.css": "../app/folkbot/src/main/res/raw/style.css",
+};
 
 // pass in -w or --watch to run in watch mode
 const useWatchMode = process.argv.find(arg => ["-w", "--watch"].indexOf(arg) !== -1) !== undefined;
 
 if (useWatchMode) {
-  // const watcher = chokidar.watch(path.join(__dirname, "..", "src", "*.scss"));
-  const watcher = chokidar.watch("src/*.scss");
+  const watcher = chokidar.watch(["src/*.html", "build/src/*.js"]);
 
   // debounce running the synchronization
   const runDebounce = debounce(async () => {
     const startTime = Date.now();
 
     try {
-      await compile();
+      await sync();
       const timeTaken = Date.now() - startTime;
 
       process.stdout.write(`${chalk.bgGreen.black(" DONE ")} in ${chalk.bold(`${pad(timeTaken, 4)}ms`)}\n`);
@@ -36,7 +36,7 @@ if (useWatchMode) {
 
   watcher.on("all", async (event, filename) => {
     process.stdout.write(
-      chalk.reset(`> ${chalk.bold(pad(event, 6))} for ${chalk.bold(pad(filename, 30))}, recompiling.. `),
+      chalk.reset(`> ${chalk.bold(pad(event, 6))} for ${chalk.bold(pad(filename, 30))}, scheduling sync\n`),
     );
 
     runDebounce();
@@ -44,7 +44,7 @@ if (useWatchMode) {
 } else {
   const startTime = Date.now();
 
-  compile()
+  sync()
     .then(() => {
       const timeTaken = Date.now() - startTime;
 
@@ -57,37 +57,24 @@ if (useWatchMode) {
     });
 }
 
-async function compile(): Promise<sass.Result> {
-  return new Promise<sass.Result>((resolve, reject) => {
-    const file = path.join(__dirname, "..", "src", "style.scss");
-    const outFile = path.join(__dirname, "..", "build", "src", "style.css");
+async function sync(): Promise<void> {
+  const sources = Object.keys(fileMap);
+  const basePath = path.join(__dirname, "..", "..", "controller");
 
-    sass.render(
-      {
-        file,
-        outFile,
-        sourceMapEmbed: true,
-        sourceMapContents: true,
-      },
-      (renderError, result) => {
-        if (renderError) {
-          reject(renderError);
+  for (const source of sources) {
+    const destination = fileMap[source];
 
-          return;
-        }
+    try {
+      await fs.copy(path.join(basePath, source), path.join(basePath, destination));
+    } catch (error) {
+      process.stdout.write(`failed - ${error.message}\n`);
+    }
+  }
 
-        fs.writeFile(outFile, result.css, cssWriteError => {
-          if (cssWriteError) {
-            reject(cssWriteError);
-
-            return;
-          }
-
-          resolve(result);
-        });
-      },
-    );
-  });
+  // await fs.copy(
+  //   path.join(__dirname, "..", "src", "index.html"),
+  //   path.join(__dirname, "..", "..", "app", "folkbot", "src", "main", "res", "raw", "index.html"),
+  // );
 }
 
 function pad(value: string | number, padding: number) {
@@ -101,18 +88,12 @@ function pad(value: string | number, padding: number) {
   return `${new Array(padLength + 1).join(" ")}${str}`;
 }
 
-function showError(error: ICompileError, timeTaken: number) {
-  const message = typeof error.formatted === "string" ? error.formatted : error.message;
-  const paddedMessage = message
+function showError(error: Error, timeTaken: number) {
+  const paddedMessage = error.message
     .split("\n")
     .map(line => `    ${line}`)
     .join("\n");
 
   process.stdout.write(`${chalk.bgRed.white(" FAIL ")} in ${chalk.bold(`${pad(timeTaken, 4)}ms`)}\n`);
-
-  if (error.file && error.line) {
-    process.stdout.write(`\n${chalk.redBright(error.file)}${chalk.gray(":")} ${chalk.bold(error.line)}\n\n`);
-  }
-
   process.stdout.write(`${paddedMessage}\n\n`);
 }

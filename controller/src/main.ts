@@ -1,32 +1,36 @@
 type Loggable = string | number;
 
 const app = window.app;
-const ip = app.getIpAddress();
-const port = 8000;
-const wsUrl = `ws://${ip}:${port}`;
 
-log("remote ip", ip);
-log("port", port);
-log("websocket url", wsUrl);
+// resolve web socket configuration
+const wsIp = localStorage.wsIp ? localStorage.wsIp : "127.0.0.1";
+const wsPort = 8000;
+const wsUrl = `ws://${wsIp}:${wsPort}`;
 
+// resolve app configuration
+const appIp = app.getIpAddress();
+const appPort = 8080;
+const appUrl = `http://${appIp}:${appPort}/`;
+
+// log important info
+log("app url", appUrl);
+log("web socket url", wsUrl);
+
+// create a new websocket client
 let ws = new WebSocket(wsUrl);
 
 ws.onopen = () => {
   log("established WebSocket connection");
-
-  showToast("Established WebSocket connection");
 
   send("hello from JavaScript!");
 };
 
 ws.onerror = () => {
   log("establishing WebSocket connection failed");
-
-  showToast("Establishing WebSocket connection failed");
 };
 
 ws.onclose = () => {
-  log("WebSocket connection closed");
+  log("connection to WebSocket closed");
 };
 
 ws.onmessage = event => {
@@ -69,4 +73,10 @@ function reload() {
   log(`reloading`);
 
   app.reload();
+}
+
+function promptWebSocketIp() {
+  localStorage.wsIp = prompt("Enter web-socket ip");
+
+  reload();
 }

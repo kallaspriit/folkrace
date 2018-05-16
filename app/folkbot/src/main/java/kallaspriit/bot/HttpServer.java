@@ -8,8 +8,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.List;
-import java.util.Map;
 
 import fi.iki.elonen.NanoHTTPD;
 
@@ -18,7 +16,7 @@ public class HttpServer extends NanoHTTPD {
 
     private Context context;
 
-    public HttpServer(Context context, int port) throws IOException {
+    HttpServer(Context context, int port) throws IOException {
         super("0.0.0.0", port);
 
         this.context = context;
@@ -48,8 +46,18 @@ public class HttpServer extends NanoHTTPD {
         // read the resource contents
         String contents = getResourceContents(resourceId);
 
+        // default to text/plain
+        String mimeType = NanoHTTPD.MIME_PLAINTEXT;
+
+        // handle few common mime types
+        if (uri.contains(".html") || uri.equals("/")) {
+            mimeType = NanoHTTPD.MIME_HTML;
+        } else if (uri.contains(".css")) {
+            mimeType = "text/css";
+        }
+
         // send the response
-        return newFixedLengthResponse(Response.Status.OK, NanoHTTPD.MIME_HTML, contents);
+        return newFixedLengthResponse(Response.Status.OK, mimeType, contents);
     }
 
     private String getResourceContents(int resourceId) {

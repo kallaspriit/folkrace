@@ -33,9 +33,10 @@ public class MainActivity extends Activity {
         // create web-view
         webView = findViewById(R.id.webview);
 
-        // enable javascript
+        // enable javascript and storage
         WebSettings webSettings = webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
+        webSettings.setDomStorageEnabled(true);
 
         // make the web-view debuggable
         WebView.setWebContentsDebuggingEnabled(true);
