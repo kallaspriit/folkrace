@@ -21,7 +21,7 @@ const PinName LIDAR_RX_PIN = p27;
 
 // baud rates configuration
 const int LOG_SERIAL_BAUDRATE = 115200;
-const int APP_SERIAL_BAUDRATE = 1382400; // 115200
+const int APP_SERIAL_BAUDRATE = 1382400; // 115200/1382400
 const int MOTOR_SERIAL_BAUDRATE = 115200;
 
 // component configuration
@@ -196,6 +196,11 @@ void reportEncoderValues()
 
 int main()
 {
+  // change bluetooth serial baud rate
+  // appSerial.printf("AT+BAUDC");
+  // appSerial.printf("AT+BAUD8");
+  // wait(1.0f);
+
   // notify of reset/startup
   logSerial.printf("reset\n");
   appSerial.printf("reset\n");
