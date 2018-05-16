@@ -8,7 +8,8 @@
     "build": "yarn build:ts && yarn build:sass",
     "build:ts": "yarn tidy:build && tsc",
     "build:sass": "ts-node scripts/sass.ts",
-    "watch": "yarn tidy:build && tsc --watch",
+    "watch":
+      "yarn tidy:build && concurrently --names \"TSC ,SCSS\" --prefix-colors \"magenta,yellow\" \"tsc --watch\" \"yarn build:sass --watch\"",
     "production": "node build/server/index",
     "lint": "tslint --project tsconfig.json --format codeFrame",
     "lint-fix": "yarn lint --fix",
@@ -29,6 +30,7 @@
     "@types/node-sass": "^3.10.32",
     "chalk": "^2.4.1",
     "chokidar": "^2.0.3",
+    "concurrently": "^3.5.1",
     "express": "^4.16.3",
     "jest": "^22.4.3",
     "node-sass": "^4.9.0",
