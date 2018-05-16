@@ -45,8 +45,6 @@ public class HttpServer extends NanoHTTPD {
             return newFixedLengthResponse(Response.Status.NOT_FOUND, NanoHTTPD.MIME_PLAINTEXT, "requested resource could not be found");
         }
 
-        Log.i(LOG_TAG,"requested uri '" + uri + "' resource id: " + resourceId);
-
         // read the resource contents
         String contents = getResourceContents(resourceId);
 

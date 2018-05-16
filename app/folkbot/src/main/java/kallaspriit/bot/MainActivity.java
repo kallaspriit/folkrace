@@ -32,7 +32,6 @@ public class MainActivity extends Activity {
 
         // create web-view
         webView = findViewById(R.id.webview);
-        webView.loadUrl("http://kallaspriit/");
 
         // enable javascript
         WebSettings webSettings = webView.getSettings();
@@ -53,8 +52,6 @@ public class MainActivity extends Activity {
         // create http server
         try {
             httpServer = new HttpServer(this, HTTP_SERVER_PORT);
-
-            Log.i(LOG_TAG, "http server started on port " + HTTP_SERVER_PORT);
         } catch (IOException e) {
             Log.e(LOG_TAG, "starting http server failed");
 
@@ -66,7 +63,8 @@ public class MainActivity extends Activity {
         webSocketServer.setConnectionLostTimeout(1000);
         webSocketServer.start();
 
-        Log.i(LOG_TAG, "web socket server started on port " + HTTP_SERVER_PORT);
+        // show the local index view
+        webView.loadUrl("http://127.0.0.1:" + HTTP_SERVER_PORT + "/");
     }
 
     @Override
@@ -75,16 +73,45 @@ public class MainActivity extends Activity {
 
         Log.i(LOG_TAG, "stopping main activity");
 
+        stopHttpServer();
+        stopWebSocketServer();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        stopHttpServer();
+        stopWebSocketServer();
+    }
+
+    private void stopHttpServer() {
+        // do nothing if already stopped
+        if (httpServer == null) {
+            return;
+        }
+
         // stop the http server
         httpServer.stop();
+        httpServer = null;
 
-        // attempt to stop the server
+    }
+
+    private void stopWebSocketServer() {
+        // do nothing if already stopped
+        if (webSocketServer == null) {
+            return;
+        }
+
+        // attempt to stop the web-socket server
         try {
             webSocketServer.stop();
         } catch (IOException | InterruptedException e) {
             Log.e(LOG_TAG, "stopping web-socket server failed");
 
             e.printStackTrace();
+        } finally {
+            webSocketServer = null;
         }
     }
 }
