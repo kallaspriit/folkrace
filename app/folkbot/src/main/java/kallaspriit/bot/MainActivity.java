@@ -9,6 +9,7 @@ import android.webkit.WebView;
 
 import org.java_websocket.drafts.Draft_6455;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -17,6 +18,7 @@ import java.util.Enumeration;
 public class MainActivity extends Activity {
 
     public WebView webView;
+    Server server;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,17 +34,29 @@ public class MainActivity extends Activity {
         WebSettings webSettings = webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
 
-        // make the webview debuggable
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            WebView.setWebContentsDebuggingEnabled(true);
-        }
+        // make the web-view debuggable
+        WebView.setWebContentsDebuggingEnabled(true);
 
         // add javascript interface
         webView.addJavascriptInterface(new WebAppInterface(this), "app");
 
         // create web-socket server
-        Server server = new Server(8000, new Draft_6455());
+        server = new Server(8000, new Draft_6455());
         server.setConnectionLostTimeout( 0 );
         server.start();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        // attempt to stop the server
+        try {
+            server.stop();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }

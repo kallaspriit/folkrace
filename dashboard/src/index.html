@@ -5,6 +5,14 @@
   <meta charset="utf-8">
   <title>Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, minimal-ui">
+  <style>
+    .log {
+      border: 1px dashed #CCC;
+      padding: 10px;
+      font-family: 'Courier New', Courier, monospace;
+      white-space: pre;
+    }
+  </style>
 </head>
 
 <body>
@@ -17,12 +25,63 @@
     <input type="button" value="Reload" onClick="app.reload();" />
   </p>
 
+  <p class="log" id="log"></p>
+
   <script>
     const ip = app.getIpAddress();
+    const port = 8000;
+    const wsUrl = "ws://" + ip + ":" + port;
 
-    console.log("ip", ip);
+    log("remote ip", ip);
+    log("port", port);
+    log("websocket url", wsUrl);
 
-    app.showToast("ip: " + ip);
+    var ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+      log("established WebSocket connection");
+
+      app.showToast("Established WebSocket connection");
+
+      send("hello from JavaScript!");
+    }
+
+    ws.onerror = () => {
+      log("establishing WebSocket connection failed");
+
+      app.showToast("Establishing WebSocket connection failed");
+    }
+
+    ws.onclose = () => {
+      log("WebSocket connection closed");
+    }
+
+    ws.onmessage = (event) => {
+      log("&lt; " + event.data);
+    }
+
+    function log() {
+      const log = document.getElementById("log");
+      const args = Array.from(arguments);
+
+      args.forEach((arg, index) => {
+        if (index > 0) {
+          log.innerHTML += "  ";
+        }
+
+        log.innerHTML += arg;
+      });
+
+      log.innerHTML += "\n";
+
+      console.log.apply(console, args);
+    }
+
+    function send(message) {
+      ws.send(message);
+
+      log("&gt; " + message);
+    }
   </script>
 </body>
 

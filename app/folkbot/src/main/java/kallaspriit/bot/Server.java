@@ -1,60 +1,71 @@
 package kallaspriit.bot;
 
+import android.util.Log;
+
 import org.java_websocket.WebSocket;
 import org.java_websocket.drafts.Draft;
-import org.java_websocket.framing.Framedata;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 import java.util.Collections;
 
 public class Server extends WebSocketServer {
+    private static final String LOG_TAG = "Server";
+
     private static int counter = 0;
-    public Server( int port, Draft d ) {
-        super( new InetSocketAddress( port ), Collections.singletonList( d ) );
+
+    public Server(int port, Draft d) {
+        super(new InetSocketAddress(port), Collections.singletonList(d));
     }
 
-    public Server( InetSocketAddress address, Draft d ) {
-        super( address, Collections.singletonList( d ) );
-    }
+//    public Server( InetSocketAddress address, Draft d ) {
+//        super( address, Collections.singletonList( d ) );
+//    }
 
     @Override
-    public void onOpen(WebSocket conn, ClientHandshake handshake ) {
+    public void onOpen(WebSocket conn, ClientHandshake handshake) {
         counter++;
-        System.out.println( "///////////Opened connection number" + counter );
+
+        Log.i(LOG_TAG, "client connected [" + counter + "]");
     }
 
     @Override
-    public void onClose( WebSocket conn, int code, String reason, boolean remote ) {
-        System.out.println( "closed" );
+    public void onClose(WebSocket conn, int code, String reason, boolean remote) {
+        counter--;
+
+        Log.i(LOG_TAG, "client disconnected [" + counter + "]");
     }
 
     @Override
-    public void onError( WebSocket conn, Exception ex ) {
-        System.out.println( "Error:" );
-        ex.printStackTrace();
+    public void onError(WebSocket conn, Exception e) {
+        Log.w(LOG_TAG, "error: " + e.getMessage());
+
+        e.printStackTrace();
     }
 
     @Override
     public void onStart() {
-        System.out.println( "Server started!" );
+        Log.i(LOG_TAG, "server started");
     }
 
     @Override
-    public void onMessage( WebSocket conn, String message ) {
-        conn.send( message );
-    }
-    @Override
-    public void onFragment( WebSocket conn, Framedata fragment ) {
-        System.out.println( "received fragment: " + fragment );
+    public void onMessage(WebSocket conn, String message) {
+        Log.i(LOG_TAG, "got message: '" + message + "'");
+
+        // echo back the message
+        conn.send("you said: '" + message + "'");
     }
 
-    @Override
-    public void onMessage( WebSocket conn, ByteBuffer blob ) {
-        conn.send( blob );
-    }
+//    @Override
+//    public void onFragment(WebSocket conn, Framedata fragment) {
+//        System.out.println("received fragment: " + fragment);
+//    }
+
+//    @Override
+//    public void onMessage(WebSocket conn, ByteBuffer blob) {
+//        conn.send(blob);
+//    }
 
 //    public static void main( String[] args ) throws UnknownHostException {
 //        WebSocketImpl.DEBUG = false;
