@@ -6,6 +6,7 @@
   "scripts": {
     "start": "nodemon --inspect server/index.ts",
     "build": "yarn tidy:build && tsc",
+    "watch": "yarn tidy:build && tsc --watch",
     "production": "node build/server/index",
     "lint": "tslint --project tsconfig.json --format codeFrame",
     "lint-fix": "yarn lint --fix",
