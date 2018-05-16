@@ -20,9 +20,9 @@ const PinName LIDAR_TX_PIN = p28;
 const PinName LIDAR_RX_PIN = p27;
 
 // baud rates configuration
-const int LOG_SERIAL_BAUDRATE = 115200;
-const int APP_SERIAL_BAUDRATE = 1382400; // 115200/1382400
-const int MOTOR_SERIAL_BAUDRATE = 115200;
+const int LOG_SERIAL_BAUDRATE = 921600;
+const int APP_SERIAL_BAUDRATE = 921600;
+const int MOTOR_SERIAL_BAUDRATE = 460800; // not default, make sure to update in the Ion Studio
 
 // component configuration
 const uint8_t MOTOR_SERIAL_ADDRESS = 128;
@@ -44,6 +44,7 @@ Lidar lidar(LIDAR_TX_PIN, LIDAR_RX_PIN, LIDAR_PWM_PIN);
 
 // setup timers
 Timer reportEncoderValuesTimer;
+Timer loopTimer;
 
 // setup status leds
 DigitalOut led1(LED1);
@@ -51,6 +52,9 @@ DigitalOut led1(LED1);
 // keep track of encoder values
 int lastEncoderDeltaM1 = 0;
 int lastEncoderDeltaM2 = 0;
+
+// keep track of last loop time in microseconds
+int lastLoopTimeUs = 0;
 
 // handles set-speed:A:B command where A and B are the target speeds for motor 1 and 2
 void handleSetSpeedCommand(Commander *commander)
@@ -197,8 +201,9 @@ void reportEncoderValues()
 int main()
 {
   // change bluetooth serial baud rate
-  // appSerial.printf("AT+BAUDC");
-  // appSerial.printf("AT+BAUD8");
+  // appSerial.printf("AT+BAUD8"); // 115200
+  // appSerial.printf("AT+BAUDB"); // 921600
+  // appSerial.printf("AT+BAUDC"); // 1382400
   // wait(1.0f);
 
   // notify of reset/startup
@@ -235,8 +240,8 @@ int main()
   // start timers
   reportEncoderValuesTimer.start();
 
-  // start the lidar
-  // lidar.start();
+  // start the loop timer
+  loopTimer.start();
 
   // // main loop
   while (true)
@@ -246,9 +251,7 @@ int main()
     appCommander.handleAllQueuedCommands();
 
     // report encoder values at certain interval
-    int msSinceLastEncoderValuesReport = reportEncoderValuesTimer.read_ms();
-
-    if (msSinceLastEncoderValuesReport >= REPORT_ENCODER_VALUES_INTERVAL_MS)
+    if (reportEncoderValuesTimer.read_ms() >= REPORT_ENCODER_VALUES_INTERVAL_MS)
     {
       reportEncoderValues();
 
@@ -273,5 +276,9 @@ int main()
 
     // blink the led on every main loop
     led1 = !led1;
+
+    // read the loop time in microseconds and reset the timer
+    lastLoopTimeUs = loopTimer.read_us();
+    loopTimer.reset();
   }
 }
