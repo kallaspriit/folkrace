@@ -8,7 +8,7 @@ import java.net.SocketException;
 import java.util.Enumeration;
 
 public class Util {
-    private static final String LOG_TAG = "Util";
+    private static final String TAG = "Util";
 
     public static String getIpAddress() {
         try {
@@ -20,31 +20,20 @@ public class Util {
                     if (!inetAddress.isLoopbackAddress()) {
                         String ip = inetAddress.getHostAddress();
 
-                        Log.i(LOG_TAG, "consider: " + ip);
-
                         // search for ipv4 address
                         if (ip.contains(".")) {
+                            Log.i(TAG, "resolve device ip to: " + ip);
+
                             return ip;
                         }
-
-                        // search for something like fe80::8a70:9ed1:9107:ae91%wlan0
-                        /*if (ip.contains("%")) {
-                            String[] ipTokens = ip.split("%");
-
-                            Log.i(LOG_TAG, "tokens: " + String.join(", ", ipTokens));
-
-                            if (ipTokens.length >= 2 && ipTokens[1].contains("wlan")) {
-                                return ipTokens[0];
-                            }
-                        }*/
                     }
                 }
             }
         } catch (SocketException ex) {
-            Log.e(LOG_TAG, ex.toString());
+            Log.e(TAG, ex.toString());
         }
 
-        Log.w(LOG_TAG, "resolving wlan ip address failed");
+        Log.w(TAG, "resolving device ip address failed");
 
         return null;
     }

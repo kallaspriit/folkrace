@@ -11,6 +11,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.widget.Toast;
 
 import org.java_websocket.drafts.Draft_6455;
 
@@ -18,10 +19,11 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
 public class MainActivity extends Activity {
+    private static final String TAG = "MainActivity";
 
-    private static final String LOG_TAG = "MainActivity";
     private static final int HTTP_SERVER_PORT = 8080;
     private static final int WEB_SOCKET_SERVER_PORT = 8000;
+    public static final String BLUETOOTH_DEVICE_NAME_PREFIX = "HC-06";
 
     public WebView webView;
     WebSocketServer webSocketServer;
@@ -31,7 +33,9 @@ public class MainActivity extends Activity {
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.i(LOG_TAG, "received local broadcast with intent: " + intent.getAction());
+            Log.i(TAG, "received action: " + intent.getAction());
+
+            Toast.makeText(context, intent.getAction(), Toast.LENGTH_SHORT).show();
         }
     };
 
@@ -42,7 +46,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Log.i(LOG_TAG, "creating main activity");
+        Log.i(TAG, "creating main activity");
 
         // create web-view
         webView = findViewById(R.id.webview);
@@ -68,7 +72,7 @@ public class MainActivity extends Activity {
                 try {
                     String message = new String(buffer, 0, bufferSize, "UTF-8");
 
-                    Log.d(LOG_TAG, "bluetooth read " + bufferSize + " bytes: '" + message + "'");
+                    Log.d(TAG, "bluetooth read " + bufferSize + " bytes: '" + message + "'");
 
                     commandBuffer += message;
 
@@ -81,7 +85,7 @@ public class MainActivity extends Activity {
 
                         newLineIndex = commandBuffer.indexOf("\n");
 
-                        Log.i(LOG_TAG, "got bluetooth command: '" + command + "'");
+                        Log.i(TAG, "got bluetooth command: '" + command + "'");
 
                         // forward the command to all active connections
                         if (webSocketServer != null) {
@@ -96,18 +100,19 @@ public class MainActivity extends Activity {
                 return 0;
             }
         // TODO: make the name prefix configurable
-        }, "HC-06");
+        }, BLUETOOTH_DEVICE_NAME_PREFIX);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
 
-        Log.i(LOG_TAG, "resuming main activity");
+        Log.i(TAG, "resuming main activity");
 
         // setup local broadcast receivers
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(BluetoothSerial.BLUETOOTH_CONNECTED));
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(BluetoothSerial.BLUETOOTH_DISCONNECTED));
+        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(BluetoothSerial.BLUETOOTH_CONNECTION_ATTEMPT_FAILED));
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(BluetoothSerial.BLUETOOTH_CONNECTION_FAILED));
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(BluetoothSerial.BLUETOOTH_NOT_SUPPORTED));
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(BluetoothSerial.BLUETOOTH_DISABLED));
@@ -116,7 +121,7 @@ public class MainActivity extends Activity {
         try {
             httpServer = new HttpServer(this, HTTP_SERVER_PORT);
         } catch (IOException e) {
-            Log.e(LOG_TAG, "starting http server failed");
+            Log.e(TAG, "starting http server failed");
 
             e.printStackTrace();
         }
@@ -137,7 +142,10 @@ public class MainActivity extends Activity {
     protected void onPause() {
         super.onPause();
 
-        Log.i(LOG_TAG, "pausing main activity");
+        Log.i(TAG, "pausing main activity");
+
+        // stop the bluetooth serial
+        bluetoothSerial.stop();
 
         // unregister the broadcast receiver
         LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
@@ -145,9 +153,6 @@ public class MainActivity extends Activity {
         // stop the servers
         stopHttpServer();
         stopWebSocketServer();
-
-        // stop the bluetooth serial
-        bluetoothSerial.stop();
     }
 
     private void stopHttpServer() {
@@ -159,7 +164,6 @@ public class MainActivity extends Activity {
         // stop the http server
         httpServer.stop();
         httpServer = null;
-
     }
 
     private void stopWebSocketServer() {
@@ -172,7 +176,7 @@ public class MainActivity extends Activity {
         try {
             webSocketServer.stop();
         } catch (IOException | InterruptedException e) {
-            Log.e(LOG_TAG, "stopping web-socket server failed");
+            Log.e(TAG, "stopping web-socket server failed");
 
             e.printStackTrace();
         } finally {

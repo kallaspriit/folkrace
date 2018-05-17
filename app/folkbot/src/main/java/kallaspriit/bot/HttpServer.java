@@ -12,7 +12,7 @@ import java.io.InputStreamReader;
 import fi.iki.elonen.NanoHTTPD;
 
 public class HttpServer extends NanoHTTPD {
-    private static final String LOG_TAG = "HttpServer";
+    private static final String TAG = "HttpServer";
 
     private Context context;
 
@@ -23,7 +23,7 @@ public class HttpServer extends NanoHTTPD {
 
         start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
 
-        Log.i(LOG_TAG,"server started on port " + port);
+        Log.i(TAG,"server started on port " + port);
     }
 
     @Override
@@ -38,7 +38,7 @@ public class HttpServer extends NanoHTTPD {
 
         // handle not found
         if (resourceId == 0) {
-            Log.w(LOG_TAG,"resource for requested uri '" + uri + "' could not be found");
+            Log.w(TAG,"resource for requested uri '" + uri + "' could not be found");
 
             return newFixedLengthResponse(Response.Status.NOT_FOUND, NanoHTTPD.MIME_PLAINTEXT, "requested resource could not be found");
         }
@@ -76,7 +76,7 @@ public class HttpServer extends NanoHTTPD {
                 line = reader.readLine();
             }
         } catch (Exception e) {
-            Log.e(LOG_TAG,"reading resource file failed: " + e.getMessage());
+            Log.e(TAG,"reading resource file failed: " + e.getMessage());
 
             e.printStackTrace();
         }
@@ -99,12 +99,12 @@ public class HttpServer extends NanoHTTPD {
 
         // handle failure to map the uri to resource
         if (identifierId == 0) {
-            Log.w(LOG_TAG, "uri '" + uri + "' could not be resolved to a resource");
+            Log.w(TAG, "uri '" + uri + "' could not be resolved to a resource");
 
             return 0;
         }
 
-        Log.d(LOG_TAG, "resolved uri '" + uri + "' with name '" + identifierName + "' to id of: " + identifierId);
+        Log.d(TAG, "resolved uri '" + uri + "' with name '" + identifierName + "' to id of: " + identifierId);
 
         return identifierId;
     }
