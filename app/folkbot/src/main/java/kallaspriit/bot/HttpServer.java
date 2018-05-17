@@ -104,7 +104,7 @@ public class HttpServer extends NanoHTTPD {
             return 0;
         }
 
-        Log.i(LOG_TAG, "resolved uri '" + uri + "' with name '" + identifierName + "' to id of: " + identifierId);
+        Log.d(LOG_TAG, "resolved uri '" + uri + "' with name '" + identifierName + "' to id of: " + identifierId);
 
         return identifierId;
     }

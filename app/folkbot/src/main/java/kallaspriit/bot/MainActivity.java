@@ -2,7 +2,12 @@ package kallaspriit.bot;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -10,6 +15,7 @@ import android.webkit.WebView;
 import org.java_websocket.drafts.Draft_6455;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 public class MainActivity extends Activity {
 
@@ -20,6 +26,14 @@ public class MainActivity extends Activity {
     public WebView webView;
     WebSocketServer webSocketServer;
     HttpServer httpServer;
+    BluetoothSerial bluetoothSerial;
+
+    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.i(LOG_TAG, "received local broadcast with intent: " + intent.getAction());
+        }
+    };
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -43,12 +57,60 @@ public class MainActivity extends Activity {
 
         // add javascript interface
         webView.addJavascriptInterface(new ScriptInterface(this), "app");
+
+        // setup bluetooth serial
+        // TODO: refactor into BluetoothCommander
+        bluetoothSerial = new BluetoothSerial(this, new BluetoothSerial.MessageHandler() {
+            String commandBuffer = "";
+
+            @Override
+            public int read(int bufferSize, byte[] buffer) {
+                try {
+                    String message = new String(buffer, 0, bufferSize, "UTF-8");
+
+                    Log.d(LOG_TAG, "bluetooth read " + bufferSize + " bytes: '" + message + "'");
+
+                    commandBuffer += message;
+
+                    int newLineIndex = commandBuffer.indexOf("\n");
+
+                    while (newLineIndex != -1) {
+                        String command = commandBuffer.substring(0, newLineIndex);
+
+                        commandBuffer = commandBuffer.substring(newLineIndex + 1);
+
+                        newLineIndex = commandBuffer.indexOf("\n");
+
+                        Log.i(LOG_TAG, "got bluetooth command: '" + command + "'");
+
+                        // forward the command to all active connections
+                        if (webSocketServer != null) {
+                            webSocketServer.getConnections().forEach((connection) -> connection.send(command));
+                        }
+                    }
+                    return bufferSize;
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+
+                return 0;
+            }
+        // TODO: make the name prefix configurable
+        }, "HC-06");
     }
 
-    protected void onStart() {
-        super.onStart();
+    @Override
+    protected void onResume() {
+        super.onResume();
 
-        Log.i(LOG_TAG, "starting main activity");
+        Log.i(LOG_TAG, "resuming main activity");
+
+        // setup local broadcast receivers
+        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(BluetoothSerial.BLUETOOTH_CONNECTED));
+        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(BluetoothSerial.BLUETOOTH_DISCONNECTED));
+        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(BluetoothSerial.BLUETOOTH_CONNECTION_FAILED));
+        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(BluetoothSerial.BLUETOOTH_NOT_SUPPORTED));
+        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(BluetoothSerial.BLUETOOTH_DISABLED));
 
         // create http server
         try {
@@ -66,24 +128,26 @@ public class MainActivity extends Activity {
 
         // show the local index view
         webView.loadUrl("http://127.0.0.1:" + HTTP_SERVER_PORT + "/");
+
+        // attempt to connect to the bluetooth device
+        bluetoothSerial.connect();
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
+    protected void onPause() {
+        super.onPause();
 
-        Log.i(LOG_TAG, "stopping main activity");
+        Log.i(LOG_TAG, "pausing main activity");
 
+        // unregister the broadcast receiver
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
+
+        // stop the servers
         stopHttpServer();
         stopWebSocketServer();
-    }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-        stopHttpServer();
-        stopWebSocketServer();
+        // stop the bluetooth serial
+        bluetoothSerial.stop();
     }
 
     private void stopHttpServer() {

@@ -12,28 +12,24 @@ import java.util.Collections;
 public class WebSocketServer extends org.java_websocket.server.WebSocketServer {
     private static final String LOG_TAG = "WebSocketServer";
 
-    private static int counter = 0;
+    private int connectedClientCount = 0;
 
-    public WebSocketServer(int port, Draft d) {
-        super(new InetSocketAddress(port), Collections.singletonList(d));
+    public WebSocketServer(int port, Draft draft) {
+        super(new InetSocketAddress(port), Collections.singletonList(draft));
     }
-
-//    public Server( InetSocketAddress address, Draft d ) {
-//        super( address, Collections.singletonList( d ) );
-//    }
 
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
-        counter++;
+        connectedClientCount++;
 
-        Log.i(LOG_TAG, "client connected [" + counter + "]");
+        Log.i(LOG_TAG, "client connected [" + connectedClientCount + "]");
     }
 
     @Override
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
-        counter--;
+        connectedClientCount--;
 
-        Log.i(LOG_TAG, "client disconnected [" + counter + "]");
+        Log.i(LOG_TAG, "client disconnected [" + connectedClientCount + "]");
     }
 
     @Override
@@ -55,28 +51,4 @@ public class WebSocketServer extends org.java_websocket.server.WebSocketServer {
         // echo back the message
         conn.send("you said: '" + message + "'");
     }
-
-//    @Override
-//    public void onFragment(WebSocket conn, Framedata fragment) {
-//        System.out.println("received fragment: " + fragment);
-//    }
-
-//    @Override
-//    public void onMessage(WebSocket conn, ByteBuffer blob) {
-//        conn.send(blob);
-//    }
-
-//    public static void main( String[] args ) throws UnknownHostException {
-//        WebSocketImpl.DEBUG = false;
-//        int port;
-//        try {
-//            port = new Integer( args[0] );
-//        } catch ( Exception e ) {
-//            System.out.println( "No port specified. Defaulting to 9003" );
-//            port = 9003;
-//        }
-//        AutobahnServerTest test = new AutobahnServerTest( port, new Draft_6455() );
-//        test.setConnectionLostTimeout( 0 );
-//        test.start();
-//    }
 }
