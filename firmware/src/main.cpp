@@ -164,6 +164,12 @@ void handleProxyCommand(Commander *commander)
   otherCommander->handleCommand(command);
 }
 
+// handles ping command, responds with pong
+void handlePingCommand(Commander *commander)
+{
+  commander->serial->printf("pong\n");
+}
+
 // reports encoder values
 void reportEncoderValues()
 {
@@ -233,6 +239,10 @@ int main()
   // proxy forwards the command to the other commander, useful for remote control etc
   logCommander.registerCommandHandler("proxy", callback(handleProxyCommand, &logCommander));
   appCommander.registerCommandHandler("proxy", callback(handleProxyCommand, &appCommander));
+
+  // proxy forwards the command to the other commander, useful for remote control etc
+  logCommander.registerCommandHandler("ping", callback(handlePingCommand, &logCommander));
+  appCommander.registerCommandHandler("ping", callback(handlePingCommand, &appCommander));
 
   // reset motor encoders
   motors.resetEncoders();
