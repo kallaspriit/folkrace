@@ -24,6 +24,7 @@ import java.util.UUID;
 public class BluetoothSerial {
     private static final String TAG = "BluetoothSerial";
 
+    public static String BLUETOOTH_CONNECTING = "BLUETOOTH_CONNECTING";
     public static String BLUETOOTH_CONNECTED = "BLUETOOTH_CONNECTED";
     public static String BLUETOOTH_CONNECTION_ATTEMPT_FAILED = "BLUETOOTH_CONNECTION_ATTEMPT_FAILED";
     public static String BLUETOOTH_DISCONNECTED = "BLUETOOTH_DISCONNECTED";
@@ -81,6 +82,9 @@ public class BluetoothSerial {
 
                     Log.i(TAG, ": attempting to connect to: " + device.getName() + " (attempt #" + attemptCount + ")");
 
+                    // send notification
+                    LocalBroadcastManager.getInstance(bluetoothSerial.context).sendBroadcast(new Intent(BLUETOOTH_CONNECTING));
+
                     try {
                         // attempt to create socket
                         try {
@@ -107,12 +111,14 @@ public class BluetoothSerial {
 
                         return device;
                     } catch (Exception e) {
+                        // reset
                         bluetoothSerial.bluetoothSocket = null;
                         bluetoothSerial.serialInputStream = null;
                         bluetoothSerial.serialOutputStream = null;
 
                         Log.i(TAG, "connection attempt failed (" + e.getMessage() + ")");
 
+                        // send notification
                         LocalBroadcastManager.getInstance(bluetoothSerial.context).sendBroadcast(new Intent(BLUETOOTH_CONNECTION_ATTEMPT_FAILED));
                     }
                 }
