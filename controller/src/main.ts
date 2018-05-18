@@ -23,8 +23,6 @@ let ws = new WebSocket(wsUrl);
 
 ws.onopen = () => {
   log("established WebSocket connection");
-
-  send("hello from JavaScript!");
 };
 
 ws.onerror = () => {
@@ -66,7 +64,7 @@ function log(...args: Loggable[]) {
 }
 
 function send(message: string) {
-  ws.send(message);
+  ws.send(`${message}\n`);
 
   log(`&gt ${message}`);
 }

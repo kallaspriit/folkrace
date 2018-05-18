@@ -5,12 +5,12 @@
   "license": "MIT",
   "scripts": {
     "start":
-      "concurrently --names \" TSC,SCSS,SYNC\" --prefix-colors \"magenta,yellow,cyan\" \"tsc --watch\" \"yarn build:sass --watch\" \"yarn build:sync --watch\"",
+      "concurrently --names \" TSC,SCSS,SYNC,SRVR\" --prefix-colors \"magenta,yellow,cyan,green\" \"tsc --watch\" \"yarn build:sass --watch\" \"yarn build:sync --watch\" \"yarn server\"",
     "build": "yarn tidy:build && yarn build:ts && yarn build:sass && yarn build:sync",
     "build:ts": "tsc",
     "build:sass": "ts-node scripts/sass.ts",
     "build:sync": "ts-node scripts/sync.ts",
-    "production": "node build/server/index",
+    "server": "nodemon server/index.ts",
     "lint": "tslint --project tsconfig.json --format codeFrame",
     "lint-fix": "yarn lint --fix",
     "prettier": "prettier --write src/**/*.ts server/**/*.ts",

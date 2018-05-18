@@ -38,7 +38,7 @@ public class HttpServer extends NanoHTTPD {
 
         // handle not found
         if (resourceId == 0) {
-            Log.w(TAG,"resource for requested uri '" + uri + "' could not be found");
+            Log.d(TAG,"resource for requested uri '" + uri + "' could not be found");
 
             return newFixedLengthResponse(Response.Status.NOT_FOUND, NanoHTTPD.MIME_PLAINTEXT, "requested resource could not be found");
         }

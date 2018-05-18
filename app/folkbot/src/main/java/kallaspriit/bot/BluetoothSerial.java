@@ -373,6 +373,10 @@ public class BluetoothSerial {
         }
     }
 
+    public boolean isConnected() {
+        return connected;
+    }
+
     // see: http://stackoverflow.com/questions/3397071/service-discovery-failed-exception-using-bluetooth-on-android
     private BluetoothSocket connectViaReflection(BluetoothDevice device) throws Exception {
         @SuppressWarnings("JavaReflectionMemberAccess") Method m = device.getClass().getMethod("createRfcommSocket", int.class);
@@ -394,6 +398,14 @@ public class BluetoothSerial {
         }
 
         return serialInputStream.read(buffer, byteOffset, byteCount);
+    }
+
+    public void sendMessage(String message) throws IOException {
+        if (!connected) {
+            throw new RuntimeException("bluetooth connection lost");
+        }
+
+        serialOutputStream.write(message.getBytes("UTF-8"));
     }
 
     /*

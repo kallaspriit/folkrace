@@ -16,7 +16,6 @@ log("web socket url", wsUrl);
 var ws = new WebSocket(wsUrl);
 ws.onopen = function () {
     log("established WebSocket connection");
-    send("hello from JavaScript!");
 };
 ws.onerror = function () {
     log("establishing WebSocket connection failed");
@@ -49,7 +48,7 @@ function log() {
     lastLogMessageTime = Date.now();
 }
 function send(message) {
-    ws.send(message);
+    ws.send(message + "\n");
     log("&gt " + message);
 }
 function showToast(message) {

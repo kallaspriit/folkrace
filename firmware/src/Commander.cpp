@@ -85,7 +85,7 @@ void Commander::handleCommand(std::string command)
 
   if (handlerIt != commandHandlerMap.end())
   {
-    serial->printf("< %s\n", command.c_str());
+    // serial->printf("< %s\n", command.c_str());
 
     // call the command handler if it exists
     handlerIt->second();

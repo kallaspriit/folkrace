@@ -15,6 +15,8 @@
     <input type="button" value="Test toast" onClick="showToast('Hello!');" />
     <input type="button" value="Prompt web-socket ip" onClick="promptWebSocketIp();" />
     <input type="button" value="Reload" onClick="reload();" />
+    <input type="button" value="Start motor" onClick="send('set-speed:1000:0');" />
+    <input type="button" value="Stop motor" onClick="send('set-speed:0:0');" />
   </p>
 
   <p class="log" id="log"></p>

@@ -23,11 +23,6 @@ public class ScriptInterface {
 
     @JavascriptInterface
     public void reload() {
-        mainActivity.webView.post(new Runnable() {
-            @Override
-            public void run() {
-                mainActivity.webView.reload();
-            }
-        });
+        mainActivity.webView.post(() -> mainActivity.webView.reload());
     }
 }
