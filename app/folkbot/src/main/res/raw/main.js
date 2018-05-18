@@ -8,19 +8,31 @@ var lastLogMessageTime = 0;
 // log important info
 log("web socket url", wsUrl);
 // create a new websocket client
-var ws = new WebSocket(wsUrl);
-ws.onopen = function () {
-    log("established WebSocket connection");
-};
-ws.onerror = function () {
-    log("establishing WebSocket connection failed");
-};
-ws.onclose = function () {
-    log("connection to WebSocket closed");
-};
-ws.onmessage = function (event) {
-    log("&lt " + event.data);
-};
+var ws = connect(wsUrl);
+function connect(url) {
+    log("connecting to web-socket at " + url);
+    ws = new WebSocket(url);
+    var wasConnected = false;
+    ws.onopen = function () {
+        log("established web-socket connection");
+        wasConnected = true;
+    };
+    ws.onclose = function () {
+        if (wasConnected) {
+            log("connection to web-socket was lost");
+        }
+        else {
+            log("connecting to web-socket failed");
+        }
+        setTimeout(function () {
+            ws = connect(url);
+        }, 1000);
+    };
+    ws.onmessage = function (event) {
+        log("&lt " + event.data);
+    };
+    return ws;
+}
 function log() {
     var args = [];
     for (var _i = 0; _i < arguments.length; _i++) {

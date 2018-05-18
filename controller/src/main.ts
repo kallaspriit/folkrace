@@ -13,23 +13,39 @@ let lastLogMessageTime = 0;
 log("web socket url", wsUrl);
 
 // create a new websocket client
-let ws = new WebSocket(wsUrl);
+let ws: WebSocket = connect(wsUrl);
 
-ws.onopen = () => {
-  log("established WebSocket connection");
-};
+function connect(url: string): WebSocket {
+  log(`connecting to web-socket at ${url}`);
 
-ws.onerror = () => {
-  log("establishing WebSocket connection failed");
-};
+  ws = new WebSocket(url);
 
-ws.onclose = () => {
-  log("connection to WebSocket closed");
-};
+  let wasConnected = false;
 
-ws.onmessage = event => {
-  log(`&lt ${event.data}`);
-};
+  ws.onopen = () => {
+    log("established web-socket connection");
+
+    wasConnected = true;
+  };
+
+  ws.onclose = () => {
+    if (wasConnected) {
+      log("connection to web-socket was lost");
+    } else {
+      log("connecting to web-socket failed");
+    }
+
+    setTimeout(() => {
+      ws = connect(url);
+    }, 1000);
+  };
+
+  ws.onmessage = event => {
+    log(`&lt ${event.data}`);
+  };
+
+  return ws;
+}
 
 function log(...args: Loggable[]) {
   const logWrap = document.getElementById("log");
