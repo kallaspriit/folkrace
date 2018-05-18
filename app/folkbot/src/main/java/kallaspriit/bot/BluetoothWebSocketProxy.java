@@ -1,5 +1,6 @@
 package kallaspriit.bot;
 
+import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
@@ -18,7 +19,7 @@ public class BluetoothWebSocketProxy implements WebSocketServer.Listener, Blueto
 
     private static final String TAG = "BluetoothWebSocketProxy";
 
-    private BluetoothSerial bluetoothSerial;
+    BluetoothSerial bluetoothSerial;
     private WebSocketServer webSocketServer;
     private String commandBuffer = "";
     private Listener listener;
@@ -60,7 +61,9 @@ public class BluetoothWebSocketProxy implements WebSocketServer.Listener, Blueto
 
     @Override
     public void onOpen(WebSocket connection, ClientHandshake handshake) {
+        // report app state
         connection.send("ip:" + Util.getIpAddress());
+        connection.send("bluetooth:" + bluetoothSerial.getState() + (bluetoothSerial.isConnected() ? ":" + bluetoothSerial.getDevice().getName() : ""));
     }
 
     @Override
@@ -114,7 +117,7 @@ public class BluetoothWebSocketProxy implements WebSocketServer.Listener, Blueto
             // remove the handled message from the command buffer
             commandBuffer = commandBuffer.substring(newLineIndex + 1);
 
-            Log.i(TAG, "forwarding bluetooth command '" + command + "' to web-socket clients");
+            Log.d(TAG, "forwarding bluetooth command '" + command + "' to web-socket clients");
 
             // forward the command to all active connections
             webSocketServer.getConnections().forEach((connection) -> connection.send(command));

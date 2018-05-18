@@ -2,6 +2,7 @@ package kallaspriit.bot;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -35,10 +36,24 @@ public class MainActivity extends Activity implements BluetoothWebSocketProxy.Li
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-        Log.i(TAG, "received action: " + intent.getAction());
+        String action = intent.getAction();
 
-        // TODO: handle the intents
-        Toast.makeText(context, intent.getAction(), Toast.LENGTH_SHORT).show();
+        // return if no valid action is associated
+        if (action == null) {
+            return;
+        }
+
+        switch (action) {
+            // broadcast bluetooth state on state change
+            case BluetoothSerial.BLUETOOTH_STATE_CHANGED:
+                broadcast("bluetooth:" + bluetoothWebSocketProxy.bluetoothSerial.getState() + (bluetoothWebSocketProxy.bluetoothSerial.isConnected() ? ":" + bluetoothWebSocketProxy.bluetoothSerial.getDevice().getName() : ""));
+                break;
+
+            default:
+                Log.i(TAG, "received unhandled local intent action: " + action);
+
+                Toast.makeText(context, action, Toast.LENGTH_SHORT).show();
+        }
         }
     };
 
@@ -100,14 +115,31 @@ public class MainActivity extends Activity implements BluetoothWebSocketProxy.Li
         stopBroadcastListeners();
     }
 
+    @Override
+    public void handleInternalCommand(String command) {
+        if (command.length() == 0) {
+            return;
+        }
+
+        String[] tokens = command.split(":");
+        String name = tokens[0];
+        String[] parameters = Arrays.copyOfRange(tokens, 1, 2);
+
+        switch (name) {
+            case "toast":
+                handleShowToast(parameters);
+                break;
+
+            case "reload":
+                webView.reload();
+                break;
+        }
+
+        Log.i(TAG, "handling internal command: '" + command + "'");
+    }
+
     private void startBroadcastListeners() {
-        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(BluetoothSerial.BLUETOOTH_CONNECTING));
-        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(BluetoothSerial.BLUETOOTH_CONNECTED));
-        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(BluetoothSerial.BLUETOOTH_DISCONNECTED));
-        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(BluetoothSerial.BLUETOOTH_CONNECTION_ATTEMPT_FAILED));
-        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(BluetoothSerial.BLUETOOTH_CONNECTION_FAILED));
-        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(BluetoothSerial.BLUETOOTH_NOT_SUPPORTED));
-        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(BluetoothSerial.BLUETOOTH_DISABLED));
+        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(BluetoothSerial.BLUETOOTH_STATE_CHANGED));
     }
 
     private void stopBroadcastListeners() {
@@ -190,29 +222,6 @@ public class MainActivity extends Activity implements BluetoothWebSocketProxy.Li
         bluetoothWebSocketProxy = null;
     }
 
-    @Override
-    public void handleInternalCommand(String command) {
-        if (command.length() == 0) {
-            return;
-        }
-
-        String[] tokens = command.split(":");
-        String name = tokens[0];
-        String[] parameters = Arrays.copyOfRange(tokens, 1, 2);
-
-        switch (name) {
-            case "toast":
-                handleShowToast(parameters);
-                break;
-
-            case "reload":
-                webView.reload();
-                break;
-        }
-
-        Log.i(TAG, "handling internal command: '" + command + "'");
-    }
-
     private void handleShowToast(String[] parameters) {
         if (parameters.length != 1) {
             Log.w(TAG, "showing toast requested, expected exactly one parameter but got " + parameters.length);
@@ -222,5 +231,22 @@ public class MainActivity extends Activity implements BluetoothWebSocketProxy.Li
 
         String toast = parameters[0];
         Toast.makeText(this, toast, Toast.LENGTH_LONG).show();
+    }
+
+    private void broadcast(String message) {
+        if (webSocketServer == null) {
+            Log.w(TAG, "broadcasting '" + message + "' requested but web-socket server is not connected");
+
+            return;
+        }
+
+        if (webSocketServer.getConnections().size() == 0) {
+            Log.w(TAG, "broadcasting '" + message + "' requested but no web-socket clients are connected");
+
+            return;
+        }
+
+        // broadcast the message to all connected clients
+        webSocketServer.getConnections().forEach(connection -> connection.send(message));
     }
 }

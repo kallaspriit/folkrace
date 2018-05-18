@@ -22,42 +22,31 @@ import java.util.UUID;
 
 // https://github.com/jpetrocik/bluetoothserial/blob/master/src/org/psoft/android/bluetooth/BluetoothSerial.java
 public class BluetoothSerial {
+
     private static final String TAG = "BluetoothSerial";
 
-    public static String BLUETOOTH_CONNECTING = "BLUETOOTH_CONNECTING";
-    public static String BLUETOOTH_CONNECTED = "BLUETOOTH_CONNECTED";
-    public static String BLUETOOTH_CONNECTION_ATTEMPT_FAILED = "BLUETOOTH_CONNECTION_ATTEMPT_FAILED";
-    public static String BLUETOOTH_DISCONNECTED = "BLUETOOTH_DISCONNECTED";
-    public static String BLUETOOTH_CONNECTION_FAILED = "BLUETOOTH_CONNECTION_FAILED";
-    public static String BLUETOOTH_NOT_SUPPORTED = "BLUETOOTH_NOT_SUPPORTED";
-    public static String BLUETOOTH_DISABLED = "BLUETOOTH_DISABLED";
-
-    private boolean connected = false;
-
-    private BluetoothDevice bluetoothDevice;
-    private BluetoothSocket bluetoothSocket;
-    private InputStream serialInputStream;
-    private OutputStream serialOutputStream;
-    private SerialReader serialReader;
-    private MessageHandler messageHandler;
-    private Context context;
-    private AsyncTask<Void, Void, BluetoothDevice> attemptConnectionTask;
-    private String devicePrefix;
+    public enum State {
+        CONNECTING,
+        CONNECTED,
+        DISCONNECTED,
+        NOT_SUPPORTED,
+        DEVICE_NOT_FOUND,
+        DISABLED
+    }
 
     private static class AttemptConnectionTask extends AsyncTask<Void, Void, BluetoothDevice> {
 
         private static String SERIAL_PORT_SERVICE_ID = "00001101-0000-1000-8000-00805F9B34FB";
-        private static int MAX_ATTEMPTS = 30;
 
         private WeakReference<BluetoothSerial> bluetoothSerialReference;
-        private List<BluetoothDevice> pairedDevices;
+        private BluetoothDevice device;
 
 
         // only retain a weak reference to the bluetooth serial
-        AttemptConnectionTask(BluetoothSerial bluetoothSerial, List<BluetoothDevice> pairedDevices) {
+        AttemptConnectionTask(BluetoothSerial bluetoothSerial, BluetoothDevice device) {
             bluetoothSerialReference = new WeakReference<>(bluetoothSerial);
 
-            this.pairedDevices = pairedDevices;
+            this.device = device;
         }
 
         @Override
@@ -72,74 +61,55 @@ public class BluetoothSerial {
             int attemptCount = 0;
 
             while (!isCancelled()) {
-                for (BluetoothDevice device : pairedDevices) {
-                    // skip if the device name does not match the prefix
-                    if (!device.getName().toUpperCase().startsWith(bluetoothSerial.devicePrefix)) {
-                        continue;
-                    }
+                attemptCount++;
 
-                    attemptCount++;
+                Log.i(TAG, ": attempting to connect to '" + device.getName() + "' (attempt #" + attemptCount + ")");
 
-                    Log.i(TAG, ": attempting to connect to: " + device.getName() + " (attempt #" + attemptCount + ")");
+                // update state
+                bluetoothSerial.setState(State.CONNECTING);
 
-                    // send notification
-                    LocalBroadcastManager.getInstance(bluetoothSerial.context).sendBroadcast(new Intent(BLUETOOTH_CONNECTING));
-
+                try {
+                    // attempt to create socket
                     try {
-                        // attempt to create socket
-                        try {
-                            UUID uuid = UUID.fromString(SERIAL_PORT_SERVICE_ID);
+                        UUID uuid = UUID.fromString(SERIAL_PORT_SERVICE_ID);
 
-                            // attempt to create socket using uuid
-                            bluetoothSerial.bluetoothSocket = device.createRfcommSocketToServiceRecord(uuid);
-                        } catch (Exception ce) {
-                            // normal connection failed, attempt to connect via reflection
-                            bluetoothSerial.bluetoothSocket = bluetoothSerial.connectViaReflection(device);
-                        }
-
-                        // connect to the socket
-                        bluetoothSerial.bluetoothSocket.connect();
-
-                        // setup the streams
-                        bluetoothSerial.serialInputStream = bluetoothSerial.bluetoothSocket.getInputStream();
-                        bluetoothSerial.serialOutputStream = bluetoothSerial.bluetoothSocket.getOutputStream();
-
-                        // we're now connected
-                        bluetoothSerial.connected = true;
-
-                        Log.i(TAG, "connected to device '" + device.getName() + "'");
-
-                        return device;
-                    } catch (Exception e) {
-                        // reset
-                        bluetoothSerial.bluetoothSocket = null;
-                        bluetoothSerial.serialInputStream = null;
-                        bluetoothSerial.serialOutputStream = null;
-
-                        Log.i(TAG, "connection attempt failed (" + e.getMessage() + ")");
-
-                        // send notification
-                        LocalBroadcastManager.getInstance(bluetoothSerial.context).sendBroadcast(new Intent(BLUETOOTH_CONNECTION_ATTEMPT_FAILED));
+                        // attempt to create socket using uuid
+                        bluetoothSerial.bluetoothSocket = device.createRfcommSocketToServiceRecord(uuid);
+                    } catch (Exception ce) {
+                        // normal connection failed, attempt to connect via reflection
+                        bluetoothSerial.bluetoothSocket = bluetoothSerial.connectViaReflection(device);
                     }
+
+                    // connect to the socket
+                    bluetoothSerial.bluetoothSocket.connect();
+
+                    // setup the streams
+                    bluetoothSerial.serialInputStream = bluetoothSerial.bluetoothSocket.getInputStream();
+                    bluetoothSerial.serialOutputStream = bluetoothSerial.bluetoothSocket.getOutputStream();
+
+                    return device;
+                } catch (Exception e) {
+                    // reset
+                    bluetoothSerial.bluetoothSocket = null;
+                    bluetoothSerial.serialInputStream = null;
+                    bluetoothSerial.serialOutputStream = null;
+
+                    Log.i(TAG, "connection attempt failed");
                 }
 
-                // cancel if maximum attempt count is reached
-                if (attemptCount >= MAX_ATTEMPTS) {
-                    Log.i(TAG, "maximum connection attempt of " + MAX_ATTEMPTS + " exceeded, giving up");
-
-                    this.cancel(false);
-                } else {
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        break;
-                    }
+                // wait a bit and try again
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    break;
                 }
             }
 
+            // should not really get here
             Log.i(TAG, "connecting to bluetooth failed");
 
-            LocalBroadcastManager.getInstance(bluetoothSerial.context).sendBroadcast(new Intent(BLUETOOTH_CONNECTION_FAILED));
+            // update state
+            bluetoothSerial.setState(State.DISCONNECTED);
 
             return null;
         }
@@ -162,8 +132,10 @@ public class BluetoothSerial {
             bluetoothSerial.serialReader = new SerialReader(bluetoothSerial);
             bluetoothSerial.serialReader.start();
 
-            // send connection message
-            LocalBroadcastManager.getInstance(bluetoothSerial.context).sendBroadcast(new Intent(BLUETOOTH_CONNECTED));
+            // update state
+            bluetoothSerial.setState(State.CONNECTED);
+
+            Log.i(TAG, "connected to device '" + device.getName() + "'");
         }
     }
 
@@ -226,39 +198,53 @@ public class BluetoothSerial {
         }
     }
 
+    public static final String BLUETOOTH_STATE_CHANGED = "BLUETOOTH_STATE_CHANGED";
+
+    private State state = State.DISCONNECTED;
+
+    private BluetoothDevice bluetoothDevice;
+    private BluetoothSocket bluetoothSocket;
+    private InputStream serialInputStream;
+    private OutputStream serialOutputStream;
+    private SerialReader serialReader;
+    private MessageHandler messageHandler;
+    private Context context;
+    private AsyncTask<Void, Void, BluetoothDevice> attemptConnectionTask;
+    private String devicePrefix;
+
     // listens for discount message from bluetooth system and re-establishing a connection
     private final BroadcastReceiver bluetoothReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            // return if there is no active device
-            if (bluetoothDevice == null) {
-                return;
-            }
+        // return if there is no active device
+        if (bluetoothDevice == null) {
+            return;
+        }
 
-            String action = intent.getAction();
+        String action = intent.getAction();
 
-            // return if the action is not disconnecting
-            if (action == null || !action.equals(BluetoothDevice.ACTION_ACL_DISCONNECTED)) {
-                return;
-            }
+        // return if the action is not disconnecting
+        if (action == null || !action.equals(BluetoothDevice.ACTION_ACL_DISCONNECTED)) {
+            return;
+        }
 
-            BluetoothDevice eventDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+        BluetoothDevice eventDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
 
-            // return if the disconnected device is not our device
-            if (!bluetoothDevice.equals(eventDevice)) {
-                return;
-            }
+        // return if the disconnected device is not our device
+        if (!bluetoothDevice.equals(eventDevice)) {
+            return;
+        }
 
-            Log.i(TAG, "bluetooth device '" + eventDevice.getName() + "' disconnected");
+        Log.i(TAG, "bluetooth device '" + eventDevice.getName() + "' disconnected");
 
-            // clean up any streams
-            stop();
+        // clean up any streams
+        stop();
 
-            // attempt to re-establish connection
-            connect();
+        // update state
+        setState(State.DISCONNECTED);
 
-            // send notification
-            LocalBroadcastManager.getInstance(context).sendBroadcast(new Intent(BLUETOOTH_DISCONNECTED));
+        // attempt to re-establish connection
+        connect();
         }
     };
 
@@ -270,10 +256,8 @@ public class BluetoothSerial {
 
     public void connect() {
         // return if already connected
-        if (connected) {
+        if (state == State.CONNECTED) {
             Log.w(TAG, "connect requested but bluetooth is already connected");
-
-            LocalBroadcastManager.getInstance(context).sendBroadcast(new Intent(BLUETOOTH_CONNECTED));
 
             return;
         }
@@ -295,7 +279,8 @@ public class BluetoothSerial {
         if (bluetoothAdapter == null) {
             Log.w(TAG, "connect requested but device does not have bluetooth");
 
-            LocalBroadcastManager.getInstance(context).sendBroadcast(new Intent(BLUETOOTH_NOT_SUPPORTED));
+            // update state
+            setState(State.NOT_SUPPORTED);
 
             return;
         }
@@ -304,8 +289,8 @@ public class BluetoothSerial {
         if (!bluetoothAdapter.isEnabled()) {
             Log.w(TAG, "connect requested but bluetooth is not enabled");
 
-            // send notification
-            LocalBroadcastManager.getInstance(context).sendBroadcast(new Intent(BLUETOOTH_DISABLED));
+            // update state
+            setState(State.DISABLED);
 
             return;
         }
@@ -318,11 +303,22 @@ public class BluetoothSerial {
             return;
         }
 
+        // find device with name matching the configured prefix
+        BluetoothDevice device = pairedDevices.stream().filter(item -> item.getName().toUpperCase().startsWith(devicePrefix.toUpperCase())).findFirst().orElse(null);
+
+        if (device == null) {
+            Log.w(TAG, "there is no paired device starting with '" + devicePrefix + "'");
+
+            setState(State.DEVICE_NOT_FOUND);
+
+            return;
+        }
+
         // cancel discovery
         bluetoothAdapter.cancelDiscovery();
 
         // attempt connection in an async task
-        attemptConnectionTask = new AttemptConnectionTask(this, pairedDevices);
+        attemptConnectionTask = new AttemptConnectionTask(this, device);
         attemptConnectionTask.execute();
     }
 
@@ -335,13 +331,11 @@ public class BluetoothSerial {
         }
 
         // do nothing if not connected
-        if (!connected) {
+        if (!isConnected()) {
             return;
         }
 
         Log.i(TAG, "stopping bluetooth serial");
-
-        connected = false;
 
         // unregister the bluetooth broadcast receiver
         context.unregisterReceiver(bluetoothReceiver);
@@ -358,29 +352,59 @@ public class BluetoothSerial {
         }
 
         // close the input stream
-        try {
-            serialInputStream.close();
-        } catch (Exception e) {
-            Log.e(TAG, "failed to release input stream connection");
+        if (serialInputStream != null) {
+            try {
+                serialInputStream.close();
+            } catch (Exception e) {
+                Log.e(TAG, "failed to release input stream");
+            }
         }
 
         // close the output stream
-        try {
-            serialOutputStream.close();
-        } catch (Exception e) {
-            Log.e(TAG, "failed to release output stream");
+        if (serialOutputStream != null) {
+            try {
+                serialOutputStream.close();
+            } catch (Exception e) {
+                Log.e(TAG, "failed to release output stream");
+            }
         }
 
         // close the bluetooth socket
-        try {
-            bluetoothSocket.close();
-        } catch (Exception e) {
-            Log.e(TAG, "failed to close the bluetooth socket");
+        if (bluetoothSocket != null) {
+            try {
+                bluetoothSocket.close();
+            } catch (Exception e) {
+                Log.e(TAG, "failed to close the bluetooth socket");
+            }
         }
+
+        // update state
+        setState(State.DISCONNECTED);
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isConnected() {
-        return connected;
+        return state == State.CONNECTED;
+    }
+
+    void setState(State newState) {
+        // ignore if already in requested state
+        if (newState == state) {
+            return;
+        }
+
+        state = newState;
+
+        // send notification
+        LocalBroadcastManager.getInstance(context).sendBroadcast(new Intent(BLUETOOTH_STATE_CHANGED));
+    }
+
+    State getState() {
+        return state;
+    }
+
+    BluetoothDevice getDevice() {
+        return bluetoothDevice;
     }
 
     // see: http://stackoverflow.com/questions/3397071/service-discovery-failed-exception-using-bluetooth-on-android
@@ -391,24 +415,24 @@ public class BluetoothSerial {
     }
 
     public int available() throws IOException {
-        if (!connected) {
-            throw new RuntimeException("bluetooth connection lost");
+        if (!isConnected()) {
+            throw new RuntimeException("checking availability requested but bluetooth is not connected");
         }
 
         return serialInputStream.available();
     }
 
     public int read(byte[] buffer, int byteOffset, int byteCount) throws IOException {
-        if (!connected) {
-            throw new RuntimeException("bluetooth connection lost");
+        if (!isConnected()) {
+            throw new RuntimeException("reading requested but bluetooth is not connected");
         }
 
         return serialInputStream.read(buffer, byteOffset, byteCount);
     }
 
     public void sendMessage(String message) throws IOException {
-        if (!connected) {
-            throw new RuntimeException("bluetooth connection lost");
+        if (!isConnected()) {
+            throw new RuntimeException("sending message '" + message + "' requested but bluetooth is not connected");
         }
 
         serialOutputStream.write(message.getBytes("UTF-8"));
