@@ -4,13 +4,8 @@ var app = window.app;
 var wsIp = localStorage.wsIp ? localStorage.wsIp : "127.0.0.1";
 var wsPort = 8000;
 var wsUrl = "ws://" + wsIp + ":" + wsPort;
-// resolve app configuration
-var appIp = app.getIpAddress();
-var appPort = 8080;
-var appUrl = "http://" + appIp + ":" + appPort;
 var lastLogMessageTime = 0;
 // log important info
-log("app url", appUrl);
 log("web socket url", wsUrl);
 // create a new websocket client
 var ws = new WebSocket(wsUrl);
@@ -48,16 +43,15 @@ function log() {
     lastLogMessageTime = Date.now();
 }
 function send(message) {
-    ws.send(message + "\n");
+    ws.send("" + message);
     log("&gt " + message);
 }
 function showToast(message) {
-    ws.send("!toast:" + message);
+    send("!toast:" + message);
     log("# " + message);
 }
 function reload() {
-    log("reloading");
-    app.reload();
+    send("!reload");
 }
 function promptWebSocketIp() {
     localStorage.wsIp = prompt("Enter web-socket ip");

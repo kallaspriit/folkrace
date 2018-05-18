@@ -7,15 +7,9 @@ const wsIp = localStorage.wsIp ? localStorage.wsIp : "127.0.0.1";
 const wsPort = 8000;
 const wsUrl = `ws://${wsIp}:${wsPort}`;
 
-// resolve app configuration
-const appIp = app.getIpAddress();
-const appPort = 8080;
-const appUrl = `http://${appIp}:${appPort}`;
-
 let lastLogMessageTime = 0;
 
 // log important info
-log("app url", appUrl);
 log("web socket url", wsUrl);
 
 // create a new websocket client
@@ -64,21 +58,19 @@ function log(...args: Loggable[]) {
 }
 
 function send(message: string) {
-  ws.send(`${message}\n`);
+  ws.send(`${message}`);
 
   log(`&gt ${message}`);
 }
 
 function showToast(message: string) {
-  ws.send(`!toast:${message}`);
+  send(`!toast:${message}`);
 
   log(`# ${message}`);
 }
 
 function reload() {
-  log(`reloading`);
-
-  app.reload();
+  send("!reload");
 }
 
 function promptWebSocketIp() {

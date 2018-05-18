@@ -94,7 +94,7 @@ public class BluetoothWebSocketProxy implements WebSocketServer.Listener, Blueto
         Log.d(TAG, "forwarding web-socket message '" + message + "' to bluetooth device");
 
         try {
-            bluetoothSerial.sendMessage(message);
+            bluetoothSerial.sendMessage(message + "\n");
         } catch (IOException e) {
             Log.w(TAG, "forwarding message '" + message + "' to bluetooth device failed");
 

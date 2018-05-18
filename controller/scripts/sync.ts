@@ -8,7 +8,6 @@ import * as path from "path";
 const fileMap: { [x: string]: string } = {
   "src/index.html": "../app/folkbot/src/main/res/raw/index.html",
   "build/src/main.js": "../app/folkbot/src/main/res/raw/main.js",
-  "build/src/app.js": "../app/folkbot/src/main/res/raw/app.js",
   "build/src/style.css": "../app/folkbot/src/main/res/raw/style.css",
 };
 

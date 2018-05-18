@@ -65,9 +65,6 @@ public class MainActivity extends Activity implements BluetoothWebSocketProxy.Li
 
         // make the web-view debuggable
         WebView.setWebContentsDebuggingEnabled(true);
-
-        // add javascript interface
-        webView.addJavascriptInterface(new ScriptInterface(this), "app");
     }
 
     @Override
@@ -202,6 +199,10 @@ public class MainActivity extends Activity implements BluetoothWebSocketProxy.Li
         switch (name) {
             case "toast":
                 handleShowToast(parameters);
+                break;
+
+            case "reload":
+                webView.reload();
                 break;
         }
 
