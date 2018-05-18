@@ -70,7 +70,7 @@ function send(message: string) {
 }
 
 function showToast(message: string) {
-  app.showToast(message);
+  ws.send(`!toast:${message}`);
 
   log(`# ${message}`);
 }

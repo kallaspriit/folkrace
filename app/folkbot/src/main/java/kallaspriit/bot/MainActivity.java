@@ -17,8 +17,9 @@ import android.widget.Toast;
 import org.java_websocket.drafts.Draft_6455;
 
 import java.io.IOException;
+import java.util.Arrays;
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements BluetoothWebSocketProxy.Listener {
     private static final String TAG = "MainActivity";
 
     private static final int HTTP_SERVER_PORT = 8080;
@@ -177,7 +178,7 @@ public class MainActivity extends Activity {
         Log.i(TAG, "starting bluetooth web-socket proxy");
 
         // setup bluetooth web-socket proxy
-        bluetoothWebSocketProxy = new BluetoothWebSocketProxy(this, webSocketServer, BLUETOOTH_DEVICE_NAME_PREFIX);
+        bluetoothWebSocketProxy = new BluetoothWebSocketProxy(this, this, webSocketServer, BLUETOOTH_DEVICE_NAME_PREFIX);
 
         // attempt to connect to the bluetooth device
         bluetoothWebSocketProxy.start();
@@ -186,5 +187,35 @@ public class MainActivity extends Activity {
     private void stopBluetoothWebSocketProxy() {
         bluetoothWebSocketProxy.stop();
         bluetoothWebSocketProxy = null;
+    }
+
+    @Override
+    public void handleInternalCommand(String command) {
+        if (command.length() == 0) {
+            return;
+        }
+
+        String[] tokens = command.split(":");
+        String name = tokens[0];
+        String[] parameters = Arrays.copyOfRange(tokens, 1, 2);
+
+        switch (name) {
+            case "toast":
+                handleShowToast(parameters);
+                break;
+        }
+
+        Log.i(TAG, "handling internal command: '" + command + "'");
+    }
+
+    private void handleShowToast(String[] parameters) {
+        if (parameters.length != 1) {
+            Log.w(TAG, "showing toast requested, expected exactly one parameter but got " + parameters.length);
+
+            return;
+        }
+
+        String toast = parameters[0];
+        Toast.makeText(this, toast, Toast.LENGTH_LONG).show();
     }
 }

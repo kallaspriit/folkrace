@@ -52,7 +52,7 @@ function send(message) {
     log("&gt " + message);
 }
 function showToast(message) {
-    app.showToast(message);
+    ws.send("!toast:" + message);
     log("# " + message);
 }
 function reload() {

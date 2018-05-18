@@ -1,6 +1,8 @@
 package kallaspriit.bot;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import org.java_websocket.WebSocket;
@@ -10,14 +12,19 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
 public class BluetoothWebSocketProxy implements WebSocketServer.Listener, BluetoothSerial.MessageHandler {
+    public interface Listener {
+        void handleInternalCommand(String command);
+    }
 
     private static final String TAG = "BluetoothWebSocketProxy";
 
     private BluetoothSerial bluetoothSerial;
     private WebSocketServer webSocketServer;
     private String commandBuffer = "";
+    private Listener listener;
 
-    BluetoothWebSocketProxy(Context context, WebSocketServer webSocketServer, String bluetoothDeviceNamePrefix) {
+    BluetoothWebSocketProxy(Listener listener, Context context, WebSocketServer webSocketServer, String bluetoothDeviceNamePrefix) {
+        this.listener = listener;
         this.webSocketServer = webSocketServer;
 
         // create bluetooth serial instance
@@ -53,7 +60,7 @@ public class BluetoothWebSocketProxy implements WebSocketServer.Listener, Blueto
 
     @Override
     public void onOpen(WebSocket connection, ClientHandshake handshake) {
-
+        connection.send("ip:" + Util.getIpAddress());
     }
 
     @Override
@@ -70,6 +77,16 @@ public class BluetoothWebSocketProxy implements WebSocketServer.Listener, Blueto
     public void onMessage(WebSocket connection, String message) {
         if (!bluetoothSerial.isConnected()) {
             Log.w(TAG, "received web-socket message '" + message + " but bluetooth is not connected");
+
+            return;
+        }
+
+        // commands starting with hash are handled by the app and not forwarded
+        if (message.substring(0, 1).equals("!")) {
+            String command = message.substring(1);
+
+            // handle the internal command in main thread
+            new Handler(Looper.getMainLooper()).post(() -> listener.handleInternalCommand(command));
 
             return;
         }

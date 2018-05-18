@@ -4,8 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "start":
-      "concurrently --names \" TSC,SCSS,SYNC,SRVR\" --prefix-colors \"magenta,yellow,cyan,green\" \"tsc --watch\" \"yarn build:sass --watch\" \"yarn build:sync --watch\" \"yarn server\"",
+    "start": "concurrently --names \" TSC,SCSS,SYNC,SRVR\" --prefix-colors \"magenta,yellow,cyan,green\" \"tsc --watch\" \"yarn build:sass --watch\" \"yarn build:sync --watch\" \"yarn server\"",
     "build": "yarn tidy:build && yarn build:ts && yarn build:sass && yarn build:sync",
     "build:ts": "tsc",
     "build:sass": "ts-node scripts/sass.ts",
@@ -37,6 +36,7 @@
     "express": "^4.16.3",
     "fs-extra": "^6.0.1",
     "jest": "^22.4.3",
+    "lit-html": "^0.10.0",
     "lodash": "^4.17.10",
     "node-sass": "^4.9.0",
     "nodemon": "^1.17.4",
