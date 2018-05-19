@@ -49,8 +49,9 @@ public class MainActivity extends Activity implements BluetoothWebSocketProxy.Li
                 broadcast("bluetooth:" + bluetoothWebSocketProxy.bluetoothSerial.getState() + (bluetoothWebSocketProxy.bluetoothSerial.isConnected() ? ":" + bluetoothWebSocketProxy.bluetoothSerial.getDevice().getName() : ""));
                 break;
 
+            // log unhandled local broadcast intents
             default:
-                Log.i(TAG, "received unhandled local intent action: " + action);
+                Log.w(TAG, "received unhandled local intent action: " + action);
 
                 Toast.makeText(context, action, Toast.LENGTH_SHORT).show();
         }
