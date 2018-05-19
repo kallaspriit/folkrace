@@ -1,5 +1,5 @@
 import "./main.scss";
-import "./menu";
+import "./menu.tsx";
 
 type Loggable = string | number;
 
@@ -11,17 +11,17 @@ const wsUrl = `ws://${wsIp}:${wsPort}`;
 let lastLogMessageTime = 0;
 let ws: WebSocket;
 
-document.addEventListener(
-  "DOMContentLoaded",
-  () => {
-    // log important info
-    log("web socket url", wsUrl);
+// document.addEventListener(
+//   "DOMContentLoaded",
+//   () => {
+// log important info
+log("web socket url", wsUrl);
 
-    // create a new websocket client
-    ws = connect(wsUrl);
-  },
-  false,
-);
+// create a new websocket client
+ws = connect(wsUrl);
+//   },
+//   false,
+// );
 
 function connect(url: string): WebSocket {
   log(`connecting to web-socket at ${url}`);

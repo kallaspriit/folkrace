@@ -5,6 +5,7 @@
     "rootDirs": ["src", "server"],
     "outDir": "build",
     "moduleResolution": "node",
+    "module": "commonjs",
 
     "allowSyntheticDefaultImports": true,
 
@@ -13,6 +14,7 @@
     "sourceMap": true,
     "pretty": true,
     "forceConsistentCasingInFileNames": true,
+    "jsx": "react",
 
     "noEmitOnError": true,
     "noFallthroughCasesInSwitch": true,

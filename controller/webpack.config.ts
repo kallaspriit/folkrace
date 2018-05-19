@@ -11,11 +11,12 @@ const config: Configuration = {
     filename: "bundle.js",
   },
   resolve: {
-    extensions: [".ts", ".scss", ".css"],
+    extensions: [".js", ".ts", ".tsx", ".scss"],
   },
   module: {
     rules: [
-      { test: /\.tsx?$/, loader: "ts-loader" },
+      { test: /\.tsx?$/, loader: "awesome-typescript-loader" },
+      { enforce: "pre", test: /\.js$/, loader: "source-map-loader" },
       {
         test: /\.scss$/,
         use: [
