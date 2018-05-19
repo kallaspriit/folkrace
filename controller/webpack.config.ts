@@ -5,7 +5,7 @@ import { Configuration } from "webpack";
 
 const config: Configuration = {
   mode: "development",
-  entry: "./src/main.ts",
+  entry: "./src/main.tsx",
   output: {
     path: path.resolve(__dirname, "build"),
     filename: "bundle.js",
