@@ -1,8 +1,5 @@
-// import hyperHTML from "hyperhtml";
 import "./main.scss";
-import menu from "./menu";
-
-console.log(menu, 2);
+import "./menu";
 
 type Loggable = string | number;
 
@@ -12,12 +9,19 @@ const wsPort = 8000;
 const wsUrl = `ws://${wsIp}:${wsPort}`;
 
 let lastLogMessageTime = 0;
+let ws: WebSocket;
 
-// log important info
-log("web socket url", wsUrl);
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
+    // log important info
+    log("web socket url", wsUrl);
 
-// create a new websocket client
-let ws: WebSocket = connect(wsUrl);
+    // create a new websocket client
+    ws = connect(wsUrl);
+  },
+  false,
+);
 
 function connect(url: string): WebSocket {
   log(`connecting to web-socket at ${url}`);
@@ -109,11 +113,3 @@ function pad(value: string | number, padding: number) {
 
   return `${new Array(padLength + 1).join(" ")}${str}`;
 }
-
-// const root = document.getElementById("root");
-
-// if (root === null) {
-//   throw new Error("Root element #root not found");
-// }
-
-// setInterval(menu, 1000, hyperHTML(root));

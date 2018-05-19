@@ -1,8 +1,9 @@
-const path = require("path");
-const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-const CopyWebpackPlugin = require("copy-webpack-plugin");
+import * as CopyWebpackPlugin from "copy-webpack-plugin";
+import * as MiniCssExtractPlugin from "mini-css-extract-plugin";
+import * as path from "path";
+import { Configuration } from "webpack";
 
-module.exports = {
+const config: Configuration = {
   mode: "development",
   entry: "./src/main.ts",
   output: {
@@ -19,7 +20,7 @@ module.exports = {
         test: /\.scss$/,
         use: [
           MiniCssExtractPlugin.loader,
-          //"style-loader", // creates style nodes from JS strings
+          // "style-loader", // creates style nodes from JS strings
           "css-loader", // translates CSS into CommonJS
           "sass-loader", // compiles Sass to CSS
         ],
@@ -38,5 +39,7 @@ module.exports = {
       },
     ]),
   ],
-  devtool: "source-map",
+  // devtool: "source-map",
 };
+
+export default config;
