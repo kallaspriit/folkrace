@@ -1,9 +1,21 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
+import { BrowserRouter as Router, Route } from "react-router-dom";
+import { MainMenu } from "./components/MainMenu";
 import "./main.scss";
-import RootView from "./views/RootView";
+import { RemoteView } from "./views/RemoteView";
 
-ReactDOM.render(<RootView />, document.getElementById("root"));
+ReactDOM.render(
+  <Router>
+    <div className="app">
+      <MainMenu />
+
+      <Route exact path="/" component={RemoteView} />
+      <Route path="/remote" component={RemoteView} />
+    </div>
+  </Router>,
+  document.getElementById("root"),
+);
 
 // type Loggable = string | number;
 
