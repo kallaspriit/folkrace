@@ -6,16 +6,16 @@ import * as path from "path";
 
 // files to sync
 const fileMap: { [x: string]: string } = {
-  "src/index.html": "../app/folkbot/src/main/res/raw/index.html",
-  "build/src/main.js": "../app/folkbot/src/main/res/raw/main.js",
-  "build/src/style.css": "../app/folkbot/src/main/res/raw/style.css",
+  "build/bundle.js": "../app/folkbot/src/main/res/raw/bundle.js",
+  "build/main.css": "../app/folkbot/src/main/res/raw/main.css",
+  "build/index.html": "../app/folkbot/src/main/res/raw/index.html",
 };
 
 // pass in -w or --watch to run in watch mode
 const useWatchMode = process.argv.find(arg => ["-w", "--watch"].indexOf(arg) !== -1) !== undefined;
 
 if (useWatchMode) {
-  const watcher = chokidar.watch(["src/*.html", "build/src/*.js"]);
+  const watcher = chokidar.watch(["build/*.js", "build/*.css", "build/*.html"]);
 
   // debounce running the synchronization
   const runDebounce = debounce(async () => {

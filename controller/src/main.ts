@@ -1,6 +1,10 @@
-type Loggable = string | number;
+// import hyperHTML from "hyperhtml";
+import "./main.scss";
+import menu from "./menu";
 
-const app = window.app;
+console.log(menu, 2);
+
+type Loggable = string | number;
 
 // resolve web socket configuration
 const wsIp = localStorage.wsIp ? localStorage.wsIp : "127.0.0.1";
@@ -47,7 +51,7 @@ function connect(url: string): WebSocket {
   return ws;
 }
 
-function log(...args: Loggable[]) {
+export function log(...args: Loggable[]) {
   const logWrap = document.getElementById("log");
 
   if (logWrap === null) {
@@ -79,17 +83,17 @@ function send(message: string) {
   log(`&gt ${message}`);
 }
 
-function showToast(message: string) {
+export function showToast(message: string) {
   send(`!toast:${message}`);
 
   log(`# ${message}`);
 }
 
-function reload() {
+export function reload() {
   send("!reload");
 }
 
-function promptWebSocketIp() {
+export function promptWebSocketIp() {
   localStorage.wsIp = prompt("Enter web-socket ip");
 
   reload();
@@ -105,3 +109,11 @@ function pad(value: string | number, padding: number) {
 
   return `${new Array(padLength + 1).join(" ")}${str}`;
 }
+
+// const root = document.getElementById("root");
+
+// if (root === null) {
+//   throw new Error("Root element #root not found");
+// }
+
+// setInterval(menu, 1000, hyperHTML(root));

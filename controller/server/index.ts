@@ -1,12 +1,12 @@
 import * as express from "express";
 import * as path from "path";
 
+const PORT = 80;
+
 (async () => {
-  const app = express();
+  express()
+    .use(express.static(path.join(__dirname, "..", "build")))
+    .listen(PORT);
 
-  app.use(express.static(path.join(__dirname, "..", "src")));
-  app.use(express.static(path.join(__dirname, "..", "build/src")));
-  app.use("/src", express.static(path.join(__dirname, "..", "src")));
-
-  app.listen(80);
+  console.log(`local test server started on port ${PORT}`);
 })().catch(console.error);
