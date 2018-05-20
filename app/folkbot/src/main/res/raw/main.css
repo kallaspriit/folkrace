@@ -87,7 +87,7 @@ html {
   padding: 0;
   margin: 0;
   font-family: "Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif;
-  background-color: #111; }
+  background-color: #000; }
 
 .app {
   height: 100vh;
@@ -102,34 +102,41 @@ html {
   .app .main-menu {
     display: flex;
     flex-direction: row;
-    background-color: #e45655;
-    height: 60px;
+    justify-content: center;
+    background-color: #f0513c;
     border-radius: 0 0 8px 8px; }
-    .app .main-menu li {
-      flex: 1;
-      height: 100%;
-      text-align: center;
-      font-variant: small-caps; }
-      .app .main-menu li a {
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        height: 100%;
-        text-decoration: none;
-        color: #b23638; }
-        .app .main-menu li a .icon {
-          background-color: #b23638; }
-        .app .main-menu li a.active {
-          color: #fff; }
-          .app .main-menu li a.active i {
-            background-color: #fff; }
-    .app .main-menu--icon {
+    .app .main-menu--nav {
       display: flex;
       flex-direction: row;
-      justify-content: center;
-      height: 32px;
-      width: 100%;
-      padding: 6px 0 4px 0; }
-    .app .main-menu--text {
-      flex: 1; }
+      height: 60px;
+      flex: 1;
+      max-width: 500px; }
+      .app .main-menu--nav li {
+        flex: 1;
+        height: 100%;
+        padding: 0 10px;
+        text-align: center;
+        font-variant: small-caps; }
+        .app .main-menu--nav li a {
+          display: flex;
+          flex-direction: column;
+          width: 100%;
+          height: 100%;
+          text-decoration: none;
+          color: #a01e0c; }
+          .app .main-menu--nav li a .icon {
+            background-color: #a01e0c; }
+          .app .main-menu--nav li a.active {
+            color: #f9bbb2; }
+            .app .main-menu--nav li a.active .icon {
+              background-color: #f9bbb2; }
+      .app .main-menu--nav--icon {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        height: 32px;
+        width: 100%;
+        padding: 6px 0 4px 0; }
+      .app .main-menu--nav--text {
+        flex: 1; }
 

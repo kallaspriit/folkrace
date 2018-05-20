@@ -1,12 +1,20 @@
 @import "./gfx/icons";
 
+// $color-primary: #7b0828;
+$color-primary: #f0513c;
+$darker-lighter-percentage: 25%;
+$color-primary-darker: darken($color-primary, $darker-lighter-percentage);
+$color-primary-lighter: lighten($color-primary, $darker-lighter-percentage);
+
+$color-secondary: #404040;
+
 body,
 html {
   height: 100;
   padding: 0;
   margin: 0;
   font-family: "Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif;
-  background-color: #111;
+  background-color: #000;
 }
 .app {
   height: 100vh;
@@ -15,7 +23,7 @@ html {
 
   .view {
     flex: 1;
-    background-color: #404040;
+    background-color: $color-secondary;
     border-radius: 8px 8px 0 0;
     padding: 20px;
     color: #fff;
@@ -24,50 +32,58 @@ html {
   .main-menu {
     display: flex;
     flex-direction: row;
-    background-color: #e45655;
-    height: 60px;
+    justify-content: center;
+    background-color: $color-primary;
     border-radius: 0 0 8px 8px;
 
-    li {
+    &--nav {
+      display: flex;
+      flex-direction: row;
+      height: 60px;
       flex: 1;
-      height: 100%;
-      text-align: center;
+      max-width: 500px;
 
-      font-variant: small-caps;
-
-      a {
-        display: flex;
-        flex-direction: column;
-        width: 100%;
+      li {
+        flex: 1;
         height: 100%;
-        text-decoration: none;
-        color: #b23638;
+        padding: 0 10px;
+        text-align: center;
+        font-variant: small-caps;
 
-        .icon {
-          background-color: #b23638;
-        }
+        a {
+          display: flex;
+          flex-direction: column;
+          width: 100%;
+          height: 100%;
+          text-decoration: none;
+          color: $color-primary-darker;
 
-        &.active {
-          color: #fff;
+          .icon {
+            background-color: $color-primary-darker;
+          }
 
-          i {
-            background-color: #fff;
+          &.active {
+            color: $color-primary-lighter;
+
+            .icon {
+              background-color: $color-primary-lighter;
+            }
           }
         }
       }
-    }
 
-    &--icon {
-      display: flex;
-      flex-direction: row;
-      justify-content: center;
-      height: 32px;
-      width: 100%;
-      padding: 6px 0 4px 0;
-    }
+      &--icon {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        height: 32px;
+        width: 100%;
+        padding: 6px 0 4px 0;
+      }
 
-    &--text {
-      flex: 1;
+      &--text {
+        flex: 1;
+      }
     }
   }
 }
