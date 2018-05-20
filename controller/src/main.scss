@@ -1,27 +1,72 @@
+@import "./gfx/icons";
+
 body,
 html {
   height: 100;
   padding: 0;
   margin: 0;
+  font-family: "Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif;
+  background-color: #111;
 }
 .app {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: green;
 
   .view {
     flex: 1;
-    background-color: blue;
+    background-color: #404040;
+    border-radius: 8px 8px 0 0;
+    padding: 20px;
+    color: #fff;
   }
 
   .main-menu {
     display: flex;
     flex-direction: row;
-    background-color: red;
-    height: 40px;
+    background-color: #e45655;
+    height: 60px;
+    border-radius: 0 0 8px 8px;
 
     li {
+      flex: 1;
+      height: 100%;
+      text-align: center;
+
+      font-variant: small-caps;
+
+      a {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        text-decoration: none;
+        color: #b23638;
+
+        .icon {
+          background-color: #b23638;
+        }
+
+        &.active {
+          color: #fff;
+
+          i {
+            background-color: #fff;
+          }
+        }
+      }
+    }
+
+    &--icon {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      height: 32px;
+      width: 100%;
+      padding: 6px 0 4px 0;
+    }
+
+    &--text {
       flex: 1;
     }
   }

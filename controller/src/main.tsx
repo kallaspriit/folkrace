@@ -1,16 +1,28 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { BrowserRouter as Router, Route } from "react-router-dom";
+import { BrowserRouter as Router, Redirect, Route, Switch } from "react-router-dom";
 import "reset-css";
-import { MainMenu } from "./components/MainMenu";
+import MainMenu from "./components/MainMenu";
 import "./main.scss";
-import { RemoteView } from "./views/RemoteView";
+import AiView from "./views/AiView";
+import MapView from "./views/MapView";
+import RemoteView from "./views/RemoteView";
+import SettingsView from "./views/SettingsView";
+import StatusView from "./views/StatusView";
 
 ReactDOM.render(
   <Router>
     <div className="app">
-      <Route exact path="/" component={RemoteView} />
-      <Route path="/remote" component={RemoteView} />
+      <Switch>
+        <Route path="/status" component={StatusView} />
+        <Route path="/map" component={MapView} />
+        <Route path="/remote" component={RemoteView} />
+        <Route path="/ai" component={AiView} />
+        <Route path="/settings" component={SettingsView} />
+        <Route exact path="/">
+          <Redirect to="/status" />
+        </Route>
+      </Switch>
       <MainMenu />
     </div>
   </Router>,
