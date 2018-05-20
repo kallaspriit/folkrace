@@ -1,6 +1,28 @@
-.log {
-  border: 1px dashed #ccc;
-  padding: 10px;
-  font-family: "Courier New", Courier, monospace;
-  white-space: pre;
+body,
+html {
+  height: 100;
+  padding: 0;
+  margin: 0;
+}
+.app {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: green;
+
+  .view {
+    flex: 1;
+    background-color: blue;
+  }
+
+  .main-menu {
+    display: flex;
+    flex-direction: row;
+    background-color: red;
+    height: 40px;
+
+    li {
+      flex: 1;
+    }
+  }
 }

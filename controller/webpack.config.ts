@@ -11,7 +11,7 @@ const config: Configuration = {
     filename: "bundle.js",
   },
   resolve: {
-    extensions: [".js", ".ts", ".tsx", ".scss"],
+    extensions: [".js", ".ts", ".tsx", ".scss", ".css"],
   },
   module: {
     rules: [
@@ -19,12 +19,11 @@ const config: Configuration = {
       { enforce: "pre", test: /\.js$/, loader: "source-map-loader" },
       {
         test: /\.scss$/,
-        use: [
-          MiniCssExtractPlugin.loader,
-          // "style-loader", // creates style nodes from JS strings
-          "css-loader", // translates CSS into CommonJS
-          "sass-loader", // compiles Sass to CSS
-        ],
+        use: [MiniCssExtractPlugin.loader, "css-loader", "sass-loader"],
+      },
+      {
+        test: /\.css$/,
+        use: [MiniCssExtractPlugin.loader, "css-loader"],
       },
     ],
   },

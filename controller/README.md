@@ -9,3 +9,11 @@
 * `yarn test` - to run tests without coverage
 * `yarn coverage` - to run tests with coverage
 * `yarn audit` - to run all checks before a commit etc
+
+## Controller functionality
+
+* Map - shows Lidar data
+* AI - shows AI state
+* Camera - shows camera view
+* Remote - remote controller
+* Status - shows system statuses

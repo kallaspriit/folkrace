@@ -1,6 +1,7 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { BrowserRouter as Router, Route } from "react-router-dom";
+import "reset-css";
 import { MainMenu } from "./components/MainMenu";
 import "./main.scss";
 import { RemoteView } from "./views/RemoteView";
@@ -8,10 +9,9 @@ import { RemoteView } from "./views/RemoteView";
 ReactDOM.render(
   <Router>
     <div className="app">
-      <MainMenu />
-
       <Route exact path="/" component={RemoteView} />
       <Route path="/remote" component={RemoteView} />
+      <MainMenu />
     </div>
   </Router>,
   document.getElementById("root"),
