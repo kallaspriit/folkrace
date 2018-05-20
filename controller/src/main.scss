@@ -1,12 +1,15 @@
 @import "./gfx/icons";
 
-// $color-primary: #7b0828;
-$color-primary: #f0513c;
 $darker-lighter-percentage: 25%;
-$color-primary-darker: darken($color-primary, $darker-lighter-percentage);
-$color-primary-lighter: lighten($color-primary, $darker-lighter-percentage);
 
-$color-secondary: #404040;
+$text-primary: #f0f0f0;
+$text-secondary: #969696;
+
+$bg-primary: #cc3333;
+$bg-secondary: #282828;
+$bg-tertiary: #087099;
+$bg-tertiary: #087099;
+$bg-quaternary: #b7b327;
 
 body,
 html {
@@ -14,6 +17,7 @@ html {
   padding: 0;
   margin: 0;
   font-family: "Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif;
+  color: $text-primary;
   background-color: #000;
 }
 .app {
@@ -23,17 +27,16 @@ html {
 
   .view {
     flex: 1;
-    background-color: $color-secondary;
+    background-color: $bg-secondary;
     border-radius: 8px 8px 0 0;
     padding: 20px;
-    color: #fff;
   }
 
   .main-menu {
     display: flex;
     flex-direction: row;
     justify-content: center;
-    background-color: $color-primary;
+    background-color: $bg-primary;
     border-radius: 0 0 8px 8px;
 
     &--nav {
@@ -56,17 +59,17 @@ html {
           width: 100%;
           height: 100%;
           text-decoration: none;
-          color: $color-primary-darker;
+          color: darken($bg-primary, $darker-lighter-percentage);
 
           .icon {
-            background-color: $color-primary-darker;
+            background-color: darken($bg-primary, $darker-lighter-percentage);
           }
 
           &.active {
-            color: $color-primary-lighter;
+            color: lighten($bg-primary, $darker-lighter-percentage);
 
             .icon {
-              background-color: $color-primary-lighter;
+              background-color: lighten($bg-primary, $darker-lighter-percentage);
             }
           }
         }

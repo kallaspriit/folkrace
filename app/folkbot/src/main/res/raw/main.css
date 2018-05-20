@@ -87,6 +87,7 @@ html {
   padding: 0;
   margin: 0;
   font-family: "Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif;
+  color: #f0f0f0;
   background-color: #000; }
 
 .app {
@@ -95,15 +96,14 @@ html {
   flex-direction: column; }
   .app .view {
     flex: 1;
-    background-color: #404040;
+    background-color: #282828;
     border-radius: 8px 8px 0 0;
-    padding: 20px;
-    color: #fff; }
+    padding: 20px; }
   .app .main-menu {
     display: flex;
     flex-direction: row;
     justify-content: center;
-    background-color: #f0513c;
+    background-color: #cc3333;
     border-radius: 0 0 8px 8px; }
     .app .main-menu--nav {
       display: flex;
@@ -123,13 +123,13 @@ html {
           width: 100%;
           height: 100%;
           text-decoration: none;
-          color: #a01e0c; }
+          color: #661a1a; }
           .app .main-menu--nav li a .icon {
-            background-color: #a01e0c; }
+            background-color: #661a1a; }
           .app .main-menu--nav li a.active {
-            color: #f9bbb2; }
+            color: #e69999; }
             .app .main-menu--nav li a.active .icon {
-              background-color: #f9bbb2; }
+              background-color: #e69999; }
       .app .main-menu--nav--icon {
         display: flex;
         flex-direction: row;
