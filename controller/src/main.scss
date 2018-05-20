@@ -1,15 +1,5 @@
 @import "./gfx/icons";
-
-$darker-lighter-percentage: 25%;
-
-$text-primary: #f0f0f0;
-$text-secondary: #969696;
-
-$bg-primary: #cc3333;
-$bg-secondary: #282828;
-$bg-tertiary: #087099;
-$bg-tertiary: #087099;
-$bg-quaternary: #b7b327;
+@import "./gfx/variables.scss";
 
 body,
 html {
@@ -30,63 +20,5 @@ html {
     background-color: $bg-secondary;
     border-radius: 8px 8px 0 0;
     padding: 20px;
-  }
-
-  .main-menu {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    background-color: $bg-primary;
-    border-radius: 0 0 8px 8px;
-
-    &--nav {
-      display: flex;
-      flex-direction: row;
-      height: 60px;
-      flex: 1;
-      max-width: 500px;
-
-      li {
-        flex: 1;
-        height: 100%;
-        padding: 0 10px;
-        text-align: center;
-        font-variant: small-caps;
-
-        a {
-          display: flex;
-          flex-direction: column;
-          width: 100%;
-          height: 100%;
-          text-decoration: none;
-          color: darken($bg-primary, $darker-lighter-percentage);
-
-          .icon {
-            background-color: darken($bg-primary, $darker-lighter-percentage);
-          }
-
-          &.active {
-            color: lighten($bg-primary, $darker-lighter-percentage);
-
-            .icon {
-              background-color: lighten($bg-primary, $darker-lighter-percentage);
-            }
-          }
-        }
-      }
-
-      &--icon {
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
-        height: 32px;
-        width: 100%;
-        padding: 6px 0 4px 0;
-      }
-
-      &--text {
-        flex: 1;
-      }
-    }
   }
 }

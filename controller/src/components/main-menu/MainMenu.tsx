@@ -1,5 +1,6 @@
 import * as React from "react";
 import { NavLink } from "react-router-dom";
+import "./MainMenu.scss";
 
 const MainMenu: React.SFC<{}> = () => (
   <div className="main-menu">

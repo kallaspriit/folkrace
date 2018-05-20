@@ -1,0 +1,59 @@
+@import "../../gfx/variables.scss";
+
+.main-menu {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  background-color: $bg-primary;
+  border-radius: 0 0 8px 8px;
+
+  &--nav {
+    display: flex;
+    flex-direction: row;
+    height: 60px;
+    flex: 1;
+    max-width: 500px;
+
+    li {
+      flex: 1;
+      height: 100%;
+      padding: 0 10px;
+      text-align: center;
+      font-variant: small-caps;
+
+      a {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        text-decoration: none;
+        color: darken($bg-primary, $darker-lighter-percentage);
+
+        .icon {
+          background-color: darken($bg-primary, $darker-lighter-percentage);
+        }
+
+        &.active {
+          color: lighten($bg-primary, $darker-lighter-percentage);
+
+          .icon {
+            background-color: lighten($bg-primary, $darker-lighter-percentage);
+          }
+        }
+      }
+    }
+
+    &--icon {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      height: 32px;
+      width: 100%;
+      padding: 6px 0 4px 0;
+    }
+
+    &--text {
+      flex: 1;
+    }
+  }
+}

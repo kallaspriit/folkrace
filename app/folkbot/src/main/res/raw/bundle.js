@@ -894,15 +894,26 @@ eval("/**\n * Copyright 2014-2015, Facebook, Inc.\n * All rights reserved.\n *\n
 
 /***/ }),
 
-/***/ "./src/components/MainMenu.tsx":
-/*!*************************************!*\
-  !*** ./src/components/MainMenu.tsx ***!
-  \*************************************/
+/***/ "./src/components/main-menu/MainMenu.scss":
+/*!************************************************!*\
+  !*** ./src/components/main-menu/MainMenu.scss ***!
+  \************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+eval("// extracted by mini-css-extract-plugin\n\n//# sourceURL=webpack:///./src/components/main-menu/MainMenu.scss?");
+
+/***/ }),
+
+/***/ "./src/components/main-menu/MainMenu.tsx":
+/*!***********************************************!*\
+  !*** ./src/components/main-menu/MainMenu.tsx ***!
+  \***********************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-eval("\r\nObject.defineProperty(exports, \"__esModule\", { value: true });\r\nvar React = __webpack_require__(/*! react */ \"./node_modules/react/index.js\");\r\nvar react_router_dom_1 = __webpack_require__(/*! react-router-dom */ \"./node_modules/react-router-dom/es/index.js\");\r\nvar MainMenu = function () { return (React.createElement(\"div\", { className: \"main-menu\" },\r\n    React.createElement(\"ul\", { className: \"main-menu--nav\" },\r\n        React.createElement(\"li\", null,\r\n            React.createElement(react_router_dom_1.NavLink, { to: \"/status\", activeClassName: \"active\" },\r\n                React.createElement(\"div\", { className: \"main-menu--nav--icon\" },\r\n                    React.createElement(\"i\", { className: \"icon icon__status\" })),\r\n                React.createElement(\"div\", { className: \"main-menu--nav--text\" }, \"Status\"))),\r\n        React.createElement(\"li\", null,\r\n            React.createElement(react_router_dom_1.NavLink, { to: \"/map\", activeClassName: \"active\" },\r\n                React.createElement(\"div\", { className: \"main-menu--nav--icon\" },\r\n                    React.createElement(\"i\", { className: \"icon icon__map\" })),\r\n                React.createElement(\"div\", { className: \"main-menu--nav--text\" }, \"Map\"))),\r\n        React.createElement(\"li\", null,\r\n            React.createElement(react_router_dom_1.NavLink, { to: \"/remote\", activeClassName: \"active\" },\r\n                React.createElement(\"div\", { className: \"main-menu--nav--icon\" },\r\n                    React.createElement(\"i\", { className: \"icon icon__remote\" })),\r\n                React.createElement(\"div\", { className: \"main-menu--nav--text\" }, \"Remote\"))),\r\n        React.createElement(\"li\", null,\r\n            React.createElement(react_router_dom_1.NavLink, { to: \"/ai\", activeClassName: \"active\" },\r\n                React.createElement(\"div\", { className: \"main-menu--nav--icon\" },\r\n                    React.createElement(\"i\", { className: \"icon icon__ai\" })),\r\n                React.createElement(\"div\", { className: \"main-menu--nav--text\" }, \"AI\"))),\r\n        React.createElement(\"li\", null,\r\n            React.createElement(react_router_dom_1.NavLink, { to: \"/settings\", activeClassName: \"active\" },\r\n                React.createElement(\"div\", { className: \"main-menu--nav--icon\" },\r\n                    React.createElement(\"i\", { className: \"icon icon__settings\" })),\r\n                React.createElement(\"div\", { className: \"main-menu--nav--text\" }, \"Settings\")))))); };\r\nexports.default = MainMenu;\r\n\n\n//# sourceURL=webpack:///./src/components/MainMenu.tsx?");
+eval("\r\nObject.defineProperty(exports, \"__esModule\", { value: true });\r\nvar React = __webpack_require__(/*! react */ \"./node_modules/react/index.js\");\r\nvar react_router_dom_1 = __webpack_require__(/*! react-router-dom */ \"./node_modules/react-router-dom/es/index.js\");\r\n__webpack_require__(/*! ./MainMenu.scss */ \"./src/components/main-menu/MainMenu.scss\");\r\nvar MainMenu = function () { return (React.createElement(\"div\", { className: \"main-menu\" },\r\n    React.createElement(\"ul\", { className: \"main-menu--nav\" },\r\n        React.createElement(\"li\", null,\r\n            React.createElement(react_router_dom_1.NavLink, { to: \"/status\", activeClassName: \"active\" },\r\n                React.createElement(\"div\", { className: \"main-menu--nav--icon\" },\r\n                    React.createElement(\"i\", { className: \"icon icon__status\" })),\r\n                React.createElement(\"div\", { className: \"main-menu--nav--text\" }, \"Status\"))),\r\n        React.createElement(\"li\", null,\r\n            React.createElement(react_router_dom_1.NavLink, { to: \"/map\", activeClassName: \"active\" },\r\n                React.createElement(\"div\", { className: \"main-menu--nav--icon\" },\r\n                    React.createElement(\"i\", { className: \"icon icon__map\" })),\r\n                React.createElement(\"div\", { className: \"main-menu--nav--text\" }, \"Map\"))),\r\n        React.createElement(\"li\", null,\r\n            React.createElement(react_router_dom_1.NavLink, { to: \"/remote\", activeClassName: \"active\" },\r\n                React.createElement(\"div\", { className: \"main-menu--nav--icon\" },\r\n                    React.createElement(\"i\", { className: \"icon icon__remote\" })),\r\n                React.createElement(\"div\", { className: \"main-menu--nav--text\" }, \"Remote\"))),\r\n        React.createElement(\"li\", null,\r\n            React.createElement(react_router_dom_1.NavLink, { to: \"/ai\", activeClassName: \"active\" },\r\n                React.createElement(\"div\", { className: \"main-menu--nav--icon\" },\r\n                    React.createElement(\"i\", { className: \"icon icon__ai\" })),\r\n                React.createElement(\"div\", { className: \"main-menu--nav--text\" }, \"AI\"))),\r\n        React.createElement(\"li\", null,\r\n            React.createElement(react_router_dom_1.NavLink, { to: \"/settings\", activeClassName: \"active\" },\r\n                React.createElement(\"div\", { className: \"main-menu--nav--icon\" },\r\n                    React.createElement(\"i\", { className: \"icon icon__settings\" })),\r\n                React.createElement(\"div\", { className: \"main-menu--nav--text\" }, \"Settings\")))))); };\r\nexports.default = MainMenu;\r\n\n\n//# sourceURL=webpack:///./src/components/main-menu/MainMenu.tsx?");
 
 /***/ }),
 
@@ -925,67 +936,78 @@ eval("// extracted by mini-css-extract-plugin\n\n//# sourceURL=webpack:///./src/
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-eval("\r\nObject.defineProperty(exports, \"__esModule\", { value: true });\r\nvar React = __webpack_require__(/*! react */ \"./node_modules/react/index.js\");\r\nvar ReactDOM = __webpack_require__(/*! react-dom */ \"./node_modules/react-dom/index.js\");\r\nvar react_router_dom_1 = __webpack_require__(/*! react-router-dom */ \"./node_modules/react-router-dom/es/index.js\");\r\n__webpack_require__(/*! reset-css */ \"./node_modules/reset-css/reset.css\");\r\nvar MainMenu_1 = __webpack_require__(/*! ./components/MainMenu */ \"./src/components/MainMenu.tsx\");\r\n__webpack_require__(/*! ./main.scss */ \"./src/main.scss\");\r\nvar AiView_1 = __webpack_require__(/*! ./views/AiView */ \"./src/views/AiView.tsx\");\r\nvar MapView_1 = __webpack_require__(/*! ./views/MapView */ \"./src/views/MapView.tsx\");\r\nvar RemoteView_1 = __webpack_require__(/*! ./views/RemoteView */ \"./src/views/RemoteView.tsx\");\r\nvar SettingsView_1 = __webpack_require__(/*! ./views/SettingsView */ \"./src/views/SettingsView.tsx\");\r\nvar StatusView_1 = __webpack_require__(/*! ./views/StatusView */ \"./src/views/StatusView.tsx\");\r\nReactDOM.render(React.createElement(react_router_dom_1.BrowserRouter, null,\r\n    React.createElement(\"div\", { className: \"app\" },\r\n        React.createElement(react_router_dom_1.Switch, null,\r\n            React.createElement(react_router_dom_1.Route, { path: \"/status\", component: StatusView_1.default }),\r\n            React.createElement(react_router_dom_1.Route, { path: \"/map\", component: MapView_1.default }),\r\n            React.createElement(react_router_dom_1.Route, { path: \"/remote\", component: RemoteView_1.default }),\r\n            React.createElement(react_router_dom_1.Route, { path: \"/ai\", component: AiView_1.default }),\r\n            React.createElement(react_router_dom_1.Route, { path: \"/settings\", component: SettingsView_1.default }),\r\n            React.createElement(react_router_dom_1.Route, { exact: true, path: \"/\" },\r\n                React.createElement(react_router_dom_1.Redirect, { to: \"/status\" }))),\r\n        React.createElement(MainMenu_1.default, null))), document.getElementById(\"root\"));\r\n// type Loggable = string | number;\r\n// // resolve web socket configuration\r\n// const wsIp = localStorage.wsIp ? localStorage.wsIp : \"127.0.0.1\";\r\n// const wsPort = 8000;\r\n// const wsUrl = `ws://${wsIp}:${wsPort}`;\r\n// let lastLogMessageTime = 0;\r\n// let ws: WebSocket;\r\n// // document.addEventListener(\r\n// //   \"DOMContentLoaded\",\r\n// //   () => {\r\n// // log important info\r\n// log(\"web socket url\", wsUrl);\r\n// // create a new websocket client\r\n// ws = connect(wsUrl);\r\n// //   },\r\n// //   false,\r\n// // );\r\n// function connect(url: string): WebSocket {\r\n//   log(`connecting to web-socket at ${url}`);\r\n//   ws = new WebSocket(url);\r\n//   let wasConnected = false;\r\n//   ws.onopen = () => {\r\n//     log(\"established web-socket connection\");\r\n//     wasConnected = true;\r\n//   };\r\n//   ws.onclose = () => {\r\n//     if (wasConnected) {\r\n//       log(\"connection to web-socket was lost\");\r\n//     } else {\r\n//       log(\"connecting to web-socket failed\");\r\n//     }\r\n//     setTimeout(() => {\r\n//       ws = connect(url);\r\n//     }, 1000);\r\n//   };\r\n//   ws.onmessage = event => {\r\n//     log(`&lt ${event.data}`);\r\n//   };\r\n//   return ws;\r\n// }\r\n// export function log(...args: Loggable[]) {\r\n//   const logWrap = document.getElementById(\"log\");\r\n//   if (logWrap === null) {\r\n//     throw new Error(\"Log wrap could not be found\");\r\n//   }\r\n//   const deltaTime = lastLogMessageTime > 0 ? Date.now() - lastLogMessageTime : 0;\r\n//   logWrap.innerHTML += `[${pad(deltaTime, 5)}] `;\r\n//   args.forEach((arg, index) => {\r\n//     if (index > 0) {\r\n//       logWrap.innerHTML += \"  \";\r\n//     }\r\n//     logWrap.innerHTML += arg;\r\n//   });\r\n//   logWrap.innerHTML += \"\\n\";\r\n//   console.log.apply(console, args);\r\n//   lastLogMessageTime = Date.now();\r\n// }\r\n// function send(message: string) {\r\n//   ws.send(`${message}`);\r\n//   log(`&gt ${message}`);\r\n// }\r\n// export function showToast(message: string) {\r\n//   send(`!toast:${message}`);\r\n//   log(`# ${message}`);\r\n// }\r\n// export function reload() {\r\n//   send(\"!reload\");\r\n// }\r\n// export function promptWebSocketIp() {\r\n//   localStorage.wsIp = prompt(\"Enter web-socket ip\");\r\n//   reload();\r\n// }\r\n// function pad(value: string | number, padding: number) {\r\n//   const str = typeof value === \"string\" ? value : value.toString();\r\n//   const padLength = padding - str.length;\r\n//   if (padLength < 1) {\r\n//     return str;\r\n//   }\r\n//   return `${new Array(padLength + 1).join(\" \")}${str}`;\r\n// }\r\n\n\n//# sourceURL=webpack:///./src/main.tsx?");
+eval("\r\nObject.defineProperty(exports, \"__esModule\", { value: true });\r\nvar React = __webpack_require__(/*! react */ \"./node_modules/react/index.js\");\r\nvar ReactDOM = __webpack_require__(/*! react-dom */ \"./node_modules/react-dom/index.js\");\r\nvar react_router_dom_1 = __webpack_require__(/*! react-router-dom */ \"./node_modules/react-router-dom/es/index.js\");\r\n__webpack_require__(/*! reset-css */ \"./node_modules/reset-css/reset.css\");\r\n__webpack_require__(/*! ./main.scss */ \"./src/main.scss\");\r\nvar MainMenu_1 = __webpack_require__(/*! ./components/main-menu/MainMenu */ \"./src/components/main-menu/MainMenu.tsx\");\r\nvar AiView_1 = __webpack_require__(/*! ./views/ai/AiView */ \"./src/views/ai/AiView.tsx\");\r\nvar MapView_1 = __webpack_require__(/*! ./views/map/MapView */ \"./src/views/map/MapView.tsx\");\r\nvar RemoteView_1 = __webpack_require__(/*! ./views/remote/RemoteView */ \"./src/views/remote/RemoteView.tsx\");\r\nvar SettingsView_1 = __webpack_require__(/*! ./views/settings/SettingsView */ \"./src/views/settings/SettingsView.tsx\");\r\nvar StatusView_1 = __webpack_require__(/*! ./views/status/StatusView */ \"./src/views/status/StatusView.tsx\");\r\nReactDOM.render(React.createElement(react_router_dom_1.BrowserRouter, null,\r\n    React.createElement(\"div\", { className: \"app\" },\r\n        React.createElement(react_router_dom_1.Switch, null,\r\n            React.createElement(react_router_dom_1.Route, { path: \"/status\", component: StatusView_1.default }),\r\n            React.createElement(react_router_dom_1.Route, { path: \"/map\", component: MapView_1.default }),\r\n            React.createElement(react_router_dom_1.Route, { path: \"/remote\", component: RemoteView_1.default }),\r\n            React.createElement(react_router_dom_1.Route, { path: \"/ai\", component: AiView_1.default }),\r\n            React.createElement(react_router_dom_1.Route, { path: \"/settings\", component: SettingsView_1.default }),\r\n            React.createElement(react_router_dom_1.Route, { exact: true, path: \"/\" },\r\n                React.createElement(react_router_dom_1.Redirect, { to: \"/status\" }))),\r\n        React.createElement(MainMenu_1.default, null))), document.getElementById(\"root\"));\r\n// type Loggable = string | number;\r\n// // resolve web socket configuration\r\n// const wsIp = localStorage.wsIp ? localStorage.wsIp : \"127.0.0.1\";\r\n// const wsPort = 8000;\r\n// const wsUrl = `ws://${wsIp}:${wsPort}`;\r\n// let lastLogMessageTime = 0;\r\n// let ws: WebSocket;\r\n// // document.addEventListener(\r\n// //   \"DOMContentLoaded\",\r\n// //   () => {\r\n// // log important info\r\n// log(\"web socket url\", wsUrl);\r\n// // create a new websocket client\r\n// ws = connect(wsUrl);\r\n// //   },\r\n// //   false,\r\n// // );\r\n// function connect(url: string): WebSocket {\r\n//   log(`connecting to web-socket at ${url}`);\r\n//   ws = new WebSocket(url);\r\n//   let wasConnected = false;\r\n//   ws.onopen = () => {\r\n//     log(\"established web-socket connection\");\r\n//     wasConnected = true;\r\n//   };\r\n//   ws.onclose = () => {\r\n//     if (wasConnected) {\r\n//       log(\"connection to web-socket was lost\");\r\n//     } else {\r\n//       log(\"connecting to web-socket failed\");\r\n//     }\r\n//     setTimeout(() => {\r\n//       ws = connect(url);\r\n//     }, 1000);\r\n//   };\r\n//   ws.onmessage = event => {\r\n//     log(`&lt ${event.data}`);\r\n//   };\r\n//   return ws;\r\n// }\r\n// export function log(...args: Loggable[]) {\r\n//   const logWrap = document.getElementById(\"log\");\r\n//   if (logWrap === null) {\r\n//     throw new Error(\"Log wrap could not be found\");\r\n//   }\r\n//   const deltaTime = lastLogMessageTime > 0 ? Date.now() - lastLogMessageTime : 0;\r\n//   logWrap.innerHTML += `[${pad(deltaTime, 5)}] `;\r\n//   args.forEach((arg, index) => {\r\n//     if (index > 0) {\r\n//       logWrap.innerHTML += \"  \";\r\n//     }\r\n//     logWrap.innerHTML += arg;\r\n//   });\r\n//   logWrap.innerHTML += \"\\n\";\r\n//   console.log.apply(console, args);\r\n//   lastLogMessageTime = Date.now();\r\n// }\r\n// function send(message: string) {\r\n//   ws.send(`${message}`);\r\n//   log(`&gt ${message}`);\r\n// }\r\n// export function showToast(message: string) {\r\n//   send(`!toast:${message}`);\r\n//   log(`# ${message}`);\r\n// }\r\n// export function reload() {\r\n//   send(\"!reload\");\r\n// }\r\n// export function promptWebSocketIp() {\r\n//   localStorage.wsIp = prompt(\"Enter web-socket ip\");\r\n//   reload();\r\n// }\r\n// function pad(value: string | number, padding: number) {\r\n//   const str = typeof value === \"string\" ? value : value.toString();\r\n//   const padLength = padding - str.length;\r\n//   if (padLength < 1) {\r\n//     return str;\r\n//   }\r\n//   return `${new Array(padLength + 1).join(\" \")}${str}`;\r\n// }\r\n\n\n//# sourceURL=webpack:///./src/main.tsx?");
 
 /***/ }),
 
-/***/ "./src/views/AiView.tsx":
-/*!******************************!*\
-  !*** ./src/views/AiView.tsx ***!
-  \******************************/
+/***/ "./src/views/ai/AiView.tsx":
+/*!*********************************!*\
+  !*** ./src/views/ai/AiView.tsx ***!
+  \*********************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-eval("\r\nObject.defineProperty(exports, \"__esModule\", { value: true });\r\nvar React = __webpack_require__(/*! react */ \"./node_modules/react/index.js\");\r\nvar AiView = function () { return React.createElement(\"div\", { className: \"view remote-view\" }, \"AI\"); };\r\nexports.default = AiView;\r\n\n\n//# sourceURL=webpack:///./src/views/AiView.tsx?");
+eval("\r\nObject.defineProperty(exports, \"__esModule\", { value: true });\r\nvar React = __webpack_require__(/*! react */ \"./node_modules/react/index.js\");\r\nvar AiView = function () { return React.createElement(\"div\", { className: \"view ai-view\" }, \"AI\"); };\r\nexports.default = AiView;\r\n\n\n//# sourceURL=webpack:///./src/views/ai/AiView.tsx?");
 
 /***/ }),
 
-/***/ "./src/views/MapView.tsx":
-/*!*******************************!*\
-  !*** ./src/views/MapView.tsx ***!
-  \*******************************/
+/***/ "./src/views/map/MapView.tsx":
+/*!***********************************!*\
+  !*** ./src/views/map/MapView.tsx ***!
+  \***********************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-eval("\r\nObject.defineProperty(exports, \"__esModule\", { value: true });\r\nvar React = __webpack_require__(/*! react */ \"./node_modules/react/index.js\");\r\nvar MapView = function () { return React.createElement(\"div\", { className: \"view remote-view\" }, \"Map\"); };\r\nexports.default = MapView;\r\n\n\n//# sourceURL=webpack:///./src/views/MapView.tsx?");
+eval("\r\nObject.defineProperty(exports, \"__esModule\", { value: true });\r\nvar React = __webpack_require__(/*! react */ \"./node_modules/react/index.js\");\r\nvar MapView = function () { return React.createElement(\"div\", { className: \"view map-view\" }, \"Map\"); };\r\nexports.default = MapView;\r\n\n\n//# sourceURL=webpack:///./src/views/map/MapView.tsx?");
 
 /***/ }),
 
-/***/ "./src/views/RemoteView.tsx":
-/*!**********************************!*\
-  !*** ./src/views/RemoteView.tsx ***!
-  \**********************************/
+/***/ "./src/views/remote/RemoteView.tsx":
+/*!*****************************************!*\
+  !*** ./src/views/remote/RemoteView.tsx ***!
+  \*****************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-eval("\r\nObject.defineProperty(exports, \"__esModule\", { value: true });\r\nvar React = __webpack_require__(/*! react */ \"./node_modules/react/index.js\");\r\nvar RemoteView = function () { return React.createElement(\"div\", { className: \"view remote-view\" }, \"Remote\"); };\r\nexports.default = RemoteView;\r\n\n\n//# sourceURL=webpack:///./src/views/RemoteView.tsx?");
+eval("\r\nObject.defineProperty(exports, \"__esModule\", { value: true });\r\nvar React = __webpack_require__(/*! react */ \"./node_modules/react/index.js\");\r\nvar RemoteView = function () { return React.createElement(\"div\", { className: \"view remote-view\" }, \"Remote\"); };\r\nexports.default = RemoteView;\r\n\n\n//# sourceURL=webpack:///./src/views/remote/RemoteView.tsx?");
 
 /***/ }),
 
-/***/ "./src/views/SettingsView.tsx":
-/*!************************************!*\
-  !*** ./src/views/SettingsView.tsx ***!
-  \************************************/
+/***/ "./src/views/settings/SettingsView.tsx":
+/*!*********************************************!*\
+  !*** ./src/views/settings/SettingsView.tsx ***!
+  \*********************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-eval("\r\nObject.defineProperty(exports, \"__esModule\", { value: true });\r\nvar React = __webpack_require__(/*! react */ \"./node_modules/react/index.js\");\r\nvar SettingsView = function () { return React.createElement(\"div\", { className: \"view remote-view\" }, \"Settings\"); };\r\nexports.default = SettingsView;\r\n\n\n//# sourceURL=webpack:///./src/views/SettingsView.tsx?");
+eval("\r\nObject.defineProperty(exports, \"__esModule\", { value: true });\r\nvar React = __webpack_require__(/*! react */ \"./node_modules/react/index.js\");\r\nvar SettingsView = function () { return React.createElement(\"div\", { className: \"view settings-view\" }, \"Settings\"); };\r\nexports.default = SettingsView;\r\n\n\n//# sourceURL=webpack:///./src/views/settings/SettingsView.tsx?");
 
 /***/ }),
 
-/***/ "./src/views/StatusView.tsx":
-/*!**********************************!*\
-  !*** ./src/views/StatusView.tsx ***!
-  \**********************************/
+/***/ "./src/views/status/StatusView.scss":
+/*!******************************************!*\
+  !*** ./src/views/status/StatusView.scss ***!
+  \******************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+eval("// extracted by mini-css-extract-plugin\n\n//# sourceURL=webpack:///./src/views/status/StatusView.scss?");
+
+/***/ }),
+
+/***/ "./src/views/status/StatusView.tsx":
+/*!*****************************************!*\
+  !*** ./src/views/status/StatusView.tsx ***!
+  \*****************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-eval("\r\nObject.defineProperty(exports, \"__esModule\", { value: true });\r\nvar React = __webpack_require__(/*! react */ \"./node_modules/react/index.js\");\r\nvar StatusView = function () { return React.createElement(\"div\", { className: \"view remote-view\" }, \"Status\"); };\r\nexports.default = StatusView;\r\n\n\n//# sourceURL=webpack:///./src/views/StatusView.tsx?");
+eval("\r\nObject.defineProperty(exports, \"__esModule\", { value: true });\r\nvar React = __webpack_require__(/*! react */ \"./node_modules/react/index.js\");\r\n__webpack_require__(/*! ./StatusView.scss */ \"./src/views/status/StatusView.scss\");\r\nvar StatusView = function () { return React.createElement(\"div\", { className: \"view status-view\" }, \"Status\"); };\r\nexports.default = StatusView;\r\n\n\n//# sourceURL=webpack:///./src/views/status/StatusView.tsx?");
 
 /***/ })
 

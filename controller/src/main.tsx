@@ -2,13 +2,13 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { BrowserRouter as Router, Redirect, Route, Switch } from "react-router-dom";
 import "reset-css";
-import MainMenu from "./components/MainMenu";
 import "./main.scss";
-import AiView from "./views/AiView";
-import MapView from "./views/MapView";
-import RemoteView from "./views/RemoteView";
-import SettingsView from "./views/SettingsView";
-import StatusView from "./views/StatusView";
+import MainMenu from "./components/main-menu/MainMenu";
+import AiView from "./views/ai/AiView";
+import MapView from "./views/map/MapView";
+import RemoteView from "./views/remote/RemoteView";
+import SettingsView from "./views/settings/SettingsView";
+import StatusView from "./views/status/StatusView";
 
 ReactDOM.render(
   <Router>

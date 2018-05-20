@@ -99,44 +99,48 @@ html {
     background-color: #282828;
     border-radius: 8px 8px 0 0;
     padding: 20px; }
-  .app .main-menu {
+
+.main-menu {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  background-color: #cc3333;
+  border-radius: 0 0 8px 8px; }
+  .main-menu--nav {
     display: flex;
     flex-direction: row;
-    justify-content: center;
-    background-color: #cc3333;
-    border-radius: 0 0 8px 8px; }
-    .app .main-menu--nav {
+    height: 60px;
+    flex: 1;
+    max-width: 500px; }
+    .main-menu--nav li {
+      flex: 1;
+      height: 100%;
+      padding: 0 10px;
+      text-align: center;
+      font-variant: small-caps; }
+      .main-menu--nav li a {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        text-decoration: none;
+        color: #661a1a; }
+        .main-menu--nav li a .icon {
+          background-color: #661a1a; }
+        .main-menu--nav li a.active {
+          color: #e69999; }
+          .main-menu--nav li a.active .icon {
+            background-color: #e69999; }
+    .main-menu--nav--icon {
       display: flex;
       flex-direction: row;
-      height: 60px;
-      flex: 1;
-      max-width: 500px; }
-      .app .main-menu--nav li {
-        flex: 1;
-        height: 100%;
-        padding: 0 10px;
-        text-align: center;
-        font-variant: small-caps; }
-        .app .main-menu--nav li a {
-          display: flex;
-          flex-direction: column;
-          width: 100%;
-          height: 100%;
-          text-decoration: none;
-          color: #661a1a; }
-          .app .main-menu--nav li a .icon {
-            background-color: #661a1a; }
-          .app .main-menu--nav li a.active {
-            color: #e69999; }
-            .app .main-menu--nav li a.active .icon {
-              background-color: #e69999; }
-      .app .main-menu--nav--icon {
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
-        height: 32px;
-        width: 100%;
-        padding: 6px 0 4px 0; }
-      .app .main-menu--nav--text {
-        flex: 1; }
+      justify-content: center;
+      height: 32px;
+      width: 100%;
+      padding: 6px 0 4px 0; }
+    .main-menu--nav--text {
+      flex: 1; }
+
+.status-view {
+  text-decoration: underline; }
 
