@@ -7,7 +7,7 @@
   background-color: $bg-primary;
   border-radius: 0 0 8px 8px;
 
-  &--nav {
+  &__nav {
     display: flex;
     flex-direction: row;
     height: 60px;
@@ -43,7 +43,7 @@
       }
     }
 
-    &--icon {
+    &__icon {
       display: flex;
       flex-direction: row;
       justify-content: center;
@@ -52,7 +52,7 @@
       padding: 6px 0 4px 0;
     }
 
-    &--text {
+    &__text {
       flex: 1;
     }
   }

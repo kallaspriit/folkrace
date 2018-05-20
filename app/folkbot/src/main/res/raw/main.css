@@ -106,41 +106,52 @@ html {
   justify-content: center;
   background-color: #cc3333;
   border-radius: 0 0 8px 8px; }
-  .main-menu--nav {
+  .main-menu__nav {
     display: flex;
     flex-direction: row;
     height: 60px;
     flex: 1;
     max-width: 500px; }
-    .main-menu--nav li {
+    .main-menu__nav li {
       flex: 1;
       height: 100%;
       padding: 0 10px;
       text-align: center;
       font-variant: small-caps; }
-      .main-menu--nav li a {
+      .main-menu__nav li a {
         display: flex;
         flex-direction: column;
         width: 100%;
         height: 100%;
         text-decoration: none;
         color: #661a1a; }
-        .main-menu--nav li a .icon {
+        .main-menu__nav li a .icon {
           background-color: #661a1a; }
-        .main-menu--nav li a.active {
+        .main-menu__nav li a.active {
           color: #e69999; }
-          .main-menu--nav li a.active .icon {
+          .main-menu__nav li a.active .icon {
             background-color: #e69999; }
-    .main-menu--nav--icon {
+    .main-menu__nav__icon {
       display: flex;
       flex-direction: row;
       justify-content: center;
       height: 32px;
       width: 100%;
       padding: 6px 0 4px 0; }
-    .main-menu--nav--text {
+    .main-menu__nav__text {
       flex: 1; }
 
-.status-view {
-  text-decoration: underline; }
+.status-view .status-grid {
+  display: grid;
+  grid-gap: 20px;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 100px;
+  height: 100%; }
+  .status-view .status-grid__item {
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.01);
+    border-radius: 4px; }
+    .status-view .status-grid__item--log {
+      grid-row: 2;
+      grid-column: 1 / 3; }
 
