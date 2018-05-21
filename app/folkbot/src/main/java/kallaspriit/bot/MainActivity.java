@@ -2,18 +2,22 @@ package kallaspriit.bot;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+import android.view.View;
 import android.view.WindowManager;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import org.java_websocket.drafts.Draft_6455;
@@ -29,6 +33,7 @@ public class MainActivity extends Activity implements BluetoothWebSocketProxy.Li
     public static final String BLUETOOTH_DEVICE_NAME_PREFIX = "HC-06";
 
     WebView webView;
+    ProgressBar progressBar;
     private WebSocketServer webSocketServer;
     private HttpServer httpServer;
     private BluetoothWebSocketProxy bluetoothWebSocketProxy;
@@ -85,6 +90,25 @@ public class MainActivity extends Activity implements BluetoothWebSocketProxy.Li
 
         // make the web-view debuggable
         WebView.setWebContentsDebuggingEnabled(true);
+
+        // set background color to match the application
+        webView.setBackgroundColor(Color.parseColor("#282828"));
+
+        // get reference to the progress bar widget
+        progressBar = findViewById(R.id.progressBar);
+
+        // register web-view client
+        webView.setWebViewClient(new WebViewClient() {
+
+            // listen for finished loading
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                Log.i(TAG, "web-view page has finished loading");
+
+                // hide the progress bar
+                progressBar.setVisibility(View.GONE);
+            }
+        });
     }
 
     @Override
@@ -93,13 +117,18 @@ public class MainActivity extends Activity implements BluetoothWebSocketProxy.Li
 
         Log.i(TAG, "resuming main activity");
 
+        // show the progress bar
+        progressBar.setVisibility(View.VISIBLE);
+
         // start the services
         startBroadcastListeners();
         startHttpServer();
         startWebSocketServer();
+
+        // start the bluetooth service
         startBluetoothWebSocketProxy();
 
-        // show the local index view
+        // show the local index view if not already loaded
         webView.loadUrl("http://127.0.0.1:" + HTTP_SERVER_PORT + "/");
     }
 
@@ -108,6 +137,9 @@ public class MainActivity extends Activity implements BluetoothWebSocketProxy.Li
         super.onPause();
 
         Log.i(TAG, "pausing main activity");
+
+        // load blank page
+        webView.loadUrl("about:blank");
 
         // stop the services
         stopBluetoothWebSocketProxy();

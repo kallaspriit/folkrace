@@ -22,19 +22,19 @@ const MainMenu: React.SFC<{}> = () => (
         </NavLink>
       </li>
       <li>
-        <NavLink to="/remote" activeClassName="active">
-          <div className="main-menu__nav__icon">
-            <i className="icon icon__remote" />
-          </div>
-          <div className="main-menu__nav__text">Remote</div>
-        </NavLink>
-      </li>
-      <li>
         <NavLink to="/ai" activeClassName="active">
           <div className="main-menu__nav__icon">
             <i className="icon icon__ai" />
           </div>
           <div className="main-menu__nav__text">AI</div>
+        </NavLink>
+      </li>
+      <li>
+        <NavLink to="/remote" activeClassName="active">
+          <div className="main-menu__nav__icon">
+            <i className="icon icon__remote" />
+          </div>
+          <div className="main-menu__nav__text">Remote</div>
         </NavLink>
       </li>
       <li>

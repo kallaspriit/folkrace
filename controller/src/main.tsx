@@ -20,7 +20,7 @@ ReactDOM.render(
         <Route path="/ai" component={AiView} />
         <Route path="/settings" component={SettingsView} />
         <Route exact path="/">
-          <Redirect to="/status" />
+          <Redirect to="/ai" />
         </Route>
       </Switch>
       <MainMenu />

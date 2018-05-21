@@ -88,17 +88,23 @@ html {
   margin: 0;
   font-family: "Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif;
   color: #f0f0f0;
-  background-color: #000; }
+  background-color: #282828; }
 
 .app {
   height: 100vh;
   display: flex;
-  flex-direction: column; }
+  flex-direction: column;
+  animation: fade-in 300ms; }
   .app .view {
     flex: 1;
-    background-color: #282828;
     border-radius: 8px 8px 0 0;
     padding: 20px; }
+
+@keyframes fade-in {
+  from {
+    opacity: 0; }
+  to {
+    opacity: 1; } }
 
 .main-menu {
   display: flex;
