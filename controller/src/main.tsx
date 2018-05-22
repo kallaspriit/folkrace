@@ -9,21 +9,24 @@ import MapView from "./views/map/MapView";
 import RemoteView from "./views/remote/RemoteView";
 import SettingsView from "./views/settings/SettingsView";
 import StatusView from "./views/status/StatusView";
+import { Provider } from "unstated";
 
 ReactDOM.render(
   <Router>
     <div className="app">
-      <Switch>
-        <Route path="/status" component={StatusView} />
-        <Route path="/map" component={MapView} />
-        <Route path="/remote" component={RemoteView} />
-        <Route path="/ai" component={BotView} />
-        <Route path="/settings" component={SettingsView} />
-        <Route exact path="/">
-          <Redirect to="/status" />
-        </Route>
-      </Switch>
-      <MainMenu />
+      <Provider>
+        <Switch>
+          <Route path="/status" component={StatusView} />
+          <Route path="/map" component={MapView} />
+          <Route path="/remote" component={RemoteView} />
+          <Route path="/ai" component={BotView} />
+          <Route path="/settings" component={SettingsView} />
+          <Route exact path="/">
+            <Redirect to="/status" />
+          </Route>
+        </Switch>
+        <MainMenu />
+      </Provider>
     </div>
   </Router>,
   document.getElementById("root"),
