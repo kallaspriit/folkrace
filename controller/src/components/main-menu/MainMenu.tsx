@@ -10,7 +10,9 @@ const MainMenu: React.SFC<{}> = () => (
           <div className="main-menu__nav__icon">
             <i className="icon icon__status" />
           </div>
-          <div className="main-menu__nav__text">Status</div>
+          <div className="main-menu__nav__text">
+            <span>status</span>
+          </div>
         </NavLink>
       </li>
       <li>
@@ -18,7 +20,9 @@ const MainMenu: React.SFC<{}> = () => (
           <div className="main-menu__nav__icon">
             <i className="icon icon__map" />
           </div>
-          <div className="main-menu__nav__text">Map</div>
+          <div className="main-menu__nav__text">
+            <span>map</span>
+          </div>
         </NavLink>
       </li>
       <li>
@@ -26,7 +30,9 @@ const MainMenu: React.SFC<{}> = () => (
           <div className="main-menu__nav__icon">
             <i className="icon icon__ai" />
           </div>
-          <div className="main-menu__nav__text">AI</div>
+          <div className="main-menu__nav__text">
+            <span>bot</span>
+          </div>
         </NavLink>
       </li>
       <li>
@@ -34,7 +40,9 @@ const MainMenu: React.SFC<{}> = () => (
           <div className="main-menu__nav__icon">
             <i className="icon icon__remote" />
           </div>
-          <div className="main-menu__nav__text">Remote</div>
+          <div className="main-menu__nav__text">
+            <span>remote</span>
+          </div>
         </NavLink>
       </li>
       <li>
@@ -42,7 +50,9 @@ const MainMenu: React.SFC<{}> = () => (
           <div className="main-menu__nav__icon">
             <i className="icon icon__settings" />
           </div>
-          <div className="main-menu__nav__text">Settings</div>
+          <div className="main-menu__nav__text">
+            <span>settings</span>
+          </div>
         </NavLink>
       </li>
     </ul>

@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Redirect, Route, Switch } from "react-router-d
 import "reset-css";
 import "./main.scss";
 import MainMenu from "./components/main-menu/MainMenu";
-import AiView from "./views/ai/AiView";
+import BotView from "./views/bot/BotView";
 import MapView from "./views/map/MapView";
 import RemoteView from "./views/remote/RemoteView";
 import SettingsView from "./views/settings/SettingsView";
@@ -17,10 +17,10 @@ ReactDOM.render(
         <Route path="/status" component={StatusView} />
         <Route path="/map" component={MapView} />
         <Route path="/remote" component={RemoteView} />
-        <Route path="/ai" component={AiView} />
+        <Route path="/ai" component={BotView} />
         <Route path="/settings" component={SettingsView} />
         <Route exact path="/">
-          <Redirect to="/ai" />
+          <Redirect to="/status" />
         </Route>
       </Switch>
       <MainMenu />
