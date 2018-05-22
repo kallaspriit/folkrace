@@ -139,6 +139,8 @@ html {
   .app .view {
     flex: 1;
     border-radius: 8px 8px 0 0; }
+    .app .view--text {
+      padding: 16px; }
   .app .secondary-text {
     color: #969696; }
 
@@ -175,7 +177,9 @@ html {
         height: 100%;
         padding: 8px 0;
         text-decoration: none;
-        color: #e69999; }
+        color: #e69999;
+        background-color: rgba(0, 0, 0, 0);
+        transition: background-color 300ms; }
         .main-menu__nav li a .icon {
           background-color: #e69999; }
         .main-menu__nav li a.active {

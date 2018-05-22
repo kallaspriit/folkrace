@@ -30,20 +30,16 @@
         height: 100%;
         padding: 8px 0;
         text-decoration: none;
-        // color: darken($bg-primary, $darker-lighter-percentage);
         color: lighten($bg-primary, $darker-lighter-percentage);
+        background-color: rgba(0, 0, 0, 0);
+        transition: background-color 300ms;
 
         .icon {
           background-color: lighten($bg-primary, $darker-lighter-percentage);
         }
 
         &.active {
-          // color: lighten($bg-primary, $darker-lighter-percentage);
           background-color: rgba(0, 0, 0, 0.1);
-
-          .icon {
-            // background-color: lighten($bg-primary, $darker-lighter-percentage);
-          }
         }
       }
     }

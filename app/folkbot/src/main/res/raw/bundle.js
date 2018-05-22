@@ -982,7 +982,7 @@ eval("\r\nObject.defineProperty(exports, \"__esModule\", { value: true });\r\nva
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-eval("\r\nObject.defineProperty(exports, \"__esModule\", { value: true });\r\nvar React = __webpack_require__(/*! react */ \"./node_modules/react/index.js\");\r\nvar BotView = function () { return React.createElement(\"div\", { className: \"view bot-view\" }, \"Bot\"); };\r\nexports.default = BotView;\r\n\n\n//# sourceURL=webpack:///./src/views/bot/BotView.tsx?");
+eval("\r\nObject.defineProperty(exports, \"__esModule\", { value: true });\r\nvar React = __webpack_require__(/*! react */ \"./node_modules/react/index.js\");\r\nvar BotView = function () { return React.createElement(\"div\", { className: \"view view--text bot-view\" }, \"Bot\"); };\r\nexports.default = BotView;\r\n\n\n//# sourceURL=webpack:///./src/views/bot/BotView.tsx?");
 
 /***/ }),
 
@@ -994,7 +994,7 @@ eval("\r\nObject.defineProperty(exports, \"__esModule\", { value: true });\r\nva
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-eval("\r\nObject.defineProperty(exports, \"__esModule\", { value: true });\r\nvar React = __webpack_require__(/*! react */ \"./node_modules/react/index.js\");\r\nvar MapView = function () { return React.createElement(\"div\", { className: \"view map-view\" }, \"Map\"); };\r\nexports.default = MapView;\r\n\n\n//# sourceURL=webpack:///./src/views/map/MapView.tsx?");
+eval("\r\nObject.defineProperty(exports, \"__esModule\", { value: true });\r\nvar React = __webpack_require__(/*! react */ \"./node_modules/react/index.js\");\r\nvar MapView = function () { return React.createElement(\"div\", { className: \"view view--text map-view\" }, \"Map\"); };\r\nexports.default = MapView;\r\n\n\n//# sourceURL=webpack:///./src/views/map/MapView.tsx?");
 
 /***/ }),
 
@@ -1006,7 +1006,7 @@ eval("\r\nObject.defineProperty(exports, \"__esModule\", { value: true });\r\nva
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-eval("\r\nObject.defineProperty(exports, \"__esModule\", { value: true });\r\nvar React = __webpack_require__(/*! react */ \"./node_modules/react/index.js\");\r\nvar RemoteView = function () { return React.createElement(\"div\", { className: \"view remote-view\" }, \"Remote\"); };\r\nexports.default = RemoteView;\r\n\n\n//# sourceURL=webpack:///./src/views/remote/RemoteView.tsx?");
+eval("\r\nObject.defineProperty(exports, \"__esModule\", { value: true });\r\nvar React = __webpack_require__(/*! react */ \"./node_modules/react/index.js\");\r\nvar RemoteView = function () { return React.createElement(\"div\", { className: \"view view--text remote-view\" }, \"Remote\"); };\r\nexports.default = RemoteView;\r\n\n\n//# sourceURL=webpack:///./src/views/remote/RemoteView.tsx?");
 
 /***/ }),
 
@@ -1018,7 +1018,7 @@ eval("\r\nObject.defineProperty(exports, \"__esModule\", { value: true });\r\nva
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-eval("\r\nObject.defineProperty(exports, \"__esModule\", { value: true });\r\nvar React = __webpack_require__(/*! react */ \"./node_modules/react/index.js\");\r\nvar SettingsView = function () { return React.createElement(\"div\", { className: \"view settings-view\" }, \"Settings\"); };\r\nexports.default = SettingsView;\r\n\n\n//# sourceURL=webpack:///./src/views/settings/SettingsView.tsx?");
+eval("\r\nObject.defineProperty(exports, \"__esModule\", { value: true });\r\nvar React = __webpack_require__(/*! react */ \"./node_modules/react/index.js\");\r\nvar SettingsView = function () { return React.createElement(\"div\", { className: \"view view--text settings-view\" }, \"Settings\"); };\r\nexports.default = SettingsView;\r\n\n\n//# sourceURL=webpack:///./src/views/settings/SettingsView.tsx?");
 
 /***/ }),
 
