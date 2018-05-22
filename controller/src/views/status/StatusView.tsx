@@ -1,11 +1,11 @@
 import * as React from "react";
 import "./StatusView.scss";
+import { Grid, GridItem } from "../../components/grid/Grid";
 
-// TODO: refactor to a component
 const StatusView: React.StatelessComponent<{}> = () => (
   <div className="view view--grid status-view">
-    <div className="grid">
-      <div className="grid__item grid__item--bluetooth grid__item--good">
+    <Grid>
+      <GridItem className="bg--good">
         <div className="grid__icon">
           <i className="icon icon__bluetooth" />
         </div>
@@ -13,8 +13,8 @@ const StatusView: React.StatelessComponent<{}> = () => (
           <div className="grid__text--primary">Bluetooth</div>
           <div className="grid__text--secondary">Connected: HC-06</div>
         </div>
-      </div>
-      <div className="grid__item grid__item--web-socket grid__item--bad">
+      </GridItem>
+      <GridItem className="bg--bad">
         <div className="grid__icon">
           <i className="icon icon__web-socket" />
         </div>
@@ -22,17 +22,15 @@ const StatusView: React.StatelessComponent<{}> = () => (
           <div className="grid__text--primary">Web Socket</div>
           <div className="grid__text--secondary">Reconnecting</div>
         </div>
-      </div>
-      <div className="grid__item grid__item--log">
-        <div className="log">
-          <div>&gt; bluetooth connecting</div>
-          <div>&gt; bluetooth connected: HC-06</div>
-          <div>&lt; set-speed:1000:0</div>
-          <div>&gt; e:2342:0</div>
-          <div>&gt; e:2652:0</div>
-        </div>
-      </div>
-    </div>
+      </GridItem>
+      <GridItem className="log">
+        <div>&gt; bluetooth connecting</div>
+        <div>&gt; bluetooth connected: HC-06</div>
+        <div>&lt; set-speed:1000:0</div>
+        <div>&gt; e:2342:0</div>
+        <div>&gt; e:2652:0</div>
+      </GridItem>
+    </Grid>
   </div>
 );
 
