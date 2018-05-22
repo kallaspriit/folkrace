@@ -6,12 +6,12 @@ import LogContainer from "../../containers/LogContainer";
 import formatTime from "../../services/formatTime";
 
 // TODO: handle clearing logs
-const StatusView: React.SFC<{}> = () => (
+const StatusView: React.SFC = () => (
   <Subscribe to={[LogContainer]}>
     {(log: LogContainer) => (
       <div className="view view--grid status-view">
         <Grid>
-          <GridItem className="bg--good">
+          <GridItem className="grid-status bg--good">
             <div className="grid__icon">
               <i className="icon icon__bluetooth" />
             </div>
@@ -20,7 +20,7 @@ const StatusView: React.SFC<{}> = () => (
               <div className="grid__text--secondary">Connected: HC-06</div>
             </div>
           </GridItem>
-          <GridItem className="bg--bad">
+          <GridItem className="grid-status bg--bad">
             <div className="grid__icon">
               <i className="icon icon__web-socket" />
             </div>
@@ -29,7 +29,7 @@ const StatusView: React.SFC<{}> = () => (
               <div className="grid__text--secondary">Reconnecting</div>
             </div>
           </GridItem>
-          <GridItem className="log">
+          <GridItem className="log" scrollToBottom>
             {log.state.entries.map(entry => (
               <div className="log__entry" key={entry.id}>
                 <span className="log__entry__time">{formatTime(entry.time)}</span>{" "}

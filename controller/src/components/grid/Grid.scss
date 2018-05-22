@@ -9,10 +9,9 @@
   grid-gap: 5px;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 100px;
-  height: 100%;
+  height: calc(100vh - 74px); // subtract menu height and 2 * 5px paddings
 
   &__item {
-    padding: 16px;
     background-color: $bg-tertiary;
   }
 

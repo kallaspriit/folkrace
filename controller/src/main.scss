@@ -3,6 +3,16 @@
 @import "./gfx/icons";
 @import "./gfx/common";
 
+// default to using border box sizing
+html {
+  box-sizing: border-box;
+}
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
+}
+
 body,
 html {
   height: 100;

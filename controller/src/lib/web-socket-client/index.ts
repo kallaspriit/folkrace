@@ -11,7 +11,7 @@ export default class WebSocketClient {
     // TODO: remove fake source
     setInterval(() => {
       this.publish(`test ${i++}`);
-    }, 1000);
+    }, 100);
   }
 
   public addListener(listener: WebSocketClientListener) {
