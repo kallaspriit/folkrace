@@ -1,7 +1,15 @@
+@import "../../gfx/variables";
+
 .status-view {
   .log {
     padding: 8px;
     grid-column: 1 / 3;
     font-family: Consolas, "Courier New", Courier, monospace;
+
+    &__entry {
+      &__time {
+        color: $text-secondary;
+      }
+    }
   }
 }

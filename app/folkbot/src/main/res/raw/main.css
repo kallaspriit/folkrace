@@ -204,6 +204,8 @@ html {
   padding: 8px;
   grid-column: 1 / 3;
   font-family: Consolas, "Courier New", Courier, monospace; }
+  .status-view .log__entry__time {
+    color: #969696; }
 
 .view--grid {
   padding: 5px; }
