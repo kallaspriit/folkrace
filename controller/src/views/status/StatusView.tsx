@@ -5,6 +5,7 @@ import { Subscribe } from "unstated";
 import LogContainer from "../../containers/LogContainer";
 import formatTime from "../../services/formatTime";
 
+// TODO: handle clearing logs
 const StatusView: React.SFC<{}> = () => (
   <Subscribe to={[LogContainer]}>
     {(log: LogContainer) => (

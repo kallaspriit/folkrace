@@ -1,6 +1,7 @@
 @import "../../gfx/variables";
 
 .status-view {
+  // TODO: handle scrolling
   .log {
     padding: 8px;
     grid-column: 1 / 3;

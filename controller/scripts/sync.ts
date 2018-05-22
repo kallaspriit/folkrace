@@ -38,7 +38,7 @@ if (useWatchMode) {
       chalk.reset(`> ${chalk.bold(pad(event, 6))} for ${chalk.bold(pad(filename, 30))}, scheduling sync\n`),
     );
 
-    runDebounce();
+    await runDebounce();
   });
 } else {
   const startTime = Date.now();

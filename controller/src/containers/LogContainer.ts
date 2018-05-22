@@ -1,30 +1,18 @@
 import { Container } from "unstated";
 
-interface LogEntry {
+export interface LogEntry {
   id: string;
   time: Date;
   message: string;
 }
 
-interface LogState {
+export interface LogState {
   entries: LogEntry[];
 }
 
 export default class LogContainer extends Container<LogState> {
-  public readonly state = {
-    entries: [
-      // // TODO: remove test
-      // {
-      //   id: "1",
-      //   time: new Date(),
-      //   message: "Static test",
-      // },
-      // {
-      //   id: "2",
-      //   time: new Date(),
-      //   message: "Second test that has a very long log message that does not fit on a single line",
-      // },
-    ],
+  public readonly state: LogState = {
+    entries: [],
   };
 
   private lastId = 0;

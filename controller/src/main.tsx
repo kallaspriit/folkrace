@@ -13,10 +13,10 @@ import { Provider } from "unstated";
 import Glue from "./components/glue/Glue";
 
 ReactDOM.render(
-  <Router>
-    <div className="app">
-      <Provider>
-        <Glue />
+  <Provider>
+    <Glue />
+    <Router>
+      <div className="app">
         <Switch>
           <Route path="/status" component={StatusView} />
           <Route path="/map" component={MapView} />
@@ -28,9 +28,9 @@ ReactDOM.render(
           </Route>
         </Switch>
         <MainMenu />
-      </Provider>
-    </div>
-  </Router>,
+      </div>
+    </Router>
+  </Provider>,
   document.getElementById("root"),
 );
 

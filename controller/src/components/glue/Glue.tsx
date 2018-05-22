@@ -3,30 +3,28 @@ import { Subscribe } from "unstated";
 import webSocketClient from "../../services/webSocketClient";
 import LogContainer from "../../containers/LogContainer";
 
-let isFirstRender = true;
+let isDone = false;
 
-// sets up connections between components
-function setupConnections(log: LogContainer) {
-  webSocketClient.addListener({
-    onMessage: message => {
-      log.addEntry(message);
-    },
-  });
-}
-
-// glue component, does not render anything
+// glue component, connects external data to containers, does not render anything
 const Glue: React.SFC<{}> = () => (
   <Subscribe to={[LogContainer]}>
     {(log: LogContainer) => {
       // return if already set up
-      if (!isFirstRender) {
+      if (isDone) {
         return null;
       }
 
-      isFirstRender = false;
+      // setup connections
+      webSocketClient.addListener({
+        onMessage: message => {
+          log.addEntry(message);
+        },
+      });
 
-      setupConnections(log);
+      // don't run this logic again
+      isDone = true;
 
+      // don't render anything
       return null;
     }}
   </Subscribe>
