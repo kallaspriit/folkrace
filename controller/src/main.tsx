@@ -10,11 +10,13 @@ import RemoteView from "./views/remote/RemoteView";
 import SettingsView from "./views/settings/SettingsView";
 import StatusView from "./views/status/StatusView";
 import { Provider } from "unstated";
+import Glue from "./components/glue/Glue";
 
 ReactDOM.render(
   <Router>
     <div className="app">
       <Provider>
+        <Glue />
         <Switch>
           <Route path="/status" component={StatusView} />
           <Route path="/map" component={MapView} />

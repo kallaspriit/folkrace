@@ -19,7 +19,7 @@ class CounterContainer extends Container<CounterState> {
   }
 }
 
-const BotView: React.StatelessComponent<{}> = () => (
+const BotView: React.SFC<{}> = () => (
   <Subscribe to={[CounterContainer]}>
     {(counter: CounterContainer) => (
       <div className="view view--text bot-view">

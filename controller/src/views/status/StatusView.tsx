@@ -2,10 +2,10 @@ import * as React from "react";
 import "./StatusView.scss";
 import { Grid, GridItem } from "../../components/grid/Grid";
 import { Subscribe } from "unstated";
-import { LogContainer } from "../../containers/LogContainer";
+import LogContainer from "../../containers/LogContainer";
 import formatTime from "../../services/formatTime";
 
-const StatusView: React.StatelessComponent<{}> = () => (
+const StatusView: React.SFC<{}> = () => (
   <Subscribe to={[LogContainer]}>
     {(log: LogContainer) => (
       <div className="view view--grid status-view">

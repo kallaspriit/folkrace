@@ -10,26 +10,26 @@ interface LogState {
   entries: LogEntry[];
 }
 
-export class LogContainer extends Container<LogState> {
+export default class LogContainer extends Container<LogState> {
   public readonly state = {
     entries: [
-      // TODO: remove test
-      {
-        id: "1",
-        time: new Date(),
-        message: "Static test",
-      },
-      {
-        id: "2",
-        time: new Date(),
-        message: "Second test that has a very long log message that does not fit on a single line",
-      },
+      // // TODO: remove test
+      // {
+      //   id: "1",
+      //   time: new Date(),
+      //   message: "Static test",
+      // },
+      // {
+      //   id: "2",
+      //   time: new Date(),
+      //   message: "Second test that has a very long log message that does not fit on a single line",
+      // },
     ],
   };
 
   private lastId = 0;
 
-  public log(message: string) {
+  public addEntry(message: string) {
     this.setState({
       entries: [
         ...this.state.entries,
