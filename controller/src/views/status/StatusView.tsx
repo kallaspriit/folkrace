@@ -4,13 +4,14 @@ import { Grid, GridItem } from "../../components/grid/Grid";
 import { Subscribe } from "unstated";
 import LogContainer from "../../containers/LogContainer";
 import formatTime from "../../services/formatTime";
-import StatusContainer, { BluetoothState } from "../../containers/StatusContainer";
+import StatusContainer, { BluetoothState, BatteryState } from "../../containers/StatusContainer";
 import * as classNames from "classnames";
 import { titleCase } from "change-case";
 import { WebSocketState } from "../../lib/web-socket-client/index";
+import assertUnreachable from "../../services/assertUnreachable";
 
 // TODO: handle clearing logs
-// TODO: add motor controller, http server, IMU, battery
+// TODO: add motor controller, http server, IMU
 const StatusView: React.SFC = () => (
   <Subscribe to={[LogContainer, StatusContainer]}>
     {(logContainer: LogContainer, statusContainer: StatusContainer) => (
@@ -50,7 +51,7 @@ const StatusView: React.SFC = () => (
           <GridItem
             className={classNames(
               "grid-status",
-              true ? "bg--good" : "bg--bad", // TODO: check voltage
+              getBatteryLevelClass(statusContainer.batteryState), // TODO: check voltage
             )}
           >
             <div className="grid__icon">
@@ -58,7 +59,13 @@ const StatusView: React.SFC = () => (
             </div>
             <div className="grid__text">
               <div className="grid__text--primary">Battery</div>
-              <div className="grid__text--secondary">15.4V</div>
+              <div className="grid__text--secondary">
+                {statusContainer.state.batteryVoltage ? (
+                  `${statusContainer.state.batteryVoltage.toFixed(1)}V`
+                ) : (
+                  <em>Unknown</em>
+                )}
+              </div>
             </div>
           </GridItem>
           <GridItem className="log" scrollToBottom>
@@ -74,5 +81,24 @@ const StatusView: React.SFC = () => (
     )}
   </Subscribe>
 );
+
+function getBatteryLevelClass(batteryState: BatteryState): string {
+  switch (batteryState) {
+    case BatteryState.UNKNOWN:
+      return "bg--warn";
+
+    case BatteryState.FULL:
+      return "bg--good";
+
+    case BatteryState.LOW:
+      return "bg--warn";
+
+    case BatteryState.CRITICAL:
+      return "bg--bad";
+
+    default:
+      return assertUnreachable(batteryState, `got unexpected battery state`);
+  }
+}
 
 export default StatusView;

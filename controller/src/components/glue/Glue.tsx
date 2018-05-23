@@ -11,6 +11,7 @@ export interface ContainerMap {
 
 export enum WebSocketCommand {
   BLUETOOTH = "bluetooth",
+  GET_VOLTAGE = "get-voltage",
 }
 
 export type WebSocketCommandHandlerFn = (args: string[], containers: ContainerMap) => void;
@@ -19,7 +20,10 @@ export interface WebSocketCommandHandlersMap {
   [x: string]: WebSocketCommandHandlerFn | undefined;
 }
 
+const REQUEST_BATTERY_VOLTAGE_INTERVAL = 60 * 1000; // once per minute
+
 let isDone = false;
+let requestBatteryVoltageInterval: NodeJS.Timer | null = null;
 
 // glue component, connects external data to containers, does not render anything
 const Glue: React.SFC<{}> = () => (
@@ -31,38 +35,50 @@ const Glue: React.SFC<{}> = () => (
       }
 
       // set initial state
-      statusContainer.setWebSocketState(webSocketClient.getState());
+      statusContainer.setWebSocketState(webSocketClient.state);
 
       // subscribe to web-socket events
       webSocketClient.subscribe({
-        onConnecting: (_ws, wasConnected) => {
-          console.log(`glue: ws ${wasConnected ? "reconnecting" : "connecting"}`, event);
+        onConnecting: (_ws, _wasConnected) => {
+          // not handled
         },
-        onOpen: (_ws, event) => {
-          console.log("glue: ws open", event);
-
+        onOpen: (_ws, _event) => {
           logContainer.addEntry("web-socket connection established");
+
+          // request voltage
+          webSocketClient.send("get-voltage");
+
+          // also setup an interval to ask it periodically
+          requestBatteryVoltageInterval = setInterval(() => {
+            webSocketClient.send("get-voltage");
+          }, REQUEST_BATTERY_VOLTAGE_INTERVAL);
         },
-        onClose: (_ws, event, wasConnected) => {
-          console.log("glue: ws close", event);
+        onClose: (_ws, _event, wasConnected) => {
+          // clear the battery voltage interval if exists
+          if (requestBatteryVoltageInterval !== null) {
+            clearInterval(requestBatteryVoltageInterval);
+
+            requestBatteryVoltageInterval = null;
+          }
 
           if (wasConnected) {
-            logContainer.addEntry("web-socket connection was lost", true);
+            logContainer.addEntry("web-socket connection was lost");
           } else {
-            logContainer.addEntry("establishing web-socket connection failed", true);
+            logContainer.addEntry("establishing web-socket connection failed");
           }
         },
-        onError: (_ws, event, wasConnected) => {
-          console.log("glue: ws error", event, wasConnected);
+        onError: (_ws, _event, _wasConnected) => {
+          // not handled
         },
         onMessage: (_ws, message) => {
           // handle the message
           handleWebSocketMessage(message, { logContainer, statusContainer });
         },
-        onStateChanged: (_ws, newState, oldState) => {
-          console.log(`glue: ws state changed from ${oldState} to ${newState}`);
-
+        onStateChanged: (_ws, newState, _oldState) => {
           statusContainer.setWebSocketState(newState);
+        },
+        onSendMessage: (_ws, message) => {
+          logContainer.addEntry(`> ${message}`);
         },
       });
 
@@ -83,7 +99,7 @@ function handleWebSocketMessage(message: string, containers: ContainerMap) {
   }
 
   // log the message
-  containers.logContainer.addEntry(message);
+  containers.logContainer.addEntry(`< ${message}`);
 
   // parse message
   const [name, ...args] = message.split(":");
@@ -94,8 +110,6 @@ function handleWebSocketMessage(message: string, containers: ContainerMap) {
 const webSocketCommandHandlers: WebSocketCommandHandlersMap = {
   // handles bluetooth state changes
   [WebSocketCommand.BLUETOOTH]: (args: string[], containers: ContainerMap) => {
-    console.log("got bluetooth state", args, containers);
-
     const state = args[0] as BluetoothState;
     let bluetoothDeviceName: string | undefined;
 
@@ -109,6 +123,13 @@ const webSocketCommandHandlers: WebSocketCommandHandlersMap = {
     }
 
     containers.statusContainer.setBluetoothState(args[0] as BluetoothState, bluetoothDeviceName);
+  },
+
+  // handles battery voltage level
+  [WebSocketCommand.GET_VOLTAGE]: (args: string[], containers: ContainerMap) => {
+    const voltage = parseFloat(args[0]);
+
+    containers.statusContainer.setBatteryVoltage(voltage);
   },
 };
 

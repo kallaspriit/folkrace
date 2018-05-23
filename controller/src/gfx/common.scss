@@ -5,6 +5,10 @@
     background-color: $bg-good !important;
   }
 
+  &--warn {
+    background-color: $bg-warn !important;
+  }
+
   &--bad {
     background-color: $bg-bad !important;
     animation: pulse-bad 3s ease;

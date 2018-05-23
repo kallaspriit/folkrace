@@ -114,6 +114,9 @@ table {
 .bg--good {
   background-color: #009900 !important; }
 
+.bg--warn {
+  background-color: #999900 !important; }
+
 .bg--bad {
   background-color: #990000 !important;
   animation: pulse-bad 3s ease;

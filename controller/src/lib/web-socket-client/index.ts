@@ -7,6 +7,7 @@ export interface WebSocketClientListener {
   onError(ws: WebSocketClient, event: Event, wasConnected: boolean): void;
   onMessage(ws: WebSocketClient, message: string): void;
   onStateChanged(ws: WebSocketClient, newState: WebSocketState, oldState: WebSocketState): void;
+  onSendMessage(ws: WebSocketClient, e: string): void;
 }
 
 export interface WebSocketClientOptions {
@@ -25,7 +26,7 @@ export enum WebSocketState {
 }
 
 export default class WebSocketClient {
-  private state: WebSocketState = WebSocketState.DISCONNECTED;
+  private connectionState: WebSocketState = WebSocketState.DISCONNECTED;
   private listeners: WebSocketClientListener[] = [];
   private ws: WebSocket;
   private options: Required<WebSocketClientOptions>;
@@ -54,19 +55,34 @@ export default class WebSocketClient {
     this.listeners = this.listeners.filter(item => item !== listener);
   }
 
-  public getState() {
-    return this.state;
+  public get state() {
+    return this.connectionState;
+  }
+
+  public send(message: string, addNewLine = true) {
+    // we can only send messages if we're connected
+    if (this.state !== WebSocketState.CONNECTED) {
+      this.log.warn(`sending message "${message}" requested but web-socket is ${this.connectionState}`);
+
+      return;
+    }
+
+    // notify the listeners
+    this.listeners.forEach(listener => listener.onSendMessage(this, message));
+
+    // send the message
+    this.ws.send(`${message}${addNewLine ? "\n" : ""}`);
   }
 
   private setState(newState: WebSocketState) {
     // return if state has not changed
-    if (newState === this.state) {
+    if (newState === this.connectionState) {
       return;
     }
 
-    const oldState = this.state;
+    const oldState = this.connectionState;
 
-    this.state = newState;
+    this.connectionState = newState;
 
     // notify the listeners
     this.listeners.forEach(listener => listener.onStateChanged(this, newState, oldState));
