@@ -3,6 +3,8 @@
     "Loggable",
     "devtool",
     "folkbot",
-    "hyperhtml"
+    "hyperhtml",
+    "multitouch",
+    "nipplejs"
   ]
 }

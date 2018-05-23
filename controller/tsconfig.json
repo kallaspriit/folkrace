@@ -6,6 +6,7 @@
     "outDir": "build",
     "moduleResolution": "node",
     "module": "commonjs",
+    "typeRoots": ["./node_modules/@types", "./src/lib/@types"],
 
     "allowSyntheticDefaultImports": true,
 

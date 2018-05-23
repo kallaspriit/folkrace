@@ -90,8 +90,6 @@ function handleWebSocketMessage(message: string, containers: ContainerMap) {
     return;
   }
 
-  console.log("handleWebSocketMessage", message);
-
   // log the message
   containers.logContainer.addEntry(`< ${message}`);
 
@@ -143,6 +141,10 @@ const webSocketCommandHandlers: WebSocketCommandHandlersMap = {
 
     containers.statusContainer.setBatteryVoltage(voltage);
   },
+
+  // TODO: handle "e"
+  // TODO: handle "set-speed"
+  // TODO: handle "ip"
 };
 
 // handles parsed web-socket commands

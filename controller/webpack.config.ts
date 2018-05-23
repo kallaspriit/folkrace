@@ -15,7 +15,7 @@ const config: Configuration = {
   },
   module: {
     rules: [
-      { test: /\.tsx?$/, loader: "awesome-typescript-loader" },
+      { test: /\.tsx?$/, loader: "awesome-typescript-loader", options: { silent: true } },
       { enforce: "pre", test: /\.js$/, loader: "source-map-loader" },
       {
         test: /\.scss$/,
@@ -50,7 +50,8 @@ const config: Configuration = {
       },
     ]),
   ],
-  // devtool: "source-map",
+  devtool: "source-map",
+  stats: "minimal",
 };
 
 export default config;

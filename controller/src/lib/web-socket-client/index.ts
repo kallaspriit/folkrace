@@ -1,4 +1,4 @@
-import { ILogger, dummyLogger } from "ts-log";
+import { Logger, dummyLogger } from "ts-log";
 
 export interface WebSocketClientListener {
   onConnecting(ws: WebSocketClient, wasConnected: boolean): void;
@@ -15,7 +15,7 @@ export interface WebSocketClientOptions {
   port: number;
   useSSL?: boolean;
   reconnectInterval?: number;
-  log?: ILogger;
+  log?: Logger;
 }
 
 export enum WebSocketState {
@@ -30,7 +30,7 @@ export default class WebSocketClient {
   private listeners: WebSocketClientListener[] = [];
   private ws: WebSocket;
   private options: Required<WebSocketClientOptions>;
-  private log: ILogger;
+  private log: Logger;
   private wasConnected = false;
 
   public constructor(options: WebSocketClientOptions) {

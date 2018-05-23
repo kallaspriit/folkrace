@@ -227,6 +227,19 @@ html {
         display: block;
         top: 2px; }
 
+.remote-view .joystick-grid {
+  display: grid;
+  grid-template: 1fr;
+  grid-gap: 5px;
+  height: 100%; }
+  .remote-view .joystick-grid__item {
+    position: relative;
+    background-color: #353535; }
+
+.joystick {
+  width: 100%;
+  height: 100%; }
+
 .status-view .status-grid {
   grid-template-columns: 1fr 1fr 1fr;
   grid-template-rows: 100px;
@@ -234,7 +247,7 @@ html {
 
 .status-view .grid-status {
   padding: 16px;
-  overflow: auto; }
+  overflow: hidden; }
 
 .status-view .log {
   grid-column: 1 / 4;
@@ -279,3 +292,5 @@ html {
     .grid__text--primary {
       font-variant: small-caps; }
 
+
+/*# sourceMappingURL=main.css.map*/

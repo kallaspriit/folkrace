@@ -1,4 +1,5 @@
 import { WebSocketClientOptions } from "./lib/web-socket-client/index";
+import { TrackedVehicleOptions } from "./lib/web-socket-client/TrackedVehicleKinematics";
 
 export interface RulesConfig {
   battery: {
@@ -10,6 +11,7 @@ export interface RulesConfig {
 export interface Config {
   webSocket: WebSocketClientOptions;
   rules: RulesConfig;
+  vehicle: TrackedVehicleOptions;
 }
 
 const config: Config = {
@@ -25,6 +27,14 @@ const config: Config = {
       low: 15.0,
       critical: 13.5,
     },
+  },
+  vehicle: {
+    trackWidth: 0.15, // meters
+    maxSpeed: 1, // meters per second
+    wheelDiameter: 0.039, // meters
+    encoderCountsPerRotation: 20, // encoder pulse count per revolution
+    gearboxRatio: 25, // 25/1 gearbox ratio
+    speedUpdateInterval: 50, // 20Hz
   },
 };
 
