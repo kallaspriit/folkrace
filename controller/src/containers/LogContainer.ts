@@ -55,8 +55,6 @@ export default class LogContainer extends Container<LogState> {
         entries.shift();
       }
 
-      console.log("addEntry", message, entries);
-
       return {
         entries,
       };
