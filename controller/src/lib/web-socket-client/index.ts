@@ -1,29 +1,42 @@
 import { ILogger, dummyLogger } from "ts-log";
 
 export interface WebSocketClientListener {
-  onOpen(event: Event): void;
-  onClose(event: CloseEvent): void;
-  onError(event: Event): void;
-  onMessage(message: string): void;
+  onConnecting(ws: WebSocketClient, wasConnected: boolean): void;
+  onOpen(ws: WebSocketClient, event: Event): void;
+  onClose(ws: WebSocketClient, event: CloseEvent, wasConnected: boolean): void;
+  onError(ws: WebSocketClient, event: Event, wasConnected: boolean): void;
+  onMessage(ws: WebSocketClient, message: string): void;
+  onStateChanged(ws: WebSocketClient, newState: WebSocketState, oldState: WebSocketState): void;
 }
 
 export interface WebSocketClientOptions {
   host: string;
   port: number;
   useSSL?: boolean;
+  reconnectInterval?: number;
   log?: ILogger;
 }
 
+export enum WebSocketState {
+  DISCONNECTED = "DISCONNECTED",
+  CONNECTING = "CONNECTING",
+  RECONNECTING = "RECONNECTING",
+  CONNECTED = "CONNECTED",
+}
+
 export default class WebSocketClient {
+  private state: WebSocketState = WebSocketState.DISCONNECTED;
   private listeners: WebSocketClientListener[] = [];
   private ws: WebSocket;
   private options: Required<WebSocketClientOptions>;
   private log: ILogger;
+  private wasConnected = false;
 
   public constructor(options: WebSocketClientOptions) {
     this.options = {
       useSSL: false,
       log: dummyLogger,
+      reconnectInterval: 1000,
       ...options,
     };
     this.log = this.options.log;
@@ -41,50 +54,83 @@ export default class WebSocketClient {
     this.listeners = this.listeners.filter(item => item !== listener);
   }
 
+  public getState() {
+    return this.state;
+  }
+
+  private setState(newState: WebSocketState) {
+    // return if state has not changed
+    if (newState === this.state) {
+      return;
+    }
+
+    const oldState = this.state;
+
+    this.state = newState;
+
+    // notify the listeners
+    this.listeners.forEach(listener => listener.onStateChanged(this, newState, oldState));
+  }
+
   private connect(url: string): WebSocket {
     this.log.info(`connecting to web-socket server at ${url}`);
 
+    // update state
+    this.setState(this.wasConnected ? WebSocketState.RECONNECTING : WebSocketState.CONNECTING);
+
+    // notify the listeners
+    this.listeners.forEach(listener => listener.onConnecting(this, this.wasConnected));
+
+    // attempt to open web-socket connection
     this.ws = new WebSocket(url);
 
-    let wasConnected = false;
-
+    // handle open event
     this.ws.onopen = event => {
       this.log.info("established web-socket connection");
 
-      wasConnected = true;
+      this.wasConnected = true;
+
+      // update state
+      this.setState(WebSocketState.CONNECTED);
 
       // notify the listeners
-      this.listeners.forEach(listener => listener.onOpen(event));
+      this.listeners.forEach(listener => listener.onOpen(this, event));
     };
 
+    // handle close event
     this.ws.onclose = event => {
       const logDetails = `code: ${event.code}, reason: ${event.reason}, was clean: ${event.wasClean ? "yes" : "no"}`;
 
-      if (wasConnected) {
+      if (this.wasConnected) {
         this.log.warn(`connection to web-socket was lost (${logDetails})`);
       } else {
         this.log.warn(`connecting to web-socket failed (${logDetails})`);
       }
 
+      // update state
+      this.setState(WebSocketState.DISCONNECTED);
+
       // attempt to reconnect
       setTimeout(() => {
         this.ws = this.connect(url);
-      }, 1000);
+      }, this.options.reconnectInterval);
 
       // notify the listeners
-      this.listeners.forEach(listener => listener.onClose(event));
+      this.listeners.forEach(listener => listener.onClose(this, event, this.wasConnected));
     };
 
+    // handle error event
     this.ws.onerror = event => {
       this.log.warn(`got web-socket error`);
 
       // notify the listeners
-      this.listeners.forEach(listener => listener.onError(event));
+      this.listeners.forEach(listener => listener.onError(this, event, this.wasConnected));
     };
 
+    // handle message event
     this.ws.onmessage = event => {
       // notify the listeners
-      this.listeners.forEach(listener => listener.onMessage(event.data));
+      this.listeners.forEach(listener => listener.onMessage(this, event.data));
     };
 
     return this.ws;

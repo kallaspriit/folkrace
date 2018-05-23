@@ -39,6 +39,7 @@
     "@types/webpack": "^4.4.0",
     "awesome-typescript-loader": "^5.0.0",
     "chalk": "^2.4.1",
+    "change-case": "^3.0.2",
     "chokidar": "^2.0.3",
     "classnames": "^2.2.5",
     "concurrently": "^3.5.1",
