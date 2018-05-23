@@ -15,7 +15,16 @@ const Glue: React.SFC<{}> = () => (
       }
 
       // setup connections
-      webSocketClient.addListener({
+      webSocketClient.subscribe({
+        onOpen: event => {
+          console.log("glue: ws open", event);
+        },
+        onClose: event => {
+          console.log("glue: ws close", event);
+        },
+        onError: event => {
+          console.log("glue: ws error", event);
+        },
         onMessage: message => {
           log.addEntry(message);
         },

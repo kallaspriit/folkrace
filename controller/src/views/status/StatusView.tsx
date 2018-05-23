@@ -6,6 +6,7 @@ import LogContainer from "../../containers/LogContainer";
 import formatTime from "../../services/formatTime";
 
 // TODO: handle clearing logs
+// TODO: add motor controller, http server, IMU
 const StatusView: React.SFC = () => (
   <Subscribe to={[LogContainer]}>
     {(log: LogContainer) => (
