@@ -25,6 +25,17 @@ const config: Configuration = {
         test: /\.css$/,
         use: [MiniCssExtractPlugin.loader, "css-loader"],
       },
+      {
+        test: /\.(png|jpg|gif|svg)$/,
+        use: [
+          {
+            loader: "url-loader",
+            options: {
+              limit: 100000000,
+            },
+          },
+        ],
+      },
     ],
   },
   plugins: [

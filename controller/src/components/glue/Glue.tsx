@@ -2,7 +2,22 @@ import * as React from "react";
 import { Subscribe } from "unstated";
 import webSocketClient from "../../services/webSocketClient";
 import LogContainer from "../../containers/LogContainer";
-import StatusContainer from "../../containers/StatusContainer";
+import StatusContainer, { BluetoothState } from "../../containers/StatusContainer";
+
+export interface ContainerMap {
+  logContainer: LogContainer;
+  statusContainer: StatusContainer;
+}
+
+export enum WebSocketCommand {
+  BLUETOOTH = "bluetooth",
+}
+
+export type WebSocketCommandHandlerFn = (args: string[], containers: ContainerMap) => void;
+
+export interface WebSocketCommandHandlersMap {
+  [x: string]: WebSocketCommandHandlerFn | undefined;
+}
 
 let isDone = false;
 
@@ -41,7 +56,8 @@ const Glue: React.SFC<{}> = () => (
           console.log("glue: ws error", event, wasConnected);
         },
         onMessage: (_ws, message) => {
-          logContainer.addEntry(message);
+          // handle the message
+          handleWebSocketMessage(message, { logContainer, statusContainer });
         },
         onStateChanged: (_ws, newState, oldState) => {
           console.log(`glue: ws state changed from ${oldState} to ${newState}`);
@@ -58,5 +74,57 @@ const Glue: React.SFC<{}> = () => (
     }}
   </Subscribe>
 );
+
+// handles web-socket messages
+function handleWebSocketMessage(message: string, containers: ContainerMap) {
+  // ignore empty messages
+  if (message.length === 0) {
+    return;
+  }
+
+  // log the message
+  containers.logContainer.addEntry(message);
+
+  // parse message
+  const [name, ...args] = message.split(":");
+
+  handleWebSocketCommand(name, args, containers);
+}
+
+const webSocketCommandHandlers: WebSocketCommandHandlersMap = {
+  // handles bluetooth state changes
+  [WebSocketCommand.BLUETOOTH]: (args: string[], containers: ContainerMap) => {
+    console.log("got bluetooth state", args, containers);
+
+    const state = args[0] as BluetoothState;
+    let bluetoothDeviceName: string | undefined;
+
+    switch (state) {
+      case BluetoothState.CONNECTED:
+        bluetoothDeviceName = args[1];
+        break;
+
+      default:
+      // no action required
+    }
+
+    containers.statusContainer.setBluetoothState(args[0] as BluetoothState, bluetoothDeviceName);
+  },
+};
+
+// handles parsed web-socket commands
+function handleWebSocketCommand(name: string, args: string[], containers: ContainerMap) {
+  const handler = webSocketCommandHandlers[name];
+
+  // check whether the handler exists
+  if (handler === undefined) {
+    console.warn(`missing web-socket command handler for "${name}"`);
+
+    return;
+  }
+
+  // call the handler
+  handler(args, containers);
+}
 
 export default Glue;
