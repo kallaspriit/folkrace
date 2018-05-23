@@ -26,6 +26,21 @@
     }
   }
 
+  .clear-log-button {
+    box-sizing: content-box;
+    position: absolute;
+    bottom: $grid-gap;
+    right: $grid-gap;
+    width: 32px;
+    height: 32px;
+    padding: 10px;
+    background-color: $bg-tertiary;
+
+    .icon {
+      background-color: $text-secondary;
+    }
+  }
+
   // .log {
   //   padding: 8px;
   //   background-color: #0f0;

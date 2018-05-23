@@ -1,14 +1,15 @@
 @import "../../gfx/variables.scss";
 
 .view--grid {
-  padding: 5px;
+  padding: $grid-gap;
 }
 
 .grid {
   display: grid;
-  grid-gap: 5px;
+  grid-gap: $grid-gap;
 
   &__item {
+    position: relative;
     background-color: $bg-tertiary;
   }
 

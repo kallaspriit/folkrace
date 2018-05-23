@@ -1,5 +1,5 @@
-@import "./gfx/variables";
 @import "./gfx/fonts";
+@import "./gfx/variables";
 @import "./gfx/icons";
 @import "./gfx/common";
 
@@ -31,6 +31,7 @@ html {
 
   // TODO: refactor to a component?
   .view {
+    position: relative;
     flex: 1;
     border-radius: 8px 8px 0 0;
 

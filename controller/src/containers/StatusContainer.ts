@@ -44,7 +44,7 @@ export default class StatusContainer extends Container<StatusState> {
     });
   }
 
-  public setBatteryVoltage(batteryVoltage: number) {
+  public setBatteryVoltage(batteryVoltage: number | undefined) {
     this.setState({
       batteryVoltage,
     });

@@ -3,6 +3,7 @@ import { Subscribe } from "unstated";
 import webSocketClient from "../../services/webSocketClient";
 import LogContainer from "../../containers/LogContainer";
 import StatusContainer, { BluetoothState } from "../../containers/StatusContainer";
+import { WebSocketState } from "../../lib/web-socket-client/index";
 
 export interface ContainerMap {
   logContainer: LogContainer;
@@ -23,7 +24,7 @@ export interface WebSocketCommandHandlersMap {
 const REQUEST_BATTERY_VOLTAGE_INTERVAL = 60 * 1000; // once per minute
 
 let isDone = false;
-let requestBatteryVoltageInterval: NodeJS.Timer | null = null;
+let requestBatteryVoltageInterval: number | null = null;
 
 // glue component, connects external data to containers, does not render anything
 const Glue: React.SFC<{}> = () => (
@@ -44,23 +45,8 @@ const Glue: React.SFC<{}> = () => (
         },
         onOpen: (_ws, _event) => {
           logContainer.addEntry("web-socket connection established");
-
-          // request voltage
-          webSocketClient.send("get-voltage");
-
-          // also setup an interval to ask it periodically
-          requestBatteryVoltageInterval = setInterval(() => {
-            webSocketClient.send("get-voltage");
-          }, REQUEST_BATTERY_VOLTAGE_INTERVAL);
         },
         onClose: (_ws, _event, wasConnected) => {
-          // clear the battery voltage interval if exists
-          if (requestBatteryVoltageInterval !== null) {
-            clearInterval(requestBatteryVoltageInterval);
-
-            requestBatteryVoltageInterval = null;
-          }
-
           if (wasConnected) {
             logContainer.addEntry("web-socket connection was lost");
           } else {
@@ -76,6 +62,12 @@ const Glue: React.SFC<{}> = () => (
         },
         onStateChanged: (_ws, newState, _oldState) => {
           statusContainer.setWebSocketState(newState);
+
+          // also reset other statuses if web-socket connection is lost
+          if (newState === WebSocketState.DISCONNECTED) {
+            statusContainer.setBluetoothState(BluetoothState.DISCONNECTED);
+            statusContainer.setBatteryVoltage(undefined);
+          }
         },
         onSendMessage: (_ws, message) => {
           logContainer.addEntry(`> ${message}`);
@@ -97,6 +89,8 @@ function handleWebSocketMessage(message: string, containers: ContainerMap) {
   if (message.length === 0) {
     return;
   }
+
+  console.log("handleWebSocketMessage", message);
 
   // log the message
   containers.logContainer.addEntry(`< ${message}`);
@@ -120,6 +114,24 @@ const webSocketCommandHandlers: WebSocketCommandHandlersMap = {
 
       default:
       // no action required
+    }
+
+    // ask for some initial state info once bluetooth connection is established
+    if (state === BluetoothState.CONNECTED) {
+      // request voltage
+      webSocketClient.send("get-voltage");
+
+      // also setup an interval to ask it periodically
+      requestBatteryVoltageInterval = window.setInterval(() => {
+        webSocketClient.send("get-voltage");
+      }, REQUEST_BATTERY_VOLTAGE_INTERVAL);
+    } else {
+      // clear the battery voltage interval if exists
+      if (requestBatteryVoltageInterval !== null) {
+        window.clearInterval(requestBatteryVoltageInterval);
+
+        requestBatteryVoltageInterval = null;
+      }
     }
 
     containers.statusContainer.setBluetoothState(args[0] as BluetoothState, bluetoothDeviceName);

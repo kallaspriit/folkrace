@@ -9,9 +9,9 @@ import * as classNames from "classnames";
 import { titleCase } from "change-case";
 import { WebSocketState } from "../../lib/web-socket-client/index";
 import assertUnreachable from "../../services/assertUnreachable";
+import Icon from "../../components/icon/Icon";
 
-// TODO: handle clearing logs
-// TODO: add motor controller, http server, IMU
+// TODO: add motor controller, http server, IMU, heartbeat
 const StatusView: React.SFC = () => (
   <Subscribe to={[LogContainer, StatusContainer]}>
     {(logContainer: LogContainer, statusContainer: StatusContainer) => (
@@ -48,23 +48,16 @@ const StatusView: React.SFC = () => (
               <div className="grid__text--secondary">{titleCase(statusContainer.state.webSocketState)}</div>
             </div>
           </GridItem>
-          <GridItem
-            className={classNames(
-              "grid-status",
-              getBatteryLevelClass(statusContainer.batteryState), // TODO: check voltage
-            )}
-          >
+          <GridItem className={classNames("grid-status", getBatteryLevelClass(statusContainer.batteryState))}>
             <div className="grid__icon">
               <i className="icon icon__battery" />
             </div>
             <div className="grid__text">
               <div className="grid__text--primary">Battery</div>
               <div className="grid__text--secondary">
-                {statusContainer.state.batteryVoltage ? (
-                  `${statusContainer.state.batteryVoltage.toFixed(1)}V`
-                ) : (
-                  <em>Unknown</em>
-                )}
+                {statusContainer.state.batteryVoltage
+                  ? `${statusContainer.state.batteryVoltage.toFixed(1)}V`
+                  : "Unknown"}
               </div>
             </div>
           </GridItem>
@@ -77,6 +70,9 @@ const StatusView: React.SFC = () => (
             ))}
           </GridItem>
         </Grid>
+        <div className="clear-log-button" onClick={() => logContainer.clear()}>
+          <Icon name="clear" />
+        </div>
       </div>
     )}
   </Subscribe>
@@ -85,7 +81,7 @@ const StatusView: React.SFC = () => (
 function getBatteryLevelClass(batteryState: BatteryState): string {
   switch (batteryState) {
     case BatteryState.UNKNOWN:
-      return "bg--warn";
+      return "bg--bad";
 
     case BatteryState.FULL:
       return "bg--good";

@@ -4,6 +4,7 @@
   width: $width;
   height: $height;
   -webkit-mask-image: url($data);
+  background-color: $text-primary;
 }
 
 .icon {
@@ -42,7 +43,7 @@
   }
 
   // buttons
-  &__delete {
-    @include icon(32px, 32px, "gfx/icons/delete.svg");
+  &__clear {
+    @include icon(32px, 32px, "gfx/icons/clear.svg");
   }
 }
