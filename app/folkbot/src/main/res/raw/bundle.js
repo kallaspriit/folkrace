@@ -44229,6 +44229,8 @@ var webSocketCommandHandlers = (_a = {},
                 window.clearInterval(requestBatteryVoltageInterval);
                 requestBatteryVoltageInterval = null;
             }
+            // no bluetooth connection so we can't be sure of battery voltage
+            containers.statusContainer.setBatteryVoltage(undefined);
         }
         containers.statusContainer.setBluetoothState(args[0], bluetoothDeviceName);
     },
@@ -45378,7 +45380,7 @@ var StatusView = function () { return (React.createElement(unstated_1.Subscribe,
 function getBatteryLevelClass(batteryState) {
     switch (batteryState) {
         case StatusContainer_1.BatteryState.UNKNOWN:
-            return "bg--bad";
+            return "bg--warn";
         case StatusContainer_1.BatteryState.FULL:
             return "bg--good";
         case StatusContainer_1.BatteryState.LOW:

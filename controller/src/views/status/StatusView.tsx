@@ -81,7 +81,7 @@ const StatusView: React.SFC = () => (
 function getBatteryLevelClass(batteryState: BatteryState): string {
   switch (batteryState) {
     case BatteryState.UNKNOWN:
-      return "bg--bad";
+      return "bg--warn";
 
     case BatteryState.FULL:
       return "bg--good";

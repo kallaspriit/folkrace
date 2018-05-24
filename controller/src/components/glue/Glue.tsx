@@ -130,6 +130,9 @@ const webSocketCommandHandlers: WebSocketCommandHandlersMap = {
 
         requestBatteryVoltageInterval = null;
       }
+
+      // no bluetooth connection so we can't be sure of battery voltage
+      containers.statusContainer.setBatteryVoltage(undefined);
     }
 
     containers.statusContainer.setBluetoothState(args[0] as BluetoothState, bluetoothDeviceName);
