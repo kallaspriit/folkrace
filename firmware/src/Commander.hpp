@@ -2,6 +2,7 @@
 #define COMMANDER_HPP
 
 #include <mbed.h>
+#include <USBSerial.h>
 
 #include <string>
 #include <map>
@@ -16,6 +17,7 @@ class Commander
 {
 public:
   Commander(Serial *serial);
+  Commander(USBSerial *serial);
 
   void registerCommandHandler(std::string name, CommandHandlerCallback handler);
   void handleCommand(std::string command);
@@ -26,10 +28,13 @@ public:
 
   void handleAllQueuedCommands();
 
-  Serial *serial;
+  Stream *serial = NULL;
+  Serial *ser = NULL;
+  USBSerial *usb = NULL;
 
 private:
   void handleSerialRx();
+  bool isReadable();
 
   static const int MAX_COMMAND_LENGTH = 128;
   static const int COMMAND_BUFFER_SIZE = MAX_COMMAND_LENGTH + 1;
