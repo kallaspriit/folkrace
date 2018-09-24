@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-// https://github.com/jpetrocik/bluetoothserial/blob/master/src/org/psoft/android/bluetooth/BluetoothSerial.java
 public class BluetoothSerial {
 
     private static final String TAG = "BluetoothSerial";

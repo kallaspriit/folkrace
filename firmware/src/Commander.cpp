@@ -3,10 +3,18 @@
 
 #include <Callback.h>
 
-Commander::Commander(Serial *serial) : serial(serial)
+Commander::Commander(Serial *serial) : serial(serial), ser(serial)
 {
   // listen for receive events (can cause concurrency issues?)
   serial->attach(callback(this, &Commander::handleSerialRx), Serial::RxIrq);
+}
+
+Commander::Commander(USBSerial *serial) : serial(serial), usb(serial)
+{
+  Callback<void()> cb = callback(this, &Commander::handleSerialRx);
+
+  // listen for receive events (can cause concurrency issues?)
+  serial->attach(cb);
 }
 
 void Commander::registerCommandHandler(std::string name, CommandHandlerCallback handler)
@@ -23,6 +31,8 @@ void Commander::handleAllQueuedCommands()
     std::string command = commandQueue.front();
     commandQueue.pop();
 
+    // printf("CONSUME: %s\n", command.c_str());
+
     // handle the command
     handleCommand(command);
   }
@@ -30,40 +40,60 @@ void Commander::handleAllQueuedCommands()
 
 void Commander::handleSerialRx()
 {
-  // get next character
-  char receivedChar = serial->getc();
-
-  // consider linefeed as the end of command
-  if (receivedChar == '\n')
+  // read all available characters
+  while (isReadable())
   {
-    // queue the command
-    std::string command(commandBuffer, commandLength);
-    commandQueue.push(command);
+    // get next character
+    char receivedChar = serial->getc();
 
-    // remove commands exceeding max queue length
-    while (commandQueue.size() > MAX_COMMAND_QUEUE_LENGTH)
+    // printf("RECEIVED %c (%d) [%s] %d\n", receivedChar, receivedChar, commandBuffer, commandQueue.size());
+
+    // consider linefeed as the end of command
+    if (receivedChar == '\n')
     {
-      commandQueue.pop();
-    }
+      // queue the command
+      std::string command(commandBuffer, commandLength);
+      commandQueue.push(command);
 
-    // reset the buffer
-    commandBuffer[0] = '\0';
-    commandLength = 0;
+      // remove commands exceeding max queue length
+      while (commandQueue.size() > MAX_COMMAND_QUEUE_LENGTH)
+      {
+        commandQueue.pop();
+      }
+
+      // reset the buffer
+      commandBuffer[0] = '\0';
+      commandLength = 0;
+    }
+    else
+    {
+      // make sure we don't overflow our buffer
+      if (commandLength > MAX_COMMAND_LENGTH - 1)
+      {
+        serial->printf("@ maximum command length is %d characters, stopping at %s\n", MAX_COMMAND_LENGTH, commandBuffer);
+
+        return;
+      }
+
+      // append to the command buffer
+      commandBuffer[commandLength++] = receivedChar;
+      commandBuffer[commandLength] = '\0';
+    }
   }
-  else
+}
+
+bool Commander::isReadable()
+{
+  if (ser != NULL)
   {
-    // make sure we don't overflow our buffer
-    if (commandLength > MAX_COMMAND_LENGTH - 1)
-    {
-      serial->printf("@ maximum command length is %d characters, stopping at %s\n", MAX_COMMAND_LENGTH, commandBuffer);
-
-      return;
-    }
-
-    // append to the command buffer
-    commandBuffer[commandLength++] = receivedChar;
-    commandBuffer[commandLength] = '\0';
+    return ser->readable();
   }
+  else if (usb != NULL)
+  {
+    return usb->available() > 0;
+  }
+
+  return false;
 }
 
 void Commander::handleCommand(std::string command)

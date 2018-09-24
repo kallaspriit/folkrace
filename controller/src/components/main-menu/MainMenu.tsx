@@ -28,7 +28,7 @@ const MainMenu: React.SFC<{}> = () => (
       <li>
         <NavLink to="/ai" activeClassName="active">
           <div className="main-menu__nav__icon">
-            <i className="icon icon__ai" />
+            <i className="icon icon__bot" />
           </div>
           <div className="main-menu__nav__text">
             <span>bot</span>

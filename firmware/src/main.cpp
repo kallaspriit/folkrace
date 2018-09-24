@@ -1,5 +1,5 @@
 #include <mbed.h>
-// #include <USBSerial.h>
+#include <USBSerial.h>
 
 #include "Commander.hpp"
 #include "RoboClaw.hpp"
@@ -7,6 +7,8 @@
 
 // timing configuration
 const int REPORT_ENCODER_VALUES_INTERVAL_MS = 1000; // larger interval for testing
+const int LED_BLINK_LOOP_COUNT = 50000;             // every nth loop to blink the status led
+const int LED_BLINK_LOOPS = 100;                    // for how many main loops to keep the led on
 
 // pin mapping configuration
 const PinName LOG_SERIAL_TX_PIN = USBTX;
@@ -29,8 +31,8 @@ const uint8_t MOTOR_SERIAL_ADDRESS = 128;
 
 // setup serials
 Serial logSerial(LOG_SERIAL_TX_PIN, USBRX, LOG_SERIAL_BAUDRATE);
-// USBSerial logSerial;
 Serial appSerial(APP_SERIAL_TX_PIN, APP_SERIAL_RX_PIN, APP_SERIAL_BAUDRATE);
+// USBSerial appSerial(0x0d28, 0x0204, 0x0001, false); // ARM mbed
 
 // setup commanders
 Commander logCommander(&logSerial);
@@ -253,6 +255,9 @@ int main()
   // start the loop timer
   loopTimer.start();
 
+  // this gets incremented every loop and reset every
+  int ledLoopCounter = 0;
+
   // // main loop
   while (true)
   {
@@ -284,8 +289,18 @@ int main()
       delete measurement;
     }
 
-    // blink the led on every main loop
-    led1 = !led1;
+    // blink the led briefly on every nth main loop run
+    ledLoopCounter++;
+
+    if (ledLoopCounter % (LED_BLINK_LOOP_COUNT - LED_BLINK_LOOPS) == 0)
+    {
+      led1 = 1;
+    }
+    else if (ledLoopCounter % LED_BLINK_LOOP_COUNT == 0)
+    {
+      led1 = 0;
+      ledLoopCounter = 0;
+    }
 
     // read the loop time in microseconds and reset the timer
     lastLoopTimeUs = loopTimer.read_us();

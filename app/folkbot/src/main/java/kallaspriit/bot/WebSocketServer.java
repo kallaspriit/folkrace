@@ -67,7 +67,7 @@ public class WebSocketServer extends org.java_websocket.server.WebSocketServer {
 
     @Override
     public void onStart() {
-        Log.i(TAG, "server started on port " + getPort());
+        Log.i(TAG, "web-socket server started on " + Util.getIpAddress() + ":" + getPort());
     }
 
     @Override

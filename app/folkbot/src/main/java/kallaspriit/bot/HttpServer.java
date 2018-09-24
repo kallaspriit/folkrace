@@ -36,6 +36,8 @@ public class HttpServer extends NanoHTTPD {
         String uri = request.getUri();
         int resourceId = getUriResourceId(uri);
 
+        Log.i(TAG, "requested uri '" + uri + "' (" + resourceId + ")");
+
         // handle not found
         if (resourceId == 0) {
             Log.d(TAG,"resource for requested uri '" + uri + "' could not be found");
@@ -54,14 +56,21 @@ public class HttpServer extends NanoHTTPD {
             mimeType = NanoHTTPD.MIME_HTML;
         } else if (uri.contains(".css")) {
             mimeType = "text/css";
+        } else if (uri.contains(".js")) {
+            mimeType = "application/javascript";
         }
+
+        Log.i(TAG, "sending file '" + uri + "' of mime type type '" + mimeType + "' (" + contents.length() + " bytes)");
 
         // send the response
         return newFixedLengthResponse(Response.Status.OK, mimeType, contents);
     }
 
     private String getResourceContents(int resourceId) {
-        String contents = "";
+        // create a string builder with rather large initial capacity
+        StringBuilder stringBuilder = new StringBuilder(2 * 1000 * 1000);
+
+        Log.i(TAG, "reading resource: " + resourceId);
 
         try {
             Resources resources = context.getResources();
@@ -71,7 +80,7 @@ public class HttpServer extends NanoHTTPD {
             String line = reader.readLine();
 
             while (line != null) {
-                contents += line + "\n";
+                stringBuilder.append(line + "\n");
 
                 line = reader.readLine();
             }
@@ -81,7 +90,7 @@ public class HttpServer extends NanoHTTPD {
             e.printStackTrace();
         }
 
-        return contents;
+        return stringBuilder.toString();
     }
 
     private int getUriResourceId(String uri) {
