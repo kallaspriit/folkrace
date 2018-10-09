@@ -31,8 +31,8 @@ const uint8_t MOTOR_SERIAL_ADDRESS = 128;
 
 // setup serials
 Serial logSerial(LOG_SERIAL_TX_PIN, USBRX, LOG_SERIAL_BAUDRATE);
-Serial appSerial(APP_SERIAL_TX_PIN, APP_SERIAL_RX_PIN, APP_SERIAL_BAUDRATE);
-// USBSerial appSerial(0x0d28, 0x0204, 0x0001, false); // ARM mbed
+// Serial appSerial(APP_SERIAL_TX_PIN, APP_SERIAL_RX_PIN, APP_SERIAL_BAUDRATE);
+USBSerial appSerial(0x0d28, 0x0204, 0x0001, false); // ARM mbed
 
 // setup commanders
 Commander logCommander(&logSerial);
