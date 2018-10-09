@@ -22,6 +22,10 @@ import java.util.UUID;
 
 public class BluetoothSerial {
 
+    public interface Listener {
+        void onBluetoothSerialMessage(String message);
+    }
+
     private static final String TAG = "BluetoothSerial";
 
     public enum State {
@@ -155,7 +159,7 @@ public class BluetoothSerial {
 
             while (!isInterrupted()) {
                 try {
-                    // read bytes if available
+                    // onBluetoothSerialMessage bytes if available
                     if (bluetoothSerial.available() > 0) {
                         int newBytes = bluetoothSerial.read(buffer, bufferSize, MAX_BYTES - bufferSize);
 
@@ -163,23 +167,15 @@ public class BluetoothSerial {
                             bufferSize += newBytes;
                         }
 
-                        Log.d(TAG, "read " + newBytes + " new bytes");
+                        Log.d(TAG, "onBluetoothSerialMessage " + newBytes + " new bytes");
                     }
 
-                    // notify the message handler if any bytes were read
+                    // notify the message handler if any bytes were onBluetoothSerialMessage
                     if (bufferSize > 0) {
-                        int read = bluetoothSerial.messageHandler.read(bufferSize, buffer);
+                        String message = new String(buffer, 0, bufferSize, "UTF-8");
+                        bluetoothSerial.listener.onBluetoothSerialMessage(message);
 
-                        // shift unread data to start of buffer
-                        if (read > 0) {
-                            int index = 0;
-
-                            for (int i = read; i < bufferSize; i++) {
-                                buffer[index++] = buffer[i];
-                            }
-
-                            bufferSize = index;
-                        }
+                        bufferSize = 0;
                     } else {
                         // wait a bit before trying again
                         try {
@@ -206,7 +202,7 @@ public class BluetoothSerial {
     private InputStream serialInputStream;
     private OutputStream serialOutputStream;
     private SerialReader serialReader;
-    private MessageHandler messageHandler;
+    private Listener listener;
     private Context context;
     private AsyncTask<Void, Void, BluetoothDevice> attemptConnectionTask;
     private String devicePrefix;
@@ -215,41 +211,41 @@ public class BluetoothSerial {
     private final BroadcastReceiver bluetoothReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-        // return if there is no active device
-        if (bluetoothDevice == null) {
-            return;
-        }
+            // return if there is no active device
+            if (bluetoothDevice == null) {
+                return;
+            }
 
-        String action = intent.getAction();
+            String action = intent.getAction();
 
-        // return if the action is not disconnecting
-        if (action == null || !action.equals(BluetoothDevice.ACTION_ACL_DISCONNECTED)) {
-            return;
-        }
+            // return if the action is not disconnecting
+            if (action == null || !action.equals(BluetoothDevice.ACTION_ACL_DISCONNECTED)) {
+                return;
+            }
 
-        BluetoothDevice eventDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+            BluetoothDevice eventDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
 
-        // return if the disconnected device is not our device
-        if (!bluetoothDevice.equals(eventDevice)) {
-            return;
-        }
+            // return if the disconnected device is not our device
+            if (!bluetoothDevice.equals(eventDevice)) {
+                return;
+            }
 
-        Log.i(TAG, "bluetooth device '" + eventDevice.getName() + "' disconnected");
+            Log.i(TAG, "bluetooth device '" + eventDevice.getName() + "' disconnected");
 
-        // clean up any streams
-        stop();
+            // clean up any streams
+            disconnect();
 
-        // update state
-        setState(State.DISCONNECTED);
+            // update state
+            setState(State.DISCONNECTED);
 
-        // attempt to re-establish connection
-        connect();
+            // attempt to re-establish connection
+            connect();
         }
     };
 
-    BluetoothSerial(Context context, MessageHandler messageHandler, String devicePrefix) {
+    BluetoothSerial(Context context, Listener listener, String devicePrefix) {
         this.context = context;
-        this.messageHandler = messageHandler;
+        this.listener = listener;
         this.devicePrefix = devicePrefix.toUpperCase();
     }
 
@@ -321,8 +317,8 @@ public class BluetoothSerial {
         attemptConnectionTask.execute();
     }
 
-    public void stop() {
-        // stop the connection task if running
+    public void disconnect() {
+        // disconnect the connection task if running
         if (attemptConnectionTask != null && !attemptConnectionTask.isCancelled()) {
             Log.i(TAG, "cancelling connection task");
 
@@ -462,10 +458,5 @@ public class BluetoothSerial {
         serialOutputStream.write(buffer, offset, count);
     }
     */
-
-    // handles bluetooth serial messages
-    public interface MessageHandler {
-        int read(int bufferSize, byte[] buffer);
-    }
 
 }

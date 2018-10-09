@@ -13,7 +13,6 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
-import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -25,7 +24,7 @@ import org.java_websocket.drafts.Draft_6455;
 import java.io.IOException;
 import java.util.Arrays;
 
-public class MainActivity extends Activity implements BluetoothWebSocketProxy.Listener {
+public class MainActivity extends Activity implements SerialWebSocketProxy.Listener {
     private static final String TAG = "MainActivity";
 
     private static final int HTTP_SERVER_PORT = 8080;
@@ -36,7 +35,7 @@ public class MainActivity extends Activity implements BluetoothWebSocketProxy.Li
     ProgressBar progressBar;
     private WebSocketServer webSocketServer;
     private HttpServer httpServer;
-    private BluetoothWebSocketProxy bluetoothWebSocketProxy;
+    private SerialWebSocketProxy serialWebSocketProxy;
 
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -51,7 +50,7 @@ public class MainActivity extends Activity implements BluetoothWebSocketProxy.Li
         switch (action) {
             // broadcast bluetooth state on state change
             case BluetoothSerial.BLUETOOTH_STATE_CHANGED:
-                broadcast("bluetooth:" + bluetoothWebSocketProxy.bluetoothSerial.getState() + (bluetoothWebSocketProxy.bluetoothSerial.isConnected() ? ":" + bluetoothWebSocketProxy.bluetoothSerial.getDevice().getName() : ""));
+                broadcast("bluetooth:" + serialWebSocketProxy.bluetoothSerial.getState() + (serialWebSocketProxy.bluetoothSerial.isConnected() ? ":" + serialWebSocketProxy.bluetoothSerial.getDevice().getName() : ""));
                 break;
 
             // log unhandled local broadcast intents
@@ -141,7 +140,7 @@ public class MainActivity extends Activity implements BluetoothWebSocketProxy.Li
         // load blank page
         webView.loadUrl("about:blank");
 
-        // stop the services
+        // disconnect the services
         stopBluetoothWebSocketProxy();
         stopWebSocketServer();
         stopHttpServer();
@@ -149,7 +148,7 @@ public class MainActivity extends Activity implements BluetoothWebSocketProxy.Li
     }
 
     @Override
-    public void handleInternalCommand(String command) {
+    public void onInternalCommand(String command) {
         if (command.length() == 0) {
             return;
         }
@@ -199,7 +198,7 @@ public class MainActivity extends Activity implements BluetoothWebSocketProxy.Li
 
         Log.i(TAG, "stopping http server");
 
-        // stop the http server
+        // disconnect the http server
         httpServer.stop();
         httpServer = null;
     }
@@ -228,7 +227,7 @@ public class MainActivity extends Activity implements BluetoothWebSocketProxy.Li
 
         Log.i(TAG, "stopping web-socket server");
 
-        // attempt to stop the web-socket server
+        // attempt to disconnect the web-socket server
         try {
             webSocketServer.stop();
         } catch (IOException | InterruptedException e) {
@@ -244,15 +243,15 @@ public class MainActivity extends Activity implements BluetoothWebSocketProxy.Li
         Log.i(TAG, "starting bluetooth web-socket proxy");
 
         // setup bluetooth web-socket proxy
-        bluetoothWebSocketProxy = new BluetoothWebSocketProxy(this, this, webSocketServer, BLUETOOTH_DEVICE_NAME_PREFIX);
+        serialWebSocketProxy = new SerialWebSocketProxy(this, this, webSocketServer, BLUETOOTH_DEVICE_NAME_PREFIX);
 
         // attempt to connect to the bluetooth device
-        bluetoothWebSocketProxy.start();
+        serialWebSocketProxy.start();
     }
 
     private void stopBluetoothWebSocketProxy() {
-        bluetoothWebSocketProxy.stop();
-        bluetoothWebSocketProxy = null;
+        serialWebSocketProxy.stop();
+        serialWebSocketProxy = null;
     }
 
     private void handleShowToast(String[] parameters) {

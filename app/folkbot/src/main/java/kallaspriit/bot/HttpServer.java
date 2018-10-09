@@ -45,7 +45,7 @@ public class HttpServer extends NanoHTTPD {
             return newFixedLengthResponse(Response.Status.NOT_FOUND, NanoHTTPD.MIME_PLAINTEXT, "requested resource could not be found");
         }
 
-        // read the resource contents
+        // onBluetoothSerialMessage the resource contents
         String contents = getResourceContents(resourceId);
 
         // default to text/plain

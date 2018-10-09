@@ -10,17 +10,17 @@ import java.net.InetSocketAddress;
 import java.util.Collections;
 
 public class WebSocketServer extends org.java_websocket.server.WebSocketServer {
-    private static final String TAG = "WebSocketServer";
-
-    private int connectedClientCount = 0;
-    private Listener listener = null;
-
     public interface Listener {
         void onOpen(WebSocket connection, ClientHandshake handshake);
         void onClose(WebSocket connection, int code, String reason, boolean remote);
         void onError(WebSocket connection, Exception e);
         void onMessage(WebSocket connection, String message);
     }
+
+    private static final String TAG = "WebSocketServer";
+
+    private int connectedClientCount = 0;
+    private Listener listener = null;
 
     WebSocketServer(int port, Draft draft) {
         super(new InetSocketAddress(port), Collections.singletonList(draft));
