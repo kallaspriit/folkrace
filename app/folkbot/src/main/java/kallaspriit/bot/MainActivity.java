@@ -2,14 +2,9 @@ package kallaspriit.bot;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -24,261 +19,232 @@ import org.java_websocket.drafts.Draft_6455;
 import java.io.IOException;
 import java.util.Arrays;
 
-public class MainActivity extends Activity implements SerialWebSocketProxy.Listener {
-    private static final String TAG = "MainActivity";
+public class MainActivity extends Activity implements SerialProxy.SerialProxyEventListener {
+  public static final String BLUETOOTH_DEVICE_NAME_PREFIX = "HC-06";
+  private static final String TAG = "MainActivity";
+  private static final int HTTP_SERVER_PORT = 8080;
+  private static final int WEB_SOCKET_SERVER_PORT = 8000;
 
-    private static final int HTTP_SERVER_PORT = 8080;
-    private static final int WEB_SOCKET_SERVER_PORT = 8000;
-    public static final String BLUETOOTH_DEVICE_NAME_PREFIX = "HC-06";
+  WebView webView;
+  ProgressBar progressBar;
 
-    WebView webView;
-    ProgressBar progressBar;
-    private WebSocketServer webSocketServer;
-    private HttpServer httpServer;
-    private SerialWebSocketProxy serialWebSocketProxy;
+  private WebSocketServer webSocketServer;
+  private HttpServer httpServer;
+  private SerialProxy serialProxy;
 
-    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-        String action = intent.getAction();
+  @SuppressLint("SetJavaScriptEnabled")
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {
+    // use main activity
+    super.onCreate(savedInstanceState);
 
-        // return if no valid action is associated
-        if (action == null) {
-            return;
-        }
+    Log.i(TAG, "creating main activity");
 
-        switch (action) {
-            // broadcast bluetooth state on state change
-            case BluetoothSerial.BLUETOOTH_STATE_CHANGED:
-                broadcast("bluetooth:" + serialWebSocketProxy.bluetoothSerial.getState() + (serialWebSocketProxy.bluetoothSerial.isConnected() ? ":" + serialWebSocketProxy.bluetoothSerial.getDevice().getName() : ""));
-                break;
+    // use the main activity layout
+    setContentView(R.layout.activity_main);
 
-            // log unhandled local broadcast intents
-            default:
-                Log.w(TAG, "received unhandled local intent action: " + action);
+    // keep the screen on
+    getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-                Toast.makeText(context, action, Toast.LENGTH_SHORT).show();
-        }
-        }
-    };
+    // force portrait orientation
+    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
-    @SuppressLint("SetJavaScriptEnabled")
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        // use main activity
-        super.onCreate(savedInstanceState);
+    // create web-view
+    webView = findViewById(R.id.webview);
 
-        Log.i(TAG, "creating main activity");
+    // enable javascript and storage
+    WebSettings webSettings = webView.getSettings();
+    webSettings.setJavaScriptEnabled(true);
+    webSettings.setDomStorageEnabled(true);
 
-        // use the main activity layout
-        setContentView(R.layout.activity_main);
+    // make the web-view debuggable
+    WebView.setWebContentsDebuggingEnabled(true);
 
-        // keep the screen on
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    // set background color to match the application
+    webView.setBackgroundColor(Color.parseColor("#282828"));
 
-        // force portrait orientation
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+    // get reference to the progress bar widget
+    progressBar = findViewById(R.id.progressBar);
 
-        // create web-view
-        webView = findViewById(R.id.webview);
+    // register web-view client
+    webView.setWebViewClient(new WebViewClient() {
 
-        // enable javascript and storage
-        WebSettings webSettings = webView.getSettings();
-        webSettings.setJavaScriptEnabled(true);
-        webSettings.setDomStorageEnabled(true);
+      // listen for finished loading
+      @Override
+      public void onPageFinished(WebView view, String url) {
+        Log.i(TAG, "web-view page has finished loading");
 
-        // make the web-view debuggable
-        WebView.setWebContentsDebuggingEnabled(true);
+        // hide the progress bar
+        progressBar.setVisibility(View.GONE);
+      }
+    });
+  }
 
-        // set background color to match the application
-        webView.setBackgroundColor(Color.parseColor("#282828"));
+  @Override
+  protected void onResume() {
+    super.onResume();
 
-        // get reference to the progress bar widget
-        progressBar = findViewById(R.id.progressBar);
+    Log.i(TAG, "resuming main activity");
 
-        // register web-view client
-        webView.setWebViewClient(new WebViewClient() {
+    // show the progress bar
+    progressBar.setVisibility(View.VISIBLE);
 
-            // listen for finished loading
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                Log.i(TAG, "web-view page has finished loading");
+    // setup the services
+    setupHttpServer();
+    setupWebSocketServer();
+    setupSerialProxy();
+    setupSerials();
 
-                // hide the progress bar
-                progressBar.setVisibility(View.GONE);
-            }
-        });
+    // start the services
+    startServices();
+
+    // show the local index view if not already loaded
+    webView.loadUrl("http://127.0.0.1:" + HTTP_SERVER_PORT + "/");
+  }
+
+  @Override
+  protected void onPause() {
+    super.onPause();
+
+    Log.i(TAG, "pausing main activity");
+
+    // load blank page
+    webView.loadUrl("about:blank");
+
+    // close the services
+    stopServices();
+    stopWebSocketServer();
+    stopHttpServer();
+  }
+
+  @Override
+  public void onInternalCommand(String command) {
+    if (command.length() == 0) {
+      return;
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
+    String[] tokens = command.split(":");
+    String name = tokens[0];
+    String[] parameters = Arrays.copyOfRange(tokens, 1, 2);
 
-        Log.i(TAG, "resuming main activity");
+    switch (name) {
+      case "toast":
+        handleShowToast(parameters);
+        break;
 
-        // show the progress bar
-        progressBar.setVisibility(View.VISIBLE);
-
-        // start the services
-        startBroadcastListeners();
-        startHttpServer();
-        startWebSocketServer();
-
-        // start the bluetooth service
-        startBluetoothWebSocketProxy();
-
-        // show the local index view if not already loaded
-        webView.loadUrl("http://127.0.0.1:" + HTTP_SERVER_PORT + "/");
+      case "reload":
+        webView.reload();
+        break;
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
+    Log.i(TAG, "handling internal command: '" + command + "'");
+  }
 
-        Log.i(TAG, "pausing main activity");
+//  private void startBroadcastListeners() {
+//    LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(BluetoothSerial.BLUETOOTH_STATE_CHANGED));
+//  }
+//
+//  private void stopBroadcastListeners() {
+//    LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
+//  }
 
-        // load blank page
-        webView.loadUrl("about:blank");
+  private void setupHttpServer() {
+    Log.i(TAG, "starting http server");
 
-        // disconnect the services
-        stopBluetoothWebSocketProxy();
-        stopWebSocketServer();
-        stopHttpServer();
-        stopBroadcastListeners();
+    try {
+      httpServer = new HttpServer(this, HTTP_SERVER_PORT);
+    } catch (IOException e) {
+      Log.e(TAG, "starting http server failed");
+
+      e.printStackTrace();
+    }
+  }
+
+  private void stopHttpServer() {
+    // do nothing if already stopped
+    if (httpServer == null) {
+      return;
     }
 
-    @Override
-    public void onInternalCommand(String command) {
-        if (command.length() == 0) {
-            return;
-        }
+    Log.i(TAG, "stopping http server");
 
-        String[] tokens = command.split(":");
-        String name = tokens[0];
-        String[] parameters = Arrays.copyOfRange(tokens, 1, 2);
+    // close the http server
+    httpServer.stop();
+    httpServer = null;
+  }
 
-        switch (name) {
-            case "toast":
-                handleShowToast(parameters);
-                break;
+  private void setupWebSocketServer() {
+    Log.i(TAG, "starting web-socket server");
 
-            case "reload":
-                webView.reload();
-                break;
-        }
+    webSocketServer = new WebSocketServer(WEB_SOCKET_SERVER_PORT, new Draft_6455());
+    webSocketServer.setConnectionLostTimeout(1000);
 
-        Log.i(TAG, "handling internal command: '" + command + "'");
+    // open the web-socket server
+    try {
+      webSocketServer.start();
+    } catch (Exception e) {
+      Log.e(TAG, "starting web-socket server failed");
+
+      e.printStackTrace();
+    }
+  }
+
+  private void setupSerialProxy() {
+    serialProxy = new SerialProxy(this, webSocketServer);
+  }
+
+  private void setupSerials() {
+    // setup serials
+    UsbSerial usbSerial = new UsbSerial(this, serialProxy);
+    BluetoothSerial bluetoothSerial = new BluetoothSerial(this, serialProxy, BLUETOOTH_DEVICE_NAME_PREFIX);
+
+    // register the serials to use
+    serialProxy.addSerial(usbSerial);
+    serialProxy.addSerial(bluetoothSerial);
+  }
+
+  private void stopWebSocketServer() {
+    // do nothing if already stopped
+    if (webSocketServer == null) {
+      return;
     }
 
-    private void startBroadcastListeners() {
-        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(BluetoothSerial.BLUETOOTH_STATE_CHANGED));
+    Log.i(TAG, "stopping web-socket server");
+
+    // attempt to close the web-socket server
+    try {
+      webSocketServer.stop();
+    } catch (IOException | InterruptedException e) {
+      Log.e(TAG, "stopping web-socket server failed");
+
+      e.printStackTrace();
+    } finally {
+      webSocketServer = null;
+    }
+  }
+
+  private void startServices() {
+    Log.i(TAG, "starting bluetooth web-socket proxy");
+
+    // attempt to open the serial connections
+    serialProxy.open();
+  }
+
+  private void stopServices() {
+    // close the serial connections
+    serialProxy.close();
+
+    serialProxy = null;
+  }
+
+  private void handleShowToast(String[] parameters) {
+    if (parameters.length != 1) {
+      Log.w(TAG, "showing toast requested, expected exactly one parameter but got " + parameters.length);
+
+      return;
     }
 
-    private void stopBroadcastListeners() {
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
-    }
-
-    private void startHttpServer() {
-        Log.i(TAG, "starting http server");
-
-        try {
-            httpServer = new HttpServer(this, HTTP_SERVER_PORT);
-        } catch (IOException e) {
-            Log.e(TAG, "starting http server failed");
-
-            e.printStackTrace();
-        }
-    }
-
-    private void stopHttpServer() {
-        // do nothing if already stopped
-        if (httpServer == null) {
-            return;
-        }
-
-        Log.i(TAG, "stopping http server");
-
-        // disconnect the http server
-        httpServer.stop();
-        httpServer = null;
-    }
-
-    private void startWebSocketServer() {
-        Log.i(TAG, "starting web-socket server");
-
-        webSocketServer = new WebSocketServer(WEB_SOCKET_SERVER_PORT, new Draft_6455());
-        webSocketServer.setConnectionLostTimeout(1000);
-
-        // start the web-socket server
-        try {
-            webSocketServer.start();
-        } catch (Exception e) {
-            Log.e(TAG, "starting web-socket server failed");
-
-            e.printStackTrace();
-        }
-    }
-
-    private void stopWebSocketServer() {
-        // do nothing if already stopped
-        if (webSocketServer == null) {
-            return;
-        }
-
-        Log.i(TAG, "stopping web-socket server");
-
-        // attempt to disconnect the web-socket server
-        try {
-            webSocketServer.stop();
-        } catch (IOException | InterruptedException e) {
-            Log.e(TAG, "stopping web-socket server failed");
-
-            e.printStackTrace();
-        } finally {
-            webSocketServer = null;
-        }
-    }
-
-    private void startBluetoothWebSocketProxy() {
-        Log.i(TAG, "starting bluetooth web-socket proxy");
-
-        // setup bluetooth web-socket proxy
-        serialWebSocketProxy = new SerialWebSocketProxy(this, this, webSocketServer, BLUETOOTH_DEVICE_NAME_PREFIX);
-
-        // attempt to connect to the bluetooth device
-        serialWebSocketProxy.start();
-    }
-
-    private void stopBluetoothWebSocketProxy() {
-        serialWebSocketProxy.stop();
-        serialWebSocketProxy = null;
-    }
-
-    private void handleShowToast(String[] parameters) {
-        if (parameters.length != 1) {
-            Log.w(TAG, "showing toast requested, expected exactly one parameter but got " + parameters.length);
-
-            return;
-        }
-
-        String toast = parameters[0];
-        Toast.makeText(this, toast, Toast.LENGTH_LONG).show();
-    }
-
-    private void broadcast(String message) {
-        if (webSocketServer == null) {
-            Log.w(TAG, "broadcasting '" + message + "' requested but web-socket server is not connected");
-
-            return;
-        }
-
-        if (webSocketServer.getConnections().size() == 0) {
-            Log.w(TAG, "broadcasting '" + message + "' requested but no web-socket clients are connected");
-
-            return;
-        }
-
-        // broadcast the message to all connected clients
-        webSocketServer.getConnections().forEach(connection -> connection.send(message));
-    }
+    String toast = parameters[0];
+    Toast.makeText(this, toast, Toast.LENGTH_LONG).show();
+  }
 }

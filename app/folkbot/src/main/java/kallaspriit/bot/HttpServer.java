@@ -12,109 +12,109 @@ import java.io.InputStreamReader;
 import fi.iki.elonen.NanoHTTPD;
 
 public class HttpServer extends NanoHTTPD {
-    private static final String TAG = "HttpServer";
+  private static final String TAG = "HttpServer";
 
-    private Context context;
+  private Context context;
 
-    HttpServer(Context context, int port) throws IOException {
-        super("0.0.0.0", port);
+  HttpServer(Context context, int port) throws IOException {
+    super("0.0.0.0", port);
 
-        this.context = context;
+    this.context = context;
 
-        start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
+    start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
 
-        Log.i(TAG,"server started on port " + port);
+    Log.i(TAG, "server started on port " + port);
+  }
+
+  @Override
+  public Response serve(IHTTPSession request) {
+    // handle only get requests
+    if (request.getMethod() != Method.GET) {
+      return newFixedLengthResponse(Response.Status.METHOD_NOT_ALLOWED, NanoHTTPD.MIME_PLAINTEXT, "expecting only get requests");
     }
 
-    @Override
-    public Response serve(IHTTPSession request) {
-        // handle only get requests
-        if (request.getMethod() != Method.GET) {
-            return newFixedLengthResponse(Response.Status.METHOD_NOT_ALLOWED, NanoHTTPD.MIME_PLAINTEXT, "expecting only get requests");
-        }
+    String uri = request.getUri();
+    int resourceId = getUriResourceId(uri);
 
-        String uri = request.getUri();
-        int resourceId = getUriResourceId(uri);
+    Log.i(TAG, "requested uri '" + uri + "' (" + resourceId + ")");
 
-        Log.i(TAG, "requested uri '" + uri + "' (" + resourceId + ")");
+    // handle not found
+    if (resourceId == 0) {
+      Log.d(TAG, "resource for requested uri '" + uri + "' could not be found");
 
-        // handle not found
-        if (resourceId == 0) {
-            Log.d(TAG,"resource for requested uri '" + uri + "' could not be found");
-
-            return newFixedLengthResponse(Response.Status.NOT_FOUND, NanoHTTPD.MIME_PLAINTEXT, "requested resource could not be found");
-        }
-
-        // onBluetoothSerialMessage the resource contents
-        String contents = getResourceContents(resourceId);
-
-        // default to text/plain
-        String mimeType = NanoHTTPD.MIME_PLAINTEXT;
-
-        // handle few common mime types
-        if (uri.contains(".html") || uri.equals("/")) {
-            mimeType = NanoHTTPD.MIME_HTML;
-        } else if (uri.contains(".css")) {
-            mimeType = "text/css";
-        } else if (uri.contains(".js")) {
-            mimeType = "application/javascript";
-        }
-
-        Log.i(TAG, "sending file '" + uri + "' of mime type type '" + mimeType + "' (" + contents.length() + " bytes)");
-
-        // send the response
-        return newFixedLengthResponse(Response.Status.OK, mimeType, contents);
+      return newFixedLengthResponse(Response.Status.NOT_FOUND, NanoHTTPD.MIME_PLAINTEXT, "requested resource could not be found");
     }
 
-    private String getResourceContents(int resourceId) {
-        // create a string builder with rather large initial capacity
-        StringBuilder stringBuilder = new StringBuilder(2 * 1000 * 1000);
+    // onBluetoothSerialMessage the resource contents
+    String contents = getResourceContents(resourceId);
 
-        Log.i(TAG, "reading resource: " + resourceId);
+    // default to text/plain
+    String mimeType = NanoHTTPD.MIME_PLAINTEXT;
 
-        try {
-            Resources resources = context.getResources();
-            InputStream inputStream = resources.openRawResource(resourceId);
-
-            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-            String line = reader.readLine();
-
-            while (line != null) {
-                stringBuilder.append(line + "\n");
-
-                line = reader.readLine();
-            }
-        } catch (Exception e) {
-            Log.e(TAG,"reading resource file failed: " + e.getMessage());
-
-            e.printStackTrace();
-        }
-
-        return stringBuilder.toString();
+    // handle few common mime types
+    if (uri.contains(".html") || uri.equals("/")) {
+      mimeType = NanoHTTPD.MIME_HTML;
+    } else if (uri.contains(".css")) {
+      mimeType = "text/css";
+    } else if (uri.contains(".js")) {
+      mimeType = "application/javascript";
     }
 
-    private int getUriResourceId(String uri) {
-        // handle index
-        if (uri.equals("/")) {
-           return R.raw.index;
-        }
+    Log.i(TAG, "sending file '" + uri + "' of mime type type '" + mimeType + "' (" + contents.length() + " bytes)");
 
-        // convert /main.js to "main"
-        int lastDotPos = uri.lastIndexOf(".");
-        String identifierName = uri.substring(1, lastDotPos > 0 ? lastDotPos : uri.length());
+    // send the response
+    return newFixedLengthResponse(Response.Status.OK, mimeType, contents);
+  }
 
-        // resolve identifier id
-        int identifierId = context.getResources().getIdentifier(identifierName, "raw", context.getPackageName());
+  private String getResourceContents(int resourceId) {
+    // create a string builder with rather large initial capacity
+    StringBuilder stringBuilder = new StringBuilder(2 * 1000 * 1000);
 
-        // handle failure to map the uri to resource
-        if (identifierId == 0) {
-            Log.w(TAG, "uri '" + uri + "' could not be resolved to a resource");
+    Log.i(TAG, "reading resource: " + resourceId);
 
-            return 0;
-        }
+    try {
+      Resources resources = context.getResources();
+      InputStream inputStream = resources.openRawResource(resourceId);
 
-        Log.d(TAG, "resolved uri '" + uri + "' with name '" + identifierName + "' to id of: " + identifierId);
+      BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+      String line = reader.readLine();
 
-        return identifierId;
+      while (line != null) {
+        stringBuilder.append(line).append("\n");
+
+        line = reader.readLine();
+      }
+    } catch (Exception e) {
+      Log.e(TAG, "reading resource file failed: " + e.getMessage());
+
+      e.printStackTrace();
     }
+
+    return stringBuilder.toString();
+  }
+
+  private int getUriResourceId(String uri) {
+    // handle index
+    if (uri.equals("/")) {
+      return R.raw.index;
+    }
+
+    // convert /main.js to "main"
+    int lastDotPos = uri.lastIndexOf(".");
+    String identifierName = uri.substring(1, lastDotPos > 0 ? lastDotPos : uri.length());
+
+    // resolve identifier id
+    int identifierId = context.getResources().getIdentifier(identifierName, "raw", context.getPackageName());
+
+    // handle failure to map the uri to resource
+    if (identifierId == 0) {
+      Log.w(TAG, "uri '" + uri + "' could not be resolved to a resource");
+
+      return 0;
+    }
+
+    Log.d(TAG, "resolved uri '" + uri + "' with name '" + identifierName + "' to id of: " + identifierId);
+
+    return identifierId;
+  }
 }
