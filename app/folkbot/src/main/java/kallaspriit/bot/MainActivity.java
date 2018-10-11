@@ -78,13 +78,6 @@ public class MainActivity extends Activity implements SerialProxy.SerialProxyEve
         progressBar.setVisibility(View.GONE);
       }
     });
-  }
-
-  @Override
-  protected void onResume() {
-    super.onResume();
-
-    Log.i(TAG, "resuming main activity");
 
     // show the progress bar
     progressBar.setVisibility(View.VISIBLE);
@@ -103,18 +96,27 @@ public class MainActivity extends Activity implements SerialProxy.SerialProxyEve
   }
 
   @Override
+  protected void onResume() {
+    super.onResume();
+
+    Log.i(TAG, "resuming main activity");
+
+
+  }
+
+  @Override
   protected void onPause() {
     super.onPause();
 
     Log.i(TAG, "pausing main activity");
 
     // load blank page
-    webView.loadUrl("about:blank");
-
-    // close the services
-    stopServices();
-    stopWebSocketServer();
-    stopHttpServer();
+//    webView.loadUrl("about:blank");
+//
+//    // close the services
+//    stopServices();
+//    stopWebSocketServer();
+//    stopHttpServer();
   }
 
   @Override

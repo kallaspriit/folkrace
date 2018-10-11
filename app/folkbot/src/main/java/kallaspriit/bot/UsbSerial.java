@@ -10,12 +10,14 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.util.Log;
 import android.widget.Toast;
 
 import java.util.Set;
 
 public class UsbSerial extends AbstractSerial {
-  private static final String NAME = "USB";
+  private static final String TAG = "UsbSerial";
+  private static final String NAME = "usb";
 
   private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
     @Override
@@ -23,32 +25,34 @@ public class UsbSerial extends AbstractSerial {
       String action = intent.getAction();
 
       if (action == null) {
+        Log.w(TAG, "received broadcast with empty action");
+
         return;
       }
 
       switch (action) {
         case UsbService.ACTION_USB_PERMISSION_GRANTED:
-          Toast.makeText(context, "USB permission granted", Toast.LENGTH_SHORT).show();
+          Toast.makeText(context, "USB permission granted", Toast.LENGTH_LONG).show();
 
           setState(State.CONNECTED);
           break;
         case UsbService.ACTION_USB_PERMISSION_NOT_GRANTED:
-          Toast.makeText(context, "USB permission not granted", Toast.LENGTH_SHORT).show();
+          Toast.makeText(context, "USB permission not granted", Toast.LENGTH_LONG).show();
 
           setState(State.DISABLED);
           break;
         case UsbService.ACTION_NO_USB:
-          Toast.makeText(context, "USB not connected", Toast.LENGTH_SHORT).show();
+          Toast.makeText(context, "USB not connected", Toast.LENGTH_LONG).show();
 
           setState(State.DEVICE_NOT_FOUND);
           break;
         case UsbService.ACTION_USB_DISCONNECTED:
-          Toast.makeText(context, "USB disconnected", Toast.LENGTH_SHORT).show();
+          Toast.makeText(context, "USB disconnected", Toast.LENGTH_LONG).show();
 
           setState(State.DISCONNECTED);
           break;
         case UsbService.ACTION_USB_NOT_SUPPORTED:
-          Toast.makeText(context, "USB device not supported", Toast.LENGTH_SHORT).show();
+          Toast.makeText(context, "USB device not supported", Toast.LENGTH_LONG).show();
 
           setState(State.NOT_SUPPORTED);
           break;
@@ -143,6 +147,7 @@ public class UsbSerial extends AbstractSerial {
   private static class UsbSerialHandler extends Handler {
     private final Context context;
     private final SerialEventListener listener;
+    private String commandBuffer = "";
 
     UsbSerialHandler(Context context, SerialEventListener listener) {
       this.context = context;
@@ -153,10 +158,11 @@ public class UsbSerial extends AbstractSerial {
     public void handleMessage(Message msg) {
       switch (msg.what) {
         case UsbService.MESSAGE_FROM_SERIAL_PORT:
-          String message = (String) msg.obj;
-          Toast.makeText(this.context, "SERIAL MESSAGE:" + message, Toast.LENGTH_LONG).show();
+          // append message to buffer
+          commandBuffer += (String) msg.obj;
 
-          listener.onSerialMessage(NAME, message);
+          // handle all linefeed delimited commands
+          commandBuffer = handleCommands(commandBuffer);
           break;
 
         case UsbService.CTS_CHANGE:
@@ -167,6 +173,30 @@ public class UsbSerial extends AbstractSerial {
           Toast.makeText(this.context, "DSR_CHANGE", Toast.LENGTH_SHORT).show();
           break;
       }
+    }
+
+    private String handleCommands(String buffer) {
+      // search for new-line
+      int newLineIndex = buffer.indexOf("\n");
+
+      // handle all commands
+      while (newLineIndex != -1) {
+        // extract the command
+        String message = buffer.substring(0, newLineIndex);
+
+        // remove the handled message from the message buffer
+        buffer = buffer.substring(newLineIndex + 1);
+
+        // emit the serial message event
+        listener.onSerialMessage(NAME, message);
+
+        Log.d(TAG, "got usb serial message: '" + message + "'");
+
+        // search for next new-line
+        newLineIndex = buffer.indexOf("\n");
+      }
+
+      return buffer;
     }
   }
 }

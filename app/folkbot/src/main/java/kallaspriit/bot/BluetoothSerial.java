@@ -20,9 +20,9 @@ import java.util.List;
 import java.util.UUID;
 
 public class BluetoothSerial extends AbstractSerial {
-  private static final String NAME = "BLUETOOTH";
-
   private static final String TAG = "BluetoothSerial";
+  private static final String NAME = "bluetooth";
+
   private State state = State.DISCONNECTED;
   private BluetoothDevice bluetoothDevice;
   private BluetoothSocket bluetoothSocket;
