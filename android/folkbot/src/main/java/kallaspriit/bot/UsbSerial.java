@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.hardware.usb.UsbDevice;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -31,29 +32,35 @@ public class UsbSerial extends AbstractSerial {
       }
 
       switch (action) {
-        case UsbService.ACTION_USB_PERMISSION_GRANTED:
-          Toast.makeText(context, "USB permission granted", Toast.LENGTH_LONG).show();
-
+        case UsbService.ACTION_USB_READY:
           setState(State.CONNECTED);
           break;
-        case UsbService.ACTION_USB_PERMISSION_NOT_GRANTED:
-          Toast.makeText(context, "USB permission not granted", Toast.LENGTH_LONG).show();
 
+        case UsbService.ACTION_USB_PERMISSION_GRANTED:
+          setState(State.CONNECTING);
+          break;
+
+        case UsbService.ACTION_USB_PERMISSION_NOT_GRANTED:
           setState(State.DISABLED);
           break;
-        case UsbService.ACTION_NO_USB:
-          Toast.makeText(context, "USB not connected", Toast.LENGTH_LONG).show();
 
+        case UsbService.ACTION_NO_USB:
           setState(State.DEVICE_NOT_FOUND);
           break;
-        case UsbService.ACTION_USB_DISCONNECTED:
-          Toast.makeText(context, "USB disconnected", Toast.LENGTH_LONG).show();
 
+        case UsbService.ACTION_USB_DISCONNECTED:
           setState(State.DISCONNECTED);
           break;
-        case UsbService.ACTION_USB_NOT_SUPPORTED:
-          Toast.makeText(context, "USB device not supported", Toast.LENGTH_LONG).show();
 
+        case UsbService.ACTION_USB_NOT_SUPPORTED:
+          setState(State.NOT_SUPPORTED);
+          break;
+
+        case UsbService.ACTION_CDC_DRIVER_NOT_WORKING:
+          setState(State.NOT_SUPPORTED);
+          break;
+
+        case UsbService.ACTION_USB_DEVICE_NOT_WORKING:
           setState(State.NOT_SUPPORTED);
           break;
       }
@@ -85,8 +92,6 @@ public class UsbSerial extends AbstractSerial {
 
   @Override
   public void open() {
-    setState(State.CONNECTING);
-
     handler = new UsbSerialHandler(context, listener);
 
     registerBroadcastReceiver();
@@ -112,7 +117,7 @@ public class UsbSerial extends AbstractSerial {
 
   @SuppressWarnings("SameParameterValue")
   private void startService(Class<?> service, ServiceConnection serviceConnection, Bundle extras) {
-    if (!UsbService.SERVICE_CONNECTED) {
+    if (!UsbService.isServiceConnected) {
       Intent startService = new Intent(context, service);
 
       if (extras != null && !extras.isEmpty()) {
@@ -135,11 +140,14 @@ public class UsbSerial extends AbstractSerial {
   private void registerBroadcastReceiver() {
     IntentFilter filter = new IntentFilter();
 
+    filter.addAction(UsbService.ACTION_USB_READY);
     filter.addAction(UsbService.ACTION_USB_PERMISSION_GRANTED);
+    filter.addAction(UsbService.ACTION_USB_PERMISSION_NOT_GRANTED);
     filter.addAction(UsbService.ACTION_NO_USB);
     filter.addAction(UsbService.ACTION_USB_DISCONNECTED);
     filter.addAction(UsbService.ACTION_USB_NOT_SUPPORTED);
-    filter.addAction(UsbService.ACTION_USB_PERMISSION_NOT_GRANTED);
+    filter.addAction(UsbService.ACTION_CDC_DRIVER_NOT_WORKING);
+    filter.addAction(UsbService.ACTION_USB_DEVICE_NOT_WORKING);
 
     context.registerReceiver(broadcastReceiver, filter);
   }
@@ -157,6 +165,14 @@ public class UsbSerial extends AbstractSerial {
     @Override
     public void handleMessage(Message msg) {
       switch (msg.what) {
+        case UsbService.CONNECTING_TO_DEVICE:
+          // get associated device
+          UsbDevice device = (UsbDevice) msg.obj;
+
+          // send usb info to listener
+          listener.onSerialMessage(NAME, "usb:" + device.getVendorId() + ":" + device.getProductId() + ":" + device.getProductName());
+          break;
+
         case UsbService.MESSAGE_FROM_SERIAL_PORT:
           // append message to buffer
           commandBuffer += (String) msg.obj;
