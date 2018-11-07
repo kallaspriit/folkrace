@@ -1,0 +1,57 @@
+@import "~reset-css/reset";
+
+@import "./gfx/fonts";
+@import "./gfx/variables";
+@import "./gfx/icons";
+@import "./gfx/common";
+
+// default to using border box sizing
+html {
+  box-sizing: border-box;
+}
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
+}
+
+body,
+html {
+  height: 100;
+  padding: 0;
+  margin: 0;
+  font-family: "heebo-regular";
+  color: $text-primary;
+  background-color: $bg-secondary;
+}
+
+.app {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  animation: fade-in 300ms;
+
+  // TODO: refactor to a component?
+  .view {
+    position: relative;
+    flex: 1;
+    border-radius: 8px 8px 0 0;
+
+    &--text {
+      padding: 16px;
+    }
+  }
+
+  .secondary-text {
+    color: $text-secondary;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

@@ -1,0 +1,30 @@
+@import "./variables.scss";
+
+.bg {
+  &--good {
+    background-color: $bg-good !important;
+  }
+
+  &--warn {
+    background-color: $bg-warn !important;
+  }
+
+  &--bad {
+    background-color: $bg-bad !important;
+    animation: pulse-bad 3s ease;
+    animation-iteration-count: infinite;
+    animation-delay: 1s;
+  }
+}
+
+@keyframes pulse-bad {
+  0% {
+    background: $bg-bad;
+  }
+  50% {
+    background: lighten($bg-bad, 25%);
+  }
+  100% {
+    background: $bg-bad;
+  }
+}

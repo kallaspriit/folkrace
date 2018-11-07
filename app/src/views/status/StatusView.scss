@@ -1,0 +1,51 @@
+@import "../../gfx/variables";
+
+.status-view {
+  .status-grid {
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 100px;
+    height: calc(100vh - 74px); // subtract menu height and 2 * 5px paddings
+  }
+
+  .grid-status {
+    padding: 16px;
+    overflow: hidden;
+  }
+
+  // TODO: handle scrolling
+  .log {
+    grid-column: 1 / 4;
+    font-family: Consolas, "Courier New", Courier, monospace;
+    overflow: scroll;
+    padding: 8px;
+
+    &__entry {
+      &__time {
+        color: $text-secondary;
+      }
+    }
+  }
+
+  .clear-log-button {
+    box-sizing: content-box;
+    position: absolute;
+    bottom: $grid-gap;
+    right: $grid-gap;
+    width: 32px;
+    height: 32px;
+    padding: 10px;
+    background-color: $bg-tertiary;
+
+    .icon {
+      background-color: $text-secondary;
+    }
+  }
+
+  // .log {
+  //   padding: 8px;
+  //   background-color: #0f0;
+  //   height: 100%;
+  //   overflow-x: hidden;
+  //   overflow-y: scroll;
+  // }
+}
