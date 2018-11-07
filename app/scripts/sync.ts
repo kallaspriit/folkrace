@@ -1,10 +1,10 @@
 import chalk from "chalk";
-// import * as chokidar from "chokidar";
+import * as chokidar from "chokidar";
 import * as fs from "fs-extra";
-// import { debounce } from "lodash";
+import debounce = require("lodash.debounce");
 import * as path from "path";
 
-// configure paths and file patterns
+// configure paths
 const sourcePath = path.join(__dirname, "..", "build");
 const destinationPath = path.join(
   __dirname,
@@ -17,9 +17,38 @@ const destinationPath = path.join(
   "res",
   "raw"
 );
+
+// configure list of files to copy from the source path
 const filesToCopy = ["index.html", "static"];
 
+// execute the script
 (async () => {
+  // pass in -w or --watch to run in watch mode
+  const useWatchMode =
+    process.argv.find(arg => ["-w", "--watch"].indexOf(arg) !== -1) !==
+    undefined;
+
+  if (useWatchMode) {
+    chokidar
+      .watch(sourcePath, { ignoreInitial: true, ignorePermissionErrors: true })
+      .on("all", async (event, filename: string) => {
+        const relativeFilename = filename
+          .replace(sourcePath, "")
+          .substr(1)
+          .replace(/\\/g, "/");
+
+        process.stdout.write(
+          chalk.reset(
+            `> ${chalk.bold(pad(event, 9))} ${chalk.bold(
+              pad(relativeFilename, 60, true)
+            )}\n`
+          )
+        );
+
+        await syncDebounced();
+      });
+  }
+
   const startTime = Date.now();
 
   await sync();
@@ -27,63 +56,60 @@ const filesToCopy = ["index.html", "static"];
   const timeTaken = Date.now() - startTime;
 
   process.stdout.write(
-    `${chalk.bgGreen.black(" DONE ")} in ${chalk.bold(`${timeTaken}ms`)}\n`
+    `${chalk.bgGreen.black(" SYNC COMPLETE ")} in ${chalk.bold(
+      `${pad(timeTaken, 4)}ms`
+    )}\n`
   );
 })().catch(error => console.error(error));
 
-// pass in -w or --watch to run in watch mode
-// const useWatchMode =
-//   process.argv.find(arg => ["-w", "--watch"].indexOf(arg) !== -1) !== undefined;
-
-// if (useWatchMode) {
-//   const watcher = chokidar.watch(["build/*.js", "build/*.css", "build/*.html"]);
-
-//   // debounce running the synchronization
-//   const runDebounce = debounce(async () => {
-//     const startTime = Date.now();
-
-//     try {
-//       await sync();
-//       const timeTaken = Date.now() - startTime;
-
-//       process.stdout.write(
-//         `${chalk.bgGreen.black(" DONE ")} in ${chalk.bold(
-//           `${pad(timeTaken, 4)}ms`
-//         )}\n`
-//       );
-//     } catch (error) {
-//       const timeTaken = Date.now() - startTime;
-
-//       showError(error, timeTaken);
-//     }
-//   }, 500);
-
-//   watcher.on("all", async (event, filename) => {
-//     process.stdout.write(
-//       chalk.reset(
-//         `> ${chalk.bold(pad(event, 6))} for ${chalk.bold(
-//           pad(filename, 30)
-//         )}, scheduling sync\n`
-//       )
-//     );
-
-//     await runDebounce();
-//   });
-// } else {
-
-// }
-
+// synchronizes the files
 async function sync(): Promise<void> {
   // delete all files in destination directory
   await fs.emptyDir(destinationPath);
 
   // copy all requested files
   await Promise.all(
-    filesToCopy.map(filename => {
+    filesToCopy.map(async filename => {
       const src = path.join(sourcePath, filename);
       const dest = path.join(destinationPath, filename);
+      const srcExists = await fs.pathExists(src);
+
+      if (!srcExists) {
+        return null;
+      }
 
       return fs.copy(src, dest);
     })
   );
+}
+
+// synchronizes the files, debounced
+const syncDebounced = debounce(async () => {
+  const startTime = Date.now();
+
+  await sync();
+
+  const timeTaken = Date.now() - startTime;
+
+  process.stdout.write(
+    `${chalk.bgGreen.black(" SYNC COMPLETE ")} in ${chalk.bold(
+      `${pad(timeTaken, 4)}ms`
+    )}\n`
+  );
+}, 1000);
+
+// pads a string or number
+function pad(value: string | number, len: number, useRightPadding = false) {
+  const str = typeof value === "string" ? value : value.toString();
+  const padLength = len - str.length;
+
+  if (padLength < 1) {
+    const truncatedStr = str.substr(str.length - len - 2);
+
+    return useRightPadding ? `..${truncatedStr}` : `${truncatedStr}..`;
+  }
+
+  const padding = new Array(padLength + 1).join(" ");
+
+  return useRightPadding ? `${padding}${str}` : `${str}${padding}`;
 }

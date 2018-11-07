@@ -1,6 +1,8 @@
 {
-  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "module": "commonjs"
+    "target": "es6",
+    "module": "commonjs",
+    "strict": true,
+    "allowSyntheticDefaultImports": true
   }
 }
