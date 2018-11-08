@@ -83,7 +83,7 @@ async function sync(): Promise<void> {
   );
 }
 
-// synchronizes the files, debounced
+// synchronizes the files, debounced to run at most once per second
 const syncDebounced = debounce(async () => {
   const startTime = Date.now();
 
