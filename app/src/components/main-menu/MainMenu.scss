@@ -33,6 +33,7 @@
         color: lighten($bg-primary, $darker-lighter-percentage);
         background-color: rgba(0, 0, 0, 0);
         transition: background-color 300ms;
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 
         .icon {
           background-color: lighten($bg-primary, $darker-lighter-percentage);

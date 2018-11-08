@@ -14,8 +14,7 @@ const destinationPath = path.join(
   "folkbot",
   "src",
   "main",
-  "res",
-  "raw"
+  "assets"
 );
 
 // configure list of files to copy from the source path
@@ -93,7 +92,7 @@ const syncDebounced = debounce(async () => {
 
   process.stdout.write(
     `${chalk.bgGreen.black(" SYNC COMPLETE ")} in ${chalk.bold(
-      `${pad(timeTaken, 4)}ms`
+      `${pad(timeTaken, 4, true)}ms`
     )}\n`
   );
 }, 1000);
@@ -103,7 +102,7 @@ function pad(value: string | number, len: number, useRightPadding = false) {
   const str = typeof value === "string" ? value : value.toString();
   const padLength = len - str.length;
 
-  if (padLength < 1) {
+  if (padLength < 0) {
     const truncatedStr = str.substr(str.length - len - 2);
 
     return useRightPadding ? `..${truncatedStr}` : `${truncatedStr}..`;

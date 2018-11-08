@@ -1,13 +1,10 @@
 package kallaspriit.bot;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.util.Log;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 
 import fi.iki.elonen.NanoHTTPD;
 
@@ -33,88 +30,69 @@ public class HttpServer extends NanoHTTPD {
       return newFixedLengthResponse(Response.Status.METHOD_NOT_ALLOWED, NanoHTTPD.MIME_PLAINTEXT, "expecting only get requests");
     }
 
-    String uri = request.getUri();
-    int resourceId = getUriResourceId(uri);
+    // resolve asset filename and mime type
+    String filename = getAssetFilename(request.getUri());
+    String mimeType = getMimeType(filename);
 
-    Log.i(TAG, "requested uri '" + uri + "' (" + resourceId + ")");
+    // attempt to read the file
+    String contents;
 
-    // handle not found
-    if (resourceId == 0) {
-      Log.d(TAG, "resource for requested uri '" + uri + "' could not be found");
+    try {
+      contents = getAssetContents(filename);
+    } catch (IOException e) {
+      Log.d(TAG, "asset for requested uri '" + filename + "' could not be found");
 
-      return newFixedLengthResponse(Response.Status.NOT_FOUND, NanoHTTPD.MIME_PLAINTEXT, "requested resource could not be found");
+      contents = "requested resource could not be found";
+      mimeType = NanoHTTPD.MIME_PLAINTEXT;
     }
 
-    // onBluetoothSerialMessage the resource contents
-    String contents = getResourceContents(resourceId);
-
-    // default to text/plain
-    String mimeType = NanoHTTPD.MIME_PLAINTEXT;
-
-    // handle few common mime types
-    if (uri.contains(".html") || uri.equals("/")) {
-      mimeType = NanoHTTPD.MIME_HTML;
-    } else if (uri.contains(".css")) {
-      mimeType = "text/css";
-    } else if (uri.contains(".js")) {
-      mimeType = "application/javascript";
-    }
-
-    Log.i(TAG, "sending file '" + uri + "' of mime type type '" + mimeType + "' (" + contents.length() + " bytes)");
+    Log.i(TAG, "sending file '" + filename + "' of mime type type '" + mimeType + "' (" + contents.length() + " bytes)");
 
     // send the response
     return newFixedLengthResponse(Response.Status.OK, mimeType, contents);
   }
 
-  private String getResourceContents(int resourceId) {
-    // create a string builder with rather large initial capacity
-    StringBuilder stringBuilder = new StringBuilder(2 * 1000 * 1000);
-
-    Log.i(TAG, "reading resource: " + resourceId);
-
-    try {
-      Resources resources = context.getResources();
-      InputStream inputStream = resources.openRawResource(resourceId);
-
-      BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-      String line = reader.readLine();
-
-      while (line != null) {
-        stringBuilder.append(line).append("\n");
-
-        line = reader.readLine();
-      }
-    } catch (Exception e) {
-      Log.e(TAG, "reading resource file failed: " + e.getMessage());
-
-      e.printStackTrace();
+  private String getAssetFilename(String uri) {
+    // default to index file
+    if (uri.equals("/")) {
+      return "index.html";
     }
 
-    return stringBuilder.toString();
+    // remove leading slash
+    if (uri.substring(0, 1).equals("/")) {
+      uri = uri.substring(1);
+    }
+
+    return uri;
+  }
+  
+  private String getMimeType(String filename) {
+    // default to text/plain
+    String mimeType = NanoHTTPD.MIME_PLAINTEXT;
+
+    // handle few common mime types
+    if (filename.contains(".html") || filename.equals("/")) {
+      mimeType = NanoHTTPD.MIME_HTML;
+    } else if (filename.contains(".css")) {
+      mimeType = "text/css";
+    } else if (filename.contains(".svg")) {
+      mimeType = "image/svg+xml";
+    } else if (filename.contains(".js")) {
+      mimeType = "application/javascript";
+    }
+    return mimeType;
   }
 
-  private int getUriResourceId(String uri) {
-    // handle index
-    if (uri.equals("/")) {
-      return R.raw.index;
-    }
+  private String getAssetContents(String filename) throws IOException {
+    InputStream is = context.getAssets().open(filename);
 
-    // convert /main.js to "main"
-    int lastDotPos = uri.lastIndexOf(".");
-    String identifierName = uri.substring(1, lastDotPos > 0 ? lastDotPos : uri.length());
+    int size = is.available();
+    byte[] buffer = new byte[size];
 
-    // resolve identifier id
-    int identifierId = context.getResources().getIdentifier(identifierName, "raw", context.getPackageName());
+    //noinspection ResultOfMethodCallIgnored
+    is.read(buffer);
+    is.close();
 
-    // handle failure to map the uri to resource
-    if (identifierId == 0) {
-      Log.w(TAG, "uri '" + uri + "' could not be resolved to a resource");
-
-      return 0;
-    }
-
-    Log.d(TAG, "resolved uri '" + uri + "' with name '" + identifierName + "' to id of: " + identifierId);
-
-    return identifierId;
+    return new String(buffer);
   }
 }
