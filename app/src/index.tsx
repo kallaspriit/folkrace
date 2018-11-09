@@ -5,4 +5,4 @@ import "reset-css";
 import "./index.scss";
 import App from "./App";
 
-ReactDOM.render(<App />, document.getElementById("root") as HTMLElement);
+ReactDOM.render(<App />, document.getElementById("root"));

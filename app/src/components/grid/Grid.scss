@@ -30,7 +30,8 @@
     margin-top: 8px;
 
     &--primary {
-      font-variant: small-caps;
+      font-variant: all-small-caps;
+      // text-transform: uppercase;
     }
 
     &--secondary {

@@ -4,7 +4,9 @@
   width: $width;
   height: $height;
   mask-image: url($data);
-  // mask-size: $height $width;
+  mask-size: $height $width;
+  mask-repeat: no-repeat;
+  mask-position: center center;
   background-color: $text-primary;
 }
 
@@ -32,7 +34,7 @@
 
   // status view
   &__bluetooth {
-    @include icon(19px, 32px, "gfx/icons/bluetooth.svg");
+    @include icon(32px, 32px, "gfx/icons/bluetooth.svg");
   }
 
   &__serial {
@@ -40,11 +42,11 @@
   }
 
   &__web-socket {
-    @include icon(47px, 32px, "gfx/icons/web-socket.svg");
+    @include icon(32px, 32px, "gfx/icons/web-socket.svg");
   }
 
   &__battery {
-    @include icon(35px, 32px, "gfx/icons/battery.svg");
+    @include icon(32px, 32px, "gfx/icons/battery.svg");
   }
 
   // buttons
