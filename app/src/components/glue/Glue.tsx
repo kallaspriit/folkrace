@@ -143,9 +143,10 @@ function handleWebSocketCommand(
   handler(args, containers);
 }
 
+// handles serial status command
 function handleWebSocketSerialCommand(
   args: string[],
-  containers: ContainerMap
+  { statusContainer }: ContainerMap
 ) {
   // extract serial info
   const serialType = args[0] as SerialType;
@@ -153,13 +154,9 @@ function handleWebSocketSerialCommand(
   const serialDeviceName = typeof args[2] === "string" ? args[2] : undefined;
 
   // update serial state
-  containers.statusContainer.setSerialState(
-    serialType,
-    serialState,
-    serialDeviceName
-  );
+  statusContainer.setSerialState(serialType, serialState, serialDeviceName);
 
-  const connectedSerial = containers.statusContainer.getConnectedSerial();
+  const connectedSerial = statusContainer.getConnectedSerial();
 
   // ask for some initial state info once a serial connection is established
   if (connectedSerial !== undefined) {
@@ -179,19 +176,21 @@ function handleWebSocketSerialCommand(
     }
 
     // no serial connection so we can't be sure of battery voltage
-    containers.statusContainer.setBatteryVoltage(undefined);
+    statusContainer.setBatteryVoltage(undefined);
   }
 }
 
+// handles voltage response
 function handleWebSocketGetVoltageCommand(
   args: string[],
-  containers: ContainerMap
+  { statusContainer }: ContainerMap
 ) {
   const voltage = parseFloat(args[0]);
 
-  containers.statusContainer.setBatteryVoltage(voltage);
+  statusContainer.setBatteryVoltage(voltage);
 }
 
+// requests for the current voltage level
 function requestVoltage() {
   webSocketClient.send("get-voltage");
 }

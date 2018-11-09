@@ -4,15 +4,15 @@
   display: flex;
   flex-direction: row;
   justify-content: center;
-  background-color: $bg-primary;
+  background-color: #000;
   border-radius: 0 0 8px 8px;
 
   &__nav {
     display: flex;
     flex-direction: row;
-    height: 64px;
+    height: $menu-height;
     flex: 1;
-    max-width: 500px;
+    max-width: 600px;
 
     li {
       height: 100%;
@@ -30,17 +30,22 @@
         height: 100%;
         padding: 8px 0;
         text-decoration: none;
-        color: lighten($bg-primary, $darker-lighter-percentage);
+        color: darken(#fff, $darker-lighter-percentage);
         background-color: rgba(0, 0, 0, 0);
         transition: background-color 300ms;
         -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 
         .icon {
-          background-color: lighten($bg-primary, $darker-lighter-percentage);
+          background-color: darken(#fff, $darker-lighter-percentage);
         }
 
         &.active {
-          background-color: rgba(0, 0, 0, 0.1);
+          background-color: $bg-secondary;
+          color: #fff;
+
+          .icon {
+            background-color: #fff;
+          }
         }
       }
     }
