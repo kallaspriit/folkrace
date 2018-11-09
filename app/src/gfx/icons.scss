@@ -3,7 +3,8 @@
   display: block;
   width: $width;
   height: $height;
-  -webkit-mask-image: url($data);
+  mask-image: url($data);
+  // mask-size: $height $width;
   background-color: $text-primary;
 }
 
@@ -32,6 +33,10 @@
   // status view
   &__bluetooth {
     @include icon(19px, 32px, "gfx/icons/bluetooth.svg");
+  }
+
+  &__serial {
+    @include icon(32px, 32px, "gfx/icons/serial.svg");
   }
 
   &__web-socket {

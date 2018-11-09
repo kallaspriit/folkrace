@@ -4,5 +4,6 @@
     "folkbot",
     "nipplejs",
     "typestrict"
-  ]
+  ],
+  "typescript.tsdk": "node_modules\\typescript\\lib"
 }

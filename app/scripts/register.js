@@ -4,5 +4,5 @@ const path = require("path");
 require("ts-node").register({
   pretty: true,
   transpileOnly: true,
-  project: path.join(__dirname, "..", "tsconfig.script.json")
+  project: path.join(__dirname, "tsconfig.script.json")
 });

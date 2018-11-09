@@ -3,7 +3,12 @@ import { Container } from "unstated";
 import config from "../config";
 import { WebSocketState } from "../lib/web-socket-client/index";
 
-export enum BluetoothState {
+export enum SerialType {
+  USB = "usb",
+  BLUETOOTH = "bluetooth"
+}
+
+export enum SerialState {
   CONNECTING = "CONNECTING",
   CONNECTED = "CONNECTED",
   DISCONNECTED = "DISCONNECTED",
@@ -12,11 +17,18 @@ export enum BluetoothState {
   DISABLED = "DISABLED"
 }
 
+export interface Serial {
+  type: SerialType;
+  state: SerialState;
+  deviceName?: string;
+}
+
+export type SerialsMap = { [type in keyof typeof SerialType]: Serial };
+
 export interface StatusState {
-  bluetoothState: BluetoothState;
-  webSocketState: WebSocketState;
-  bluetoothDeviceName?: string;
-  batteryVoltage?: number;
+  readonly webSocketState: WebSocketState;
+  readonly serials: SerialsMap;
+  readonly batteryVoltage?: number;
 }
 
 export enum BatteryState {
@@ -27,28 +39,60 @@ export enum BatteryState {
 }
 
 export default class StatusContainer extends Container<StatusState> {
+  // set initial state
   readonly state: StatusState = {
-    bluetoothState: BluetoothState.DISCONNECTED,
+    serials: {
+      BLUETOOTH: {
+        type: SerialType.BLUETOOTH,
+        state: SerialState.DISCONNECTED,
+        deviceName: undefined
+      },
+      USB: {
+        type: SerialType.USB,
+        state: SerialState.DISCONNECTED,
+        deviceName: undefined
+      }
+    },
     webSocketState: WebSocketState.DISCONNECTED
   };
 
-  setBluetoothState(newState: BluetoothState, deviceName?: string) {
-    this.setState({
-      bluetoothState: newState,
-      bluetoothDeviceName: deviceName
+  setSerialState(type: SerialType, state: SerialState, deviceName?: string) {
+    const typeKey = Object.keys(SerialType).find(
+      typeName => SerialType[typeName as keyof typeof SerialType] === type
+    ) as keyof typeof SerialType;
+    const serials = this.state.serials;
+
+    // update given serial state and status
+    serials[typeKey].state = state;
+    serials[typeKey].deviceName = deviceName;
+
+    // update serial state
+    void this.setState({
+      serials
     });
   }
 
   setWebSocketState(newState: WebSocketState) {
-    this.setState({
+    void this.setState({
       webSocketState: newState
     });
   }
 
   setBatteryVoltage(batteryVoltage: number | undefined) {
-    this.setState({
+    void this.setState({
       batteryVoltage
     });
+  }
+
+  getConnectedSerial(): Serial | undefined {
+    const serialNames = Object.keys(
+      this.state.serials
+    ) as (keyof typeof SerialType)[];
+    const connectedSerial = serialNames
+      .map(serialName => this.state.serials[serialName])
+      .find(serial => serial.state === SerialState.CONNECTED);
+
+    return connectedSerial;
   }
 
   get batteryState(): BatteryState {

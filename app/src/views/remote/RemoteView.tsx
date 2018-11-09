@@ -1,6 +1,7 @@
 import * as React from "react";
 
-import Joystick, { JoystickEvent, JoystickEventName, JoystickInstance } from "../../components/joystick/Joystick";
+import Joystick from "../../components/joystick/Joystick";
+import { JoystickEvent, JoystickEventName, JoystickInstance } from "nipplejs";
 import config from "../../config";
 import RemoteController from "../../lib/web-socket-client/RemoteController";
 import webSocketClient from "../../services/webSocketClient";
@@ -12,7 +13,7 @@ export default class RemoteView extends React.Component {
   private readonly remoteController = new RemoteController({
     webSocketClient,
     log: console,
-    vehicle: config.vehicle,
+    vehicle: config.vehicle
   });
 
   render() {
@@ -20,17 +21,31 @@ export default class RemoteView extends React.Component {
       <div className="view view--grid remote-view">
         <div className="joystick-grid">
           <div className="joystick-grid__item">
-            <Joystick name="speed" onEvent={(name, event, info) => this.onJoystickEvent(name, event, info)} />
+            <Joystick
+              name="speed"
+              onEvent={(name, event, info) =>
+                this.onJoystickEvent(name, event, info)
+              }
+            />
           </div>
           <div className="joystick-grid__item">
-            <Joystick name="omega" onEvent={(name, event, info) => this.onJoystickEvent(name, event, info)} />
+            <Joystick
+              name="omega"
+              onEvent={(name, event, info) =>
+                this.onJoystickEvent(name, event, info)
+              }
+            />
           </div>
         </div>
       </div>
     );
   }
 
-  private onJoystickEvent(name: string, event: JoystickEvent, info: JoystickInstance) {
+  private onJoystickEvent(
+    name: string,
+    event: JoystickEvent,
+    info: JoystickInstance
+  ) {
     const interestingEvents: JoystickEventName[] = ["move", "end"];
 
     if (interestingEvents.indexOf(event.type) === -1) {
@@ -46,7 +61,7 @@ export default class RemoteView extends React.Component {
 
     switch (name) {
       case "speed":
-        this.remoteController.setSpeed(yPos * -1 / 100.0);
+        this.remoteController.setSpeed((yPos * -1) / 100.0);
         break;
 
       case "omega":

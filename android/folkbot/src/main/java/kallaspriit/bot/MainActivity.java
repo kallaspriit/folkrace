@@ -29,7 +29,6 @@ public class MainActivity extends Activity implements SerialProxy.SerialProxyEve
   ProgressBar progressBar;
 
   private WebSocketServer webSocketServer;
-  private HttpServer httpServer;
   private SerialProxy serialProxy;
 
   @SuppressLint("SetJavaScriptEnabled")
@@ -100,8 +99,6 @@ public class MainActivity extends Activity implements SerialProxy.SerialProxyEve
     super.onResume();
 
     Log.i(TAG, "resuming main activity");
-
-
   }
 
   @Override
@@ -109,14 +106,6 @@ public class MainActivity extends Activity implements SerialProxy.SerialProxyEve
     super.onPause();
 
     Log.i(TAG, "pausing main activity");
-
-    // load blank page
-//    webView.loadUrl("about:blank");
-//
-//    // close the services
-//    stopServices();
-//    stopWebSocketServer();
-//    stopHttpServer();
   }
 
   @Override
@@ -142,37 +131,16 @@ public class MainActivity extends Activity implements SerialProxy.SerialProxyEve
     Log.i(TAG, "handling internal command: '" + command + "'");
   }
 
-//  private void startBroadcastListeners() {
-//    LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(BluetoothSerial.BLUETOOTH_STATE_CHANGED));
-//  }
-//
-//  private void stopBroadcastListeners() {
-//    LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
-//  }
-
   private void setupHttpServer() {
     Log.i(TAG, "starting http server");
 
     try {
-      httpServer = new HttpServer(this, HTTP_SERVER_PORT);
+      HttpServer httpServer = new HttpServer(this, HTTP_SERVER_PORT);
     } catch (IOException e) {
       Log.e(TAG, "starting http server failed");
 
       e.printStackTrace();
     }
-  }
-
-  private void stopHttpServer() {
-    // do nothing if already stopped
-    if (httpServer == null) {
-      return;
-    }
-
-    Log.i(TAG, "stopping http server");
-
-    // close the http server
-    httpServer.stop();
-    httpServer = null;
   }
 
   private void setupWebSocketServer() {
@@ -205,38 +173,11 @@ public class MainActivity extends Activity implements SerialProxy.SerialProxyEve
     serialProxy.addSerial(bluetoothSerial);
   }
 
-  private void stopWebSocketServer() {
-    // do nothing if already stopped
-    if (webSocketServer == null) {
-      return;
-    }
-
-    Log.i(TAG, "stopping web-socket server");
-
-    // attempt to close the web-socket server
-    try {
-      webSocketServer.stop();
-    } catch (IOException | InterruptedException e) {
-      Log.e(TAG, "stopping web-socket server failed");
-
-      e.printStackTrace();
-    } finally {
-      webSocketServer = null;
-    }
-  }
-
   private void startServices() {
     Log.i(TAG, "starting bluetooth web-socket proxy");
 
     // attempt to open the serial connections
     serialProxy.open();
-  }
-
-  private void stopServices() {
-    // close the serial connections
-    serialProxy.close();
-
-    serialProxy = null;
   }
 
   private void handleShowToast(String[] parameters) {

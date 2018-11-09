@@ -65,7 +65,7 @@ public class HttpServer extends NanoHTTPD {
 
     return uri;
   }
-  
+
   private String getMimeType(String filename) {
     // default to text/plain
     String mimeType = NanoHTTPD.MIME_PLAINTEXT;

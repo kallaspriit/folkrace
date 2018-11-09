@@ -3,7 +3,8 @@ import { Subscribe } from "unstated";
 
 import LogContainer from "../../containers/LogContainer";
 import StatusContainer, {
-  BluetoothState
+  SerialState,
+  SerialType
 } from "../../containers/StatusContainer";
 import { WebSocketState } from "../../lib/web-socket-client/index";
 import webSocketClient from "../../services/webSocketClient";
@@ -14,7 +15,7 @@ export interface ContainerMap {
 }
 
 export enum WebSocketCommand {
-  BLUETOOTH = "bluetooth",
+  SERIAL = "serial",
   GET_VOLTAGE = "get-voltage"
 }
 
@@ -29,15 +30,26 @@ export interface WebSocketCommandHandlersMap {
 
 const REQUEST_BATTERY_VOLTAGE_INTERVAL = 60 * 1000; // once per minute
 
-let isDone = false;
+// runtime info
+let isInitialized = false;
 let requestBatteryVoltageInterval: number | null = null;
+
+// command handlers map
+const webSocketCommandHandlers: WebSocketCommandHandlersMap = {
+  [WebSocketCommand.SERIAL]: handleWebSocketSerialCommand,
+  [WebSocketCommand.GET_VOLTAGE]: handleWebSocketGetVoltageCommand
+
+  // TODO: handle "e"
+  // TODO: handle "set-speed"
+  // TODO: handle "ip"
+};
 
 // glue component, connects external data to containers, does not render anything
 const Glue: React.SFC<{}> = () => (
   <Subscribe to={[LogContainer, StatusContainer]}>
     {(logContainer: LogContainer, statusContainer: StatusContainer) => {
       // return if already set up
-      if (isDone) {
+      if (isInitialized) {
         return null;
       }
 
@@ -47,7 +59,7 @@ const Glue: React.SFC<{}> = () => (
       // subscribe to web-socket events
       webSocketClient.subscribe({
         onConnecting: (_ws, _wasConnected) => {
-          // not handled
+          logContainer.addEntry("web-socket connecting..");
         },
         onOpen: (_ws, _event) => {
           logContainer.addEntry("web-socket connection established");
@@ -71,7 +83,14 @@ const Glue: React.SFC<{}> = () => (
 
           // also reset other statuses if web-socket connection is lost
           if (newState === WebSocketState.DISCONNECTED) {
-            statusContainer.setBluetoothState(BluetoothState.DISCONNECTED);
+            statusContainer.setSerialState(
+              SerialType.BLUETOOTH,
+              SerialState.DISCONNECTED
+            );
+            statusContainer.setSerialState(
+              SerialType.USB,
+              SerialState.DISCONNECTED
+            );
             statusContainer.setBatteryVoltage(undefined);
           }
         },
@@ -81,7 +100,7 @@ const Glue: React.SFC<{}> = () => (
       });
 
       // don't run this logic again
-      isDone = true;
+      isInitialized = true;
 
       // don't render anything
       return null;
@@ -105,63 +124,6 @@ function handleWebSocketMessage(message: string, containers: ContainerMap) {
   handleWebSocketCommand(name, args, containers);
 }
 
-const webSocketCommandHandlers: WebSocketCommandHandlersMap = {
-  // handles bluetooth state changes
-  [WebSocketCommand.BLUETOOTH]: (args: string[], containers: ContainerMap) => {
-    const state = args[0] as BluetoothState;
-    let bluetoothDeviceName: string | undefined;
-
-    switch (state) {
-      case BluetoothState.CONNECTED:
-        bluetoothDeviceName = args[1];
-        break;
-
-      default:
-      // no action required
-    }
-
-    // ask for some initial state info once bluetooth connection is established
-    if (state === BluetoothState.CONNECTED) {
-      // request voltage
-      webSocketClient.send("get-voltage");
-
-      // also setup an interval to ask it periodically
-      requestBatteryVoltageInterval = window.setInterval(() => {
-        webSocketClient.send("get-voltage");
-      }, REQUEST_BATTERY_VOLTAGE_INTERVAL);
-    } else {
-      // clear the battery voltage interval if exists
-      if (requestBatteryVoltageInterval !== null) {
-        window.clearInterval(requestBatteryVoltageInterval);
-
-        requestBatteryVoltageInterval = null;
-      }
-
-      // no bluetooth connection so we can't be sure of battery voltage
-      containers.statusContainer.setBatteryVoltage(undefined);
-    }
-
-    containers.statusContainer.setBluetoothState(
-      args[0] as BluetoothState,
-      bluetoothDeviceName
-    );
-  },
-
-  // handles battery voltage level
-  [WebSocketCommand.GET_VOLTAGE]: (
-    args: string[],
-    containers: ContainerMap
-  ) => {
-    const voltage = parseFloat(args[0]);
-
-    containers.statusContainer.setBatteryVoltage(voltage);
-  }
-
-  // TODO: handle "e"
-  // TODO: handle "set-speed"
-  // TODO: handle "ip"
-};
-
 // handles parsed web-socket commands
 function handleWebSocketCommand(
   name: string,
@@ -179,6 +141,59 @@ function handleWebSocketCommand(
 
   // call the handler
   handler(args, containers);
+}
+
+function handleWebSocketSerialCommand(
+  args: string[],
+  containers: ContainerMap
+) {
+  // extract serial info
+  const serialType = args[0] as SerialType;
+  const serialState = args[1] as SerialState;
+  const serialDeviceName = typeof args[2] === "string" ? args[2] : undefined;
+
+  // update serial state
+  containers.statusContainer.setSerialState(
+    serialType,
+    serialState,
+    serialDeviceName
+  );
+
+  const connectedSerial = containers.statusContainer.getConnectedSerial();
+
+  // ask for some initial state info once a serial connection is established
+  if (connectedSerial !== undefined) {
+    // request current voltage
+    requestVoltage();
+
+    // also setup an interval to ask the voltage level periodically
+    requestBatteryVoltageInterval = window.setInterval(() => {
+      requestVoltage();
+    }, REQUEST_BATTERY_VOLTAGE_INTERVAL);
+  } else {
+    // clear the battery voltage interval if exists
+    if (requestBatteryVoltageInterval !== null) {
+      window.clearInterval(requestBatteryVoltageInterval);
+
+      requestBatteryVoltageInterval = null;
+    }
+
+    // no serial connection so we can't be sure of battery voltage
+    containers.statusContainer.setBatteryVoltage(undefined);
+  }
+}
+
+function handleWebSocketGetVoltageCommand(
+  args: string[],
+  containers: ContainerMap
+) {
+  const voltage = parseFloat(args[0]);
+
+  containers.statusContainer.setBatteryVoltage(voltage);
+}
+
+function requestVoltage() {
+  webSocketClient.send("get-voltage");
 }
 
 export default Glue;

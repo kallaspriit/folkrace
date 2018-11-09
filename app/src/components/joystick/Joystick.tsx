@@ -1,12 +1,15 @@
 import * as nipplejs from "nipplejs";
 import * as React from "react";
-export { JoystickEvent, JoystickInstance, JoystickEventName } from "nipplejs";
 
 export interface JoystickProps {
   name: string;
   config?: nipplejs.JoystickOptions;
   bind?: string;
-  onEvent?(name: string, event: nipplejs.JoystickEvent, info: nipplejs.JoystickInstance): void;
+  onEvent?(
+    name: string,
+    event: nipplejs.JoystickEvent,
+    info: nipplejs.JoystickInstance
+  ): void;
 }
 
 export default class Joystick extends React.Component<JoystickProps> {
@@ -29,16 +32,18 @@ export default class Joystick extends React.Component<JoystickProps> {
       size: 200,
       position: {
         left: "50%",
-        top: "50%",
+        top: "50%"
       },
-      mode: "static",
+      mode: "static"
     });
 
     const { onEvent } = this.props;
 
     // only listen for events if even listener has been added
     if (typeof onEvent === "function") {
-      const bind = this.props.bind ? this.props.bind : "start move end dir plain";
+      const bind = this.props.bind
+        ? this.props.bind
+        : "start move end dir plain";
 
       manager
         .on(bind, (event, nipple) => {
