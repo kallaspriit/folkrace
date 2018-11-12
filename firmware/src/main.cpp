@@ -30,6 +30,9 @@ const int MOTOR_SERIAL_BAUDRATE = 460800; // not default, make sure to update in
 // component configuration
 const uint8_t MOTOR_SERIAL_ADDRESS = 128;
 
+// behaviour configuration
+const int BUTTON_DEBOUNCE_US = 100000; // 100ms
+
 // setup serials
 Serial logSerial(LOG_SERIAL_TX_PIN, USBRX, LOG_SERIAL_BAUDRATE);
 // Serial appSerial(APP_SERIAL_TX_PIN, APP_SERIAL_RX_PIN, APP_SERIAL_BAUDRATE);
@@ -48,19 +51,25 @@ Lidar lidar(LIDAR_TX_PIN, LIDAR_RX_PIN, LIDAR_PWM_PIN);
 // setup timers
 Timer reportEncoderValuesTimer;
 Timer loopTimer;
+Timer startButtonTimer;
 
 // setup status leds
 DigitalOut led1(LED1);
 
 // setup switches
-InterruptIn startSwitchInterupt(START_SWITCH_PIN);
+InterruptIn startButtonInterupt(START_SWITCH_PIN);
 
 // keep track of encoder values
 int lastEncoderDeltaM1 = 0;
 int lastEncoderDeltaM2 = 0;
 
-// switch states
-volatile bool isStartRequested = false;
+// button states
+volatile bool isStartButtonFall = false;
+volatile bool isStartButtonRise = false;
+bool isStartButtonPressed = false;
+
+// this gets incremented every loop and reset every
+int ledLoopCounter = 0;
 
 // keep track of last loop time in microseconds
 int lastLoopTimeUs = 0;
@@ -213,9 +222,135 @@ void reportEncoderValues()
   appSerial.printf("e:%d:%d\n", encoderDeltaM1, encoderDeltaM2);
 }
 
-void onStart()
+// called by interrupt when the start button is pressed
+void onStartButtonPressed()
 {
-  isStartRequested = true;
+  // expect the button to be currently released
+  // if (!isStartButtonRise)
+  // {
+  //   return;
+  // }
+
+  isStartButtonFall = true;
+}
+
+// called by interrupt when the start button is pressed
+void onStartButtonReleased()
+{
+  // expect the button to be currently pressed
+  // if (!isStartButtonFall)
+  // {
+  //   return;
+  // }
+
+  isStartButtonRise = true;
+}
+
+// TODO: refactor to a debounce interrupt class
+void stepStartButton()
+{
+  // handle start switch
+  if (isStartButtonFall)
+  {
+    int timeSinceLastPressUs = startButtonTimer.read_us();
+
+    // only trigger start if enough time since last request has passed (debounce the button press)
+    if (!isStartButtonPressed && timeSinceLastPressUs > BUTTON_DEBOUNCE_US)
+    {
+      appSerial.printf("ready\n");
+      logSerial.printf("ready\n");
+
+      startButtonTimer.reset();
+
+      isStartButtonPressed = true;
+    }
+
+    isStartButtonFall = false;
+  }
+  else if (isStartButtonRise)
+  {
+    int timeSinceLastPressUs = startButtonTimer.read_us();
+
+    // only trigger start if enough time since last request has passed (debounce the button press)
+    if (isStartButtonPressed && timeSinceLastPressUs > BUTTON_DEBOUNCE_US)
+    {
+      appSerial.printf("start\n");
+      logSerial.printf("start\n");
+
+      startButtonTimer.reset();
+
+      isStartButtonPressed = false;
+    }
+
+    isStartButtonRise = false;
+  }
+  else if (isStartButtonPressed)
+  {
+    int pressedDuration = startButtonTimer.read_us();
+
+    // release the button if debounce duration has passed and the button is not pressed any more
+    if (pressedDuration > BUTTON_DEBOUNCE_US && startButtonInterupt.read() == 1)
+    {
+      appSerial.printf("start\n");
+      logSerial.printf("start\n");
+
+      startButtonTimer.reset();
+
+      isStartButtonPressed = false;
+    }
+  }
+}
+
+void stepCommanders()
+{
+  logCommander.handleAllQueuedCommands();
+  appCommander.handleAllQueuedCommands();
+}
+
+void stepEncoderReporter()
+{
+  // report encoder values at certain interval
+  if (reportEncoderValuesTimer.read_ms() >= REPORT_ENCODER_VALUES_INTERVAL_MS)
+  {
+    reportEncoderValues();
+
+    reportEncoderValuesTimer.reset();
+  }
+}
+
+void stepLidarMeasurements()
+{
+  // output the queued lidar measurements
+  while (lidar.getQueuedMeasurementCount() > 0)
+  {
+    // pop next measurement
+    LidarMeasurement *measurement = lidar.popQueuedMeasurement();
+
+    // only send valid and strong measurements
+    if (measurement->isValid && measurement->isStrong)
+    {
+      appSerial.printf("m:%d:%d:%d\n", measurement->angle, measurement->distance / 10, measurement->quality);
+    }
+
+    // make sure to delete it afterwards
+    delete measurement;
+  }
+}
+
+void stepLoopBlinker()
+{
+  // blink the led briefly on every nth main loop run
+  ledLoopCounter++;
+
+  if (ledLoopCounter % (LED_BLINK_LOOP_COUNT - LED_BLINK_LOOPS) == 0)
+  {
+    led1 = 1;
+  }
+  else if (ledLoopCounter % LED_BLINK_LOOP_COUNT == 0)
+  {
+    led1 = 0;
+    ledLoopCounter = 0;
+  }
 }
 
 int main()
@@ -227,8 +362,9 @@ int main()
   // wait(1.0f);
 
   // setup start switch interrupt
-  startSwitchInterupt.mode(PullUp);
-  startSwitchInterupt.fall(&onStart);
+  startButtonInterupt.mode(PullUp);
+  startButtonInterupt.fall(&onStartButtonPressed);
+  startButtonInterupt.rise(&onStartButtonReleased);
 
   // notify of reset/startup
   logSerial.printf("reset\n");
@@ -270,62 +406,16 @@ int main()
 
   // start the loop timer
   loopTimer.start();
-
-  // this gets incremented every loop and reset every
-  int ledLoopCounter = 0;
+  startButtonTimer.start();
 
   // // main loop
   while (true)
   {
-    // handle start switch
-    if (isStartRequested)
-    {
-      appSerial.printf("start\n");
-      logSerial.printf("start\n");
-
-      isStartRequested = false;
-    }
-
-    // update commanders
-    logCommander.handleAllQueuedCommands();
-    appCommander.handleAllQueuedCommands();
-
-    // report encoder values at certain interval
-    if (reportEncoderValuesTimer.read_ms() >= REPORT_ENCODER_VALUES_INTERVAL_MS)
-    {
-      reportEncoderValues();
-
-      reportEncoderValuesTimer.reset();
-    }
-
-    // output the queued lidar measurements
-    while (lidar.getQueuedMeasurementCount() > 0)
-    {
-      // pop next measurement
-      LidarMeasurement *measurement = lidar.popQueuedMeasurement();
-
-      // only send valid and strong measurements
-      if (measurement->isValid && measurement->isStrong)
-      {
-        appSerial.printf("m:%d:%d:%d\n", measurement->angle, measurement->distance / 10, measurement->quality);
-      }
-
-      // make sure to delete it afterwards
-      delete measurement;
-    }
-
-    // blink the led briefly on every nth main loop run
-    ledLoopCounter++;
-
-    if (ledLoopCounter % (LED_BLINK_LOOP_COUNT - LED_BLINK_LOOPS) == 0)
-    {
-      led1 = 1;
-    }
-    else if (ledLoopCounter % LED_BLINK_LOOP_COUNT == 0)
-    {
-      led1 = 0;
-      ledLoopCounter = 0;
-    }
+    stepStartButton();
+    stepCommanders();
+    stepEncoderReporter();
+    stepLidarMeasurements();
+    stepLoopBlinker();
 
     // read the loop time in microseconds and reset the timer
     lastLoopTimeUs = loopTimer.read_us();
