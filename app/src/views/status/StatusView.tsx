@@ -70,7 +70,11 @@ const StatusView: React.SFC = () => (
               <div className="grid__text">
                 <div className="grid__text--primary">Web Socket</div>
                 <div className="grid__text--secondary">
-                  {titleCase(statusContainer.state.webSocketState)}
+                  {statusContainer.state.webSocketState !==
+                    WebSocketState.CONNECTED &&
+                  statusContainer.state.remoteIp !== undefined
+                    ? titleCase(statusContainer.state.webSocketState)
+                    : statusContainer.state.remoteIp}
                 </div>
               </div>
             </GridItem>

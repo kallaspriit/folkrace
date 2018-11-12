@@ -20,6 +20,7 @@ const PinName MOTOR_SERIAL_RX_PIN = p14;
 const PinName LIDAR_PWM_PIN = p21;
 const PinName LIDAR_TX_PIN = p28;
 const PinName LIDAR_RX_PIN = p27;
+const PinName START_SWITCH_PIN = p18;
 
 // baud rates configuration
 const int LOG_SERIAL_BAUDRATE = 921600;
@@ -51,9 +52,15 @@ Timer loopTimer;
 // setup status leds
 DigitalOut led1(LED1);
 
+// setup switches
+InterruptIn startSwitchInterupt(START_SWITCH_PIN);
+
 // keep track of encoder values
 int lastEncoderDeltaM1 = 0;
 int lastEncoderDeltaM2 = 0;
+
+// switch states
+volatile bool isStartRequested = false;
 
 // keep track of last loop time in microseconds
 int lastLoopTimeUs = 0;
@@ -206,6 +213,11 @@ void reportEncoderValues()
   appSerial.printf("e:%d:%d\n", encoderDeltaM1, encoderDeltaM2);
 }
 
+void onStart()
+{
+  isStartRequested = true;
+}
+
 int main()
 {
   // change bluetooth serial baud rate
@@ -213,6 +225,10 @@ int main()
   // appSerial.printf("AT+BAUDB"); // 921600
   // appSerial.printf("AT+BAUDC"); // 1382400
   // wait(1.0f);
+
+  // setup start switch interrupt
+  startSwitchInterupt.mode(PullUp);
+  startSwitchInterupt.fall(&onStart);
 
   // notify of reset/startup
   logSerial.printf("reset\n");
@@ -261,6 +277,15 @@ int main()
   // // main loop
   while (true)
   {
+    // handle start switch
+    if (isStartRequested)
+    {
+      appSerial.printf("start\n");
+      logSerial.printf("start\n");
+
+      isStartRequested = false;
+    }
+
     // update commanders
     logCommander.handleAllQueuedCommands();
     appCommander.handleAllQueuedCommands();

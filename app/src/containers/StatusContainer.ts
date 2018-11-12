@@ -29,6 +29,7 @@ export interface StatusState {
   readonly webSocketState: WebSocketState;
   readonly serials: SerialsMap;
   readonly batteryVoltage?: number;
+  readonly remoteIp?: string;
 }
 
 export enum BatteryState {
@@ -81,6 +82,12 @@ export default class StatusContainer extends Container<StatusState> {
   setBatteryVoltage(batteryVoltage: number | undefined) {
     void this.setState({
       batteryVoltage
+    });
+  }
+
+  setRemoteIp(remoteIp: string) {
+    void this.setState({
+      remoteIp
     });
   }
 

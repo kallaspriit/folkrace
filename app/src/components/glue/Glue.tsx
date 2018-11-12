@@ -16,7 +16,8 @@ export interface ContainerMap {
 
 export enum WebSocketCommand {
   SERIAL = "serial",
-  GET_VOLTAGE = "get-voltage"
+  GET_VOLTAGE = "get-voltage",
+  IP = "ip"
 }
 
 export type WebSocketCommandHandlerFn = (
@@ -37,11 +38,12 @@ let requestBatteryVoltageInterval: number | null = null;
 // command handlers map
 const webSocketCommandHandlers: WebSocketCommandHandlersMap = {
   [WebSocketCommand.SERIAL]: handleWebSocketSerialCommand,
-  [WebSocketCommand.GET_VOLTAGE]: handleWebSocketGetVoltageCommand
+  [WebSocketCommand.GET_VOLTAGE]: handleWebSocketGetVoltageCommand,
+  [WebSocketCommand.IP]: handleWebSocketIpCommand
 
   // TODO: handle "e"
   // TODO: handle "set-speed"
-  // TODO: handle "ip"
+  // TODO: handle "usb"
 };
 
 // glue component, connects external data to containers, does not render anything
@@ -134,7 +136,9 @@ function handleWebSocketCommand(
 
   // check whether the handler exists
   if (handler === undefined) {
-    console.warn(`missing web-socket command handler for "${name}"`);
+    console.warn(
+      `missing web-socket command handler for "${name}" (${args.join(", ")})`
+    );
 
     return;
   }
@@ -188,6 +192,16 @@ function handleWebSocketGetVoltageCommand(
   const voltage = parseFloat(args[0]);
 
   statusContainer.setBatteryVoltage(voltage);
+}
+
+// handles remote ip address
+function handleWebSocketIpCommand(
+  args: string[],
+  { statusContainer }: ContainerMap
+) {
+  const remoteIp = args[0];
+
+  statusContainer.setRemoteIp(remoteIp);
 }
 
 // requests for the current voltage level
