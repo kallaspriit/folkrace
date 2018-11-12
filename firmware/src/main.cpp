@@ -22,6 +22,8 @@ const PinName LIDAR_PWM_PIN = p21;
 const PinName LIDAR_TX_PIN = p28;
 const PinName LIDAR_RX_PIN = p27;
 const PinName START_SWITCH_PIN = p18;
+const PinName LEFT_BUMPER_PIN = p16;
+const PinName RIGHT_BUMPER_PIN = p17;
 
 // baud rates configuration
 const int LOG_SERIAL_BAUDRATE = 921600;
@@ -58,6 +60,8 @@ DigitalOut led1(LED1);
 
 // setup buttons
 DebouncedInterruptIn startButton(START_SWITCH_PIN, PullUp, BUTTON_DEBOUNCE_US);
+DebouncedInterruptIn leftBumper(LEFT_BUMPER_PIN, PullUp, BUTTON_DEBOUNCE_US);
+DebouncedInterruptIn rightBumper(RIGHT_BUMPER_PIN, PullUp, BUTTON_DEBOUNCE_US);
 
 // keep track of encoder values
 int lastEncoderDeltaM1 = 0;
@@ -65,6 +69,8 @@ int lastEncoderDeltaM2 = 0;
 
 // track button state changes
 bool lastStartButtonState = 1;
+bool lastLeftBumperState = 1;
+bool lastRightBumperState = 1;
 
 // this gets incremented every loop and reset every
 int ledLoopCounter = 0;
@@ -240,6 +246,32 @@ void stepStartButton()
   }
 }
 
+void stepLeftBumper()
+{
+  int currentLeftBumperState = leftBumper.read();
+
+  // report left bumper state change
+  if (currentLeftBumperState != lastLeftBumperState)
+  {
+    reportButtonState("left", currentLeftBumperState);
+
+    lastLeftBumperState = currentLeftBumperState;
+  }
+}
+
+void stepRightBumper()
+{
+  int currentRightBumperState = rightBumper.read();
+
+  // report right bumper state change
+  if (currentRightBumperState != lastRightBumperState)
+  {
+    reportButtonState("right", currentRightBumperState);
+
+    lastRightBumperState = currentRightBumperState;
+  }
+}
+
 void stepCommanders()
 {
   logCommander.handleAllQueuedCommands();
@@ -303,6 +335,8 @@ void setupButtons()
 {
   // read initial button states
   lastStartButtonState = startButton.read();
+  lastLeftBumperState = leftBumper.read();
+  lastRightBumperState = rightBumper.read();
 }
 
 void setupReset()
@@ -369,6 +403,8 @@ int main()
   while (true)
   {
     stepStartButton();
+    stepLeftBumper();
+    stepRightBumper();
     stepCommanders();
     stepEncoderReporter();
     stepLidarMeasurements();
