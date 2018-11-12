@@ -4,6 +4,7 @@
 #include "Commander.hpp"
 #include "RoboClaw.hpp"
 #include "Lidar.hpp"
+#include "DebouncedInterruptIn.hpp"
 
 // timing configuration
 const int REPORT_ENCODER_VALUES_INTERVAL_MS = 1000; // larger interval for testing
@@ -51,22 +52,19 @@ Lidar lidar(LIDAR_TX_PIN, LIDAR_RX_PIN, LIDAR_PWM_PIN);
 // setup timers
 Timer reportEncoderValuesTimer;
 Timer loopTimer;
-Timer startButtonTimer;
 
 // setup status leds
 DigitalOut led1(LED1);
 
-// setup switches
-InterruptIn startButtonInterupt(START_SWITCH_PIN);
+// setup buttons
+DebouncedInterruptIn startButton(START_SWITCH_PIN, PullUp, BUTTON_DEBOUNCE_US);
 
 // keep track of encoder values
 int lastEncoderDeltaM1 = 0;
 int lastEncoderDeltaM2 = 0;
 
-// button states
-volatile bool isStartButtonFall = false;
-volatile bool isStartButtonRise = false;
-bool isStartButtonPressed = false;
+// track button state changes
+bool lastStartButtonState = 1;
 
 // this gets incremented every loop and reset every
 int ledLoopCounter = 0;
@@ -222,82 +220,23 @@ void reportEncoderValues()
   appSerial.printf("e:%d:%d\n", encoderDeltaM1, encoderDeltaM2);
 }
 
-// called by interrupt when the start button is pressed
-void onStartButtonPressed()
+// reports given button state
+void reportButtonState(string name, int state)
 {
-  // expect the button to be currently released
-  // if (!isStartButtonRise)
-  // {
-  //   return;
-  // }
-
-  isStartButtonFall = true;
+  appSerial.printf("button:%s:%d\n", name.c_str(), state);
+  logSerial.printf("button:%s:%d\n", name.c_str(), state);
 }
 
-// called by interrupt when the start button is pressed
-void onStartButtonReleased()
-{
-  // expect the button to be currently pressed
-  // if (!isStartButtonFall)
-  // {
-  //   return;
-  // }
-
-  isStartButtonRise = true;
-}
-
-// TODO: refactor to a debounce interrupt class
 void stepStartButton()
 {
-  // handle start switch
-  if (isStartButtonFall)
+  int currentStartButtonState = startButton.read();
+
+  // report start button state change
+  if (currentStartButtonState != lastStartButtonState)
   {
-    int timeSinceLastPressUs = startButtonTimer.read_us();
+    reportButtonState("start", currentStartButtonState);
 
-    // only trigger start if enough time since last request has passed (debounce the button press)
-    if (!isStartButtonPressed && timeSinceLastPressUs > BUTTON_DEBOUNCE_US)
-    {
-      appSerial.printf("ready\n");
-      logSerial.printf("ready\n");
-
-      startButtonTimer.reset();
-
-      isStartButtonPressed = true;
-    }
-
-    isStartButtonFall = false;
-  }
-  else if (isStartButtonRise)
-  {
-    int timeSinceLastPressUs = startButtonTimer.read_us();
-
-    // only trigger start if enough time since last request has passed (debounce the button press)
-    if (isStartButtonPressed && timeSinceLastPressUs > BUTTON_DEBOUNCE_US)
-    {
-      appSerial.printf("start\n");
-      logSerial.printf("start\n");
-
-      startButtonTimer.reset();
-
-      isStartButtonPressed = false;
-    }
-
-    isStartButtonRise = false;
-  }
-  else if (isStartButtonPressed)
-  {
-    int pressedDuration = startButtonTimer.read_us();
-
-    // release the button if debounce duration has passed and the button is not pressed any more
-    if (pressedDuration > BUTTON_DEBOUNCE_US && startButtonInterupt.read() == 1)
-    {
-      appSerial.printf("start\n");
-      logSerial.printf("start\n");
-
-      startButtonTimer.reset();
-
-      isStartButtonPressed = false;
-    }
+    lastStartButtonState = currentStartButtonState;
   }
 }
 
@@ -353,23 +292,28 @@ void stepLoopBlinker()
   }
 }
 
-int main()
+void stepLoopTimer()
 {
-  // change bluetooth serial baud rate
-  // appSerial.printf("AT+BAUD8"); // 115200
-  // appSerial.printf("AT+BAUDB"); // 921600
-  // appSerial.printf("AT+BAUDC"); // 1382400
-  // wait(1.0f);
+  // read the loop time in microseconds and reset the timer
+  lastLoopTimeUs = loopTimer.read_us();
+  loopTimer.reset();
+}
 
-  // setup start switch interrupt
-  startButtonInterupt.mode(PullUp);
-  startButtonInterupt.fall(&onStartButtonPressed);
-  startButtonInterupt.rise(&onStartButtonReleased);
+void setupButtons()
+{
+  // read initial button states
+  lastStartButtonState = startButton.read();
+}
 
+void setupReset()
+{
   // notify of reset/startup
   logSerial.printf("reset\n");
   appSerial.printf("reset\n");
+}
 
+void setupCommandHandlers()
+{
   // sets target motor speeds
   logCommander.registerCommandHandler("set-speed", callback(handleSetSpeedCommand, &logCommander));
   appCommander.registerCommandHandler("set-speed", callback(handleSetSpeedCommand, &appCommander));
@@ -397,18 +341,31 @@ int main()
   // proxy forwards the command to the other commander, useful for remote control etc
   logCommander.registerCommandHandler("ping", callback(handlePingCommand, &logCommander));
   appCommander.registerCommandHandler("ping", callback(handlePingCommand, &appCommander));
+}
 
+void setupMotors()
+{
   // reset motor encoders
   motors.resetEncoders();
+}
 
+void setupTimers()
+{
   // start timers
   reportEncoderValuesTimer.start();
-
-  // start the loop timer
   loopTimer.start();
-  startButtonTimer.start();
+}
 
-  // // main loop
+int main()
+{
+  // setup resources
+  setupButtons();
+  setupReset();
+  setupCommandHandlers();
+  setupMotors();
+  setupTimers();
+
+  // run main loop
   while (true)
   {
     stepStartButton();
@@ -416,9 +373,6 @@ int main()
     stepEncoderReporter();
     stepLidarMeasurements();
     stepLoopBlinker();
-
-    // read the loop time in microseconds and reset the timer
-    lastLoopTimeUs = loopTimer.read_us();
-    loopTimer.reset();
+    stepLoopTimer();
   }
 }

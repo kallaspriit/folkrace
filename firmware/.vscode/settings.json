@@ -4,11 +4,13 @@
     "PLATFORMIO_CALLER": "vscode"
   },
   "cSpell.words": [
+    "DEBOUNCED",
     "Folkrace",
     "MBED",
     "Robo",
     "USBRX",
     "USBTX",
+    "leds",
     "stoi"
   ],
   "files.associations": {
