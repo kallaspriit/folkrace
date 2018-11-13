@@ -19,6 +19,7 @@ private:
   Timer timer;
   int debounceDurationUs;
   int state;
+  bool isStable;
 };
 
 #endif

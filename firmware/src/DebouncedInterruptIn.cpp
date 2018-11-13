@@ -12,6 +12,7 @@ DebouncedInterruptIn::DebouncedInterruptIn(PinName pin, PinMode mode, int deboun
 
   // read initial state
   state = interrupt.read();
+  isStable = true;
 
   // register fall and rise callbacks
   interrupt.fall(callback(this, &DebouncedInterruptIn::handleFall));
@@ -26,11 +27,21 @@ void DebouncedInterruptIn::handleFall()
   int timeSinceLastPressUs = timer.read_us();
 
   // only update state if enough time since last request has passed
-  if (state == 1 && timeSinceLastPressUs > debounceDurationUs)
+  if (state != 1)
+  {
+    return;
+  }
+
+  if (timeSinceLastPressUs > debounceDurationUs)
   {
     timer.reset();
 
     state = 0;
+    isStable = true;
+  }
+  else
+  {
+    isStable = false;
   }
 }
 
@@ -39,11 +50,21 @@ void DebouncedInterruptIn::handleRise()
   int timeSinceLastPressUs = timer.read_us();
 
   // only update state if enough time since last request has passed
-  if (state == 0 && timeSinceLastPressUs > debounceDurationUs)
+  if (state != 0)
+  {
+    return;
+  }
+
+  if (timeSinceLastPressUs > debounceDurationUs)
   {
     timer.reset();
 
     state = 1;
+    isStable = true;
+  }
+  else
+  {
+    isStable = false;
   }
 }
 
@@ -52,11 +73,12 @@ int DebouncedInterruptIn::read()
   int stableDuration = timer.read_us();
 
   // update state if debounce duration has passed and the button state has changed
-  if (stableDuration > debounceDurationUs && interrupt.read() != state)
+  if (!isStable && stableDuration > debounceDurationUs && interrupt.read() != state)
   {
     state = interrupt.read();
 
     timer.reset();
+    isStable = true;
   }
 
   return state;
