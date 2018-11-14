@@ -1,5 +1,5 @@
 import { WebSocketClientOptions } from "./lib/web-socket-client/index";
-import { TrackedVehicleOptions } from "./lib/web-socket-client/TrackedVehicleKinematics";
+import { TrackedVehicleOptions } from "./lib/tracked-vehicle-kinematics";
 
 export interface RulesConfig {
   battery: {

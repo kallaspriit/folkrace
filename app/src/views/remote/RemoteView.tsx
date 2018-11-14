@@ -3,7 +3,7 @@ import * as React from "react";
 import Joystick from "../../components/joystick/Joystick";
 import { JoystickEvent, JoystickEventName, JoystickInstance } from "nipplejs";
 import config from "../../config";
-import RemoteController from "../../lib/web-socket-client/RemoteController";
+import RemoteController from "../../lib/remote-controller";
 import webSocketClient from "../../services/webSocketClient";
 
 import "./RemoteView.scss";

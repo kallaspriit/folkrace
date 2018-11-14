@@ -7,7 +7,7 @@ import {
 } from "react-router-dom";
 import { Provider } from "unstated";
 
-import Glue from "./components/glue/Glue";
+import ConnectionManager from "./components/glue/ConnectionManager";
 import MainMenu from "./components/main-menu/MainMenu";
 import BotView from "./views/bot/BotView";
 import MapView from "./views/map/MapView";
@@ -19,7 +19,7 @@ class App extends React.Component {
   render() {
     return (
       <Provider>
-        <Glue />
+        <ConnectionManager />
         <Router>
           <div className="app">
             <Switch>
