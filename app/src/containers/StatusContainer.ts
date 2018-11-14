@@ -25,7 +25,7 @@ export interface Serial {
 
 export type SerialsMap = { [type in keyof typeof SerialType]: Serial };
 
-export interface StatusState {
+export interface State {
   readonly webSocketState: WebSocketState;
   readonly serials: SerialsMap;
   readonly batteryVoltage?: number;
@@ -39,9 +39,8 @@ export enum BatteryState {
   CRITICAL = "CRITICAL"
 }
 
-export default class StatusContainer extends Container<StatusState> {
-  // set initial state
-  readonly state: StatusState = {
+export default class StatusContainer extends Container<State> {
+  readonly state: State = {
     serials: {
       BLUETOOTH: {
         type: SerialType.BLUETOOTH,

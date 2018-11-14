@@ -11,10 +11,14 @@ import webSocketClient from "../../services/webSocketClient";
 import handleSerialCommand from "../../command-handlers/serial";
 import handleGetVoltageCommand from "../../command-handlers/get-voltage";
 import handleIpCommand from "../../command-handlers/ip";
+import handleUsbCommand from "../../command-handlers/usb";
+import OdometryContainer from "../../containers/OdometryContainer";
+import handleECommand from "../../command-handlers/e";
 
 export interface ContainerMap {
   logContainer: LogContainer;
   statusContainer: StatusContainer;
+  odometryContainer: OdometryContainer;
 }
 
 export type WebSocketCommandHandlerFn = (
@@ -32,17 +36,21 @@ export default class ConnectionManager extends React.Component {
   private webSocketCommandHandlers: WebSocketCommandHandlersMap = {
     serial: handleSerialCommand,
     "get-voltage": handleGetVoltageCommand,
-    ip: handleIpCommand
+    ip: handleIpCommand,
+    usb: handleUsbCommand,
+    e: handleECommand
 
-    // TODO: handle "e"
     // TODO: handle "set-speed"
-    // TODO: handle "usb"
   };
 
   render() {
     return (
-      <Subscribe to={[LogContainer, StatusContainer]}>
-        {(logContainer: LogContainer, statusContainer: StatusContainer) => {
+      <Subscribe to={[LogContainer, StatusContainer, OdometryContainer]}>
+        {(
+          logContainer: LogContainer,
+          statusContainer: StatusContainer,
+          odometryContainer: OdometryContainer
+        ) => {
           // return if already set up
           if (this.isInitialized) {
             return null;
@@ -75,7 +83,8 @@ export default class ConnectionManager extends React.Component {
               // handle the message
               this.handleWebSocketMessage(message, {
                 logContainer,
-                statusContainer
+                statusContainer,
+                odometryContainer
               });
             },
             onStateChanged: (_ws, newState, _oldState) => {

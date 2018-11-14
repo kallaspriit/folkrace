@@ -1,0 +1,10 @@
+.map-view {
+  .map-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 100px;
+  }
+
+  .odometry {
+    padding: 10px;
+  }
+}

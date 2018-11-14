@@ -7,35 +7,32 @@
 .grid {
   display: grid;
   grid-gap: $grid-gap;
+  height: calc(
+    100vh - #{$menu-height + $grid-gap * 2}
+  ); // subtract menu height and 2 * grid gap paddings
 
   &__item {
     position: relative;
     background-color: $bg-tertiary;
   }
-
   &__icon {
     display: flex;
     flex-direction: row;
     justify-content: center;
     width: 100%;
-
     .icon {
       background-color: $text-primary;
     }
   }
-
   &__text {
     line-height: 1.25em;
     text-align: center;
     margin-top: 8px;
-
     &--primary {
-      font-variant: all-small-caps;
-      // text-transform: uppercase;
+      font-variant: all-small-caps; // text-transform: uppercase;
     }
-
     &--secondary {
-      //font-style: italic;
+      // font-style: italic;
     }
   }
 }

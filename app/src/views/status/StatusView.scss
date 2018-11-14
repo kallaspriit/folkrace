@@ -4,9 +4,6 @@
   .status-grid {
     grid-template-columns: 1fr 1fr 1fr;
     grid-template-rows: 100px;
-    height: calc(
-      100vh - #{$menu-height + $grid-gap * 2}
-    ); // subtract menu height and 2 * 5px paddings
   }
   .grid-status {
     padding: 16px;
