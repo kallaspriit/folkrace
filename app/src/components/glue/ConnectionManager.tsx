@@ -126,6 +126,7 @@ export default class ConnectionManager extends React.Component {
     }
 
     // log the message
+    // TODO: let the command handlers only log what's interesting?
     containers.logContainer.addEntry(`< ${message}`);
 
     // parse message

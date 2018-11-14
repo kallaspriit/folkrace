@@ -95,7 +95,7 @@ void handleSetSpeedCommand(Commander *commander)
     return;
   }
 
-  // get targeet motor speeds
+  // get target motor speeds
   int targetSpeedM1 = commander->getIntArgument(0);
   int targetSpeedM2 = commander->getIntArgument(1);
 
@@ -379,7 +379,8 @@ void setupCommandHandlers()
 
 void setupMotors()
 {
-  // reset motor encoders
+  motors.setSpeedM1(0);
+  motors.setSpeedM2(0);
   motors.resetEncoders();
 }
 
