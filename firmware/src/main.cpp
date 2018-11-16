@@ -1,6 +1,8 @@
 #include <mbed.h>
 #include <USBSerial.h>
 
+#include "WS2812.h"
+#include "PixelArray.h"
 #include "Commander.hpp"
 #include "RoboClaw.hpp"
 #include "Lidar.hpp"
@@ -22,8 +24,22 @@ const PinName LIDAR_PWM_PIN = p21;
 const PinName LIDAR_TX_PIN = p28;
 const PinName LIDAR_RX_PIN = p27;
 const PinName START_SWITCH_PIN = p18;
-const PinName LEFT_BUMPER_PIN = p16;
-const PinName RIGHT_BUMPER_PIN = p17;
+const PinName LEFT_BUMPER_PIN = p17;
+const PinName RIGHT_BUMPER_PIN = p16;
+const PinName REAR_LED_STRIP_DATA_PIN = p15;
+
+// rear led configuration
+const int REAR_LED_COUNT = 8;
+
+// WS2812 led driver timing nop counts
+// const int WS2812_ZERO_HIGH_LENGTH = 5;
+// const int WS2812_ZERO_LOW_LENGTH = 10;
+// const int WS2812_ONE_HIGH_LENGTH = 10;
+// const int WS2812_ONE_LOW_LENGTH = 15;
+const int WS2812_ZERO_HIGH_LENGTH = 3;
+const int WS2812_ZERO_LOW_LENGTH = 11;
+const int WS2812_ONE_HIGH_LENGTH = 10;
+const int WS2812_ONE_LOW_LENGTH = 11;
 
 // baud rates configuration
 const int LOG_SERIAL_BAUDRATE = 921600;
@@ -54,9 +70,14 @@ Lidar lidar(LIDAR_TX_PIN, LIDAR_RX_PIN, LIDAR_PWM_PIN);
 // setup timers
 Timer reportEncoderValuesTimer;
 Timer loopTimer;
+Timer rearLedUpdateTimer;
 
 // setup status leds
 DigitalOut led1(LED1);
+
+// setup rear led strip
+WS2812 rearLedController(REAR_LED_STRIP_DATA_PIN, REAR_LED_COUNT, WS2812_ZERO_HIGH_LENGTH, WS2812_ZERO_LOW_LENGTH, WS2812_ONE_HIGH_LENGTH, WS2812_ONE_LOW_LENGTH);
+PixelArray rearLedStrip(REAR_LED_COUNT);
 
 // setup buttons
 DebouncedInterruptIn startButton(START_SWITCH_PIN, PullUp, BUTTON_DEBOUNCE_US);
@@ -71,6 +92,9 @@ int lastEncoderDeltaM2 = 0;
 bool lastStartButtonState = 1;
 bool lastLeftBumperState = 1;
 bool lastRightBumperState = 1;
+
+// track whether the rear led strip requires update
+bool rearLedNeedsUpdate = false;
 
 // this gets incremented every loop and reset every
 int ledLoopCounter = 0;
@@ -233,6 +257,21 @@ void reportButtonState(string name, int state)
   logSerial.printf("button:%s:%d\n", name.c_str(), state);
 }
 
+void setLedColor(int index, unsigned char red, unsigned char green, unsigned char blue, unsigned char brightness = 255)
+{
+  rearLedStrip.SetI(index, brightness);
+  rearLedStrip.SetR(index, red);
+  rearLedStrip.SetG(index, green);
+  rearLedStrip.SetB(index, blue);
+
+  rearLedNeedsUpdate = true;
+}
+
+int getRandomInRange(int min, int max)
+{
+  return min + rand() / (RAND_MAX / (max - min + 1) + 1);
+}
+
 void stepStartButton()
 {
   int currentStartButtonState = startButton.read();
@@ -306,6 +345,30 @@ void stepLidarMeasurements()
     // make sure to delete it afterwards
     delete measurement;
   }
+}
+
+void stepRearLed()
+{
+  // test leds by setting new random colors at certain interval
+  if (rearLedUpdateTimer.read_ms() >= 500)
+  {
+    for (int i = 0; i < REAR_LED_COUNT; i++)
+    {
+      setLedColor(i, getRandomInRange(0, 255), getRandomInRange(0, 255), getRandomInRange(0, 255), 255);
+    }
+
+    rearLedUpdateTimer.reset();
+  }
+
+  if (!rearLedNeedsUpdate)
+  {
+    return;
+  }
+
+  // write the update rear led buffer
+  rearLedController.write(rearLedStrip.getBuf());
+
+  rearLedNeedsUpdate = false;
 }
 
 void stepLoopBlinker()
@@ -384,11 +447,22 @@ void setupMotors()
   motors.resetEncoders();
 }
 
+void setupRearLedStrip()
+{
+  rearLedController.useII(WS2812::PER_PIXEL); // use per-pixel intensity scaling
+
+  for (int i = 0; i < REAR_LED_COUNT; i++)
+  {
+    setLedColor(i, 0, 255, 0, 255);
+  }
+}
+
 void setupTimers()
 {
   // start timers
   reportEncoderValuesTimer.start();
   loopTimer.start();
+  rearLedUpdateTimer.start();
 }
 
 int main()
@@ -398,6 +472,7 @@ int main()
   setupReset();
   setupCommandHandlers();
   setupMotors();
+  setupRearLedStrip();
   setupTimers();
 
   // run main loop
@@ -409,6 +484,7 @@ int main()
     stepCommanders();
     stepEncoderReporter();
     stepLidarMeasurements();
+    stepRearLed();
     stepLoopBlinker();
     stepLoopTimer();
   }
