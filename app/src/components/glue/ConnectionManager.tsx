@@ -8,17 +8,21 @@ import StatusContainer, {
 } from "../../containers/StatusContainer";
 import { WebSocketState } from "../../lib/web-socket-client/index";
 import webSocketClient from "../../services/webSocketClient";
-import handleSerialCommand from "../../command-handlers/serial";
-import handleGetVoltageCommand from "../../command-handlers/get-voltage";
-import handleIpCommand from "../../command-handlers/ip";
-import handleUsbCommand from "../../command-handlers/usb";
+import handleSerialCommand from "../../command-handlers/handleSerialCommand";
+import handleGetVoltageCommand from "../../command-handlers/handleGetVoltageCommand";
+import handleIpCommand from "../../command-handlers/handleIpCommand";
+import handleUsbCommand from "../../command-handlers/handleUsbCommand";
 import OdometryContainer from "../../containers/OdometryContainer";
-import handleECommand from "../../command-handlers/e";
+import handleEncoderCommand from "../../command-handlers/handleEncoderCommand";
+import handleBeaconCommand from "../../command-handlers/handleBeaconCommand";
+import LidarContainer from "../../containers/LidarContainer";
+import handleMeasurementCommand from "../../command-handlers/handleMeasurementCommand";
 
 export interface ContainerMap {
   logContainer: LogContainer;
   statusContainer: StatusContainer;
   odometryContainer: OdometryContainer;
+  lidarContainer: LidarContainer;
 }
 
 export type WebSocketCommandHandlerFn = (
@@ -38,18 +42,23 @@ export default class ConnectionManager extends React.Component {
     "get-voltage": handleGetVoltageCommand,
     ip: handleIpCommand,
     usb: handleUsbCommand,
-    e: handleECommand
+    e: handleEncoderCommand,
+    b: handleBeaconCommand,
+    m: handleMeasurementCommand
 
     // TODO: handle "set-speed"
   };
 
   render() {
     return (
-      <Subscribe to={[LogContainer, StatusContainer, OdometryContainer]}>
+      <Subscribe
+        to={[LogContainer, StatusContainer, OdometryContainer, LidarContainer]}
+      >
         {(
           logContainer: LogContainer,
           statusContainer: StatusContainer,
-          odometryContainer: OdometryContainer
+          odometryContainer: OdometryContainer,
+          lidarContainer: LidarContainer
         ) => {
           // return if already set up
           if (this.isInitialized) {
@@ -84,7 +93,8 @@ export default class ConnectionManager extends React.Component {
               this.handleWebSocketMessage(message, {
                 logContainer,
                 statusContainer,
-                odometryContainer
+                odometryContainer,
+                lidarContainer
               });
             },
             onStateChanged: (_ws, newState, _oldState) => {

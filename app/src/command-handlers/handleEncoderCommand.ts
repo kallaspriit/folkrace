@@ -1,6 +1,6 @@
 import { ContainerMap } from "../components/glue/ConnectionManager";
 
-export default function handleECommand(
+export default function handleEncoderCommand(
   args: string[],
   { odometryContainer }: ContainerMap
 ) {

@@ -110,7 +110,7 @@ void Lidar::setTargetRpm(float newTargetRpm)
   }
 }
 
-float Lidar::getRpm()
+float Lidar::getCurrentRpm()
 {
   // return zero if last reading was received long time ago
   if (!isValid())

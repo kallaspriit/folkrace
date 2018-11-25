@@ -160,7 +160,7 @@ void handleSetLidarRpmCommand(Commander *commander)
 // handles get-lidar-state command, sends back lidar RPM, whether lidar is running and valid, queued command count
 void handleGetLidarStateCommand(Commander *commander)
 {
-  commander->serial->printf("get-lidar-state:%.1f:%d:%d:%.2f\n", lidar.getRpm(), lidar.isStarted() ? 1 : 0, lidar.isValid() ? 1 : 0, lidar.getMotorPwm());
+  commander->serial->printf("get-lidar-state:%d:%d:%.1f:%.1f:%.2f\n", lidar.isStarted() ? 1 : 0, lidar.isValid() ? 1 : 0, lidar.getTargetRpm(), lidar.getCurrentRpm(), lidar.getMotorPwm());
 }
 
 // handles get-voltage command, responds with main battery voltage
@@ -340,6 +340,7 @@ void stepLidarMeasurements()
     if (measurement->isValid && measurement->isStrong)
     {
       appSerial.printf("m:%d:%d:%d\n", measurement->angle, measurement->distance / 10, measurement->quality);
+      // logSerial.printf("m:%d:%d:%d\n", measurement->angle, measurement->distance / 10, measurement->quality);
     }
 
     // make sure to delete it afterwards
@@ -347,7 +348,7 @@ void stepLidarMeasurements()
   }
 }
 
-void stepRearLed()
+void stepRearLedStrip()
 {
   // test leds by setting new random colors at certain interval
   if (rearLedUpdateTimer.read_ms() >= 500)
@@ -379,6 +380,9 @@ void stepLoopBlinker()
   if (ledLoopCounter % (LED_BLINK_LOOP_COUNT - LED_BLINK_LOOPS) == 0)
   {
     led1 = 1;
+
+    // send connection alive beacon message
+    appSerial.printf("b\n");
   }
   else if (ledLoopCounter % LED_BLINK_LOOP_COUNT == 0)
   {
@@ -472,7 +476,7 @@ int main()
   setupReset();
   setupCommandHandlers();
   setupMotors();
-  setupRearLedStrip();
+  //setupRearLedStrip();
   setupTimers();
 
   // run main loop
@@ -484,7 +488,7 @@ int main()
     stepCommanders();
     stepEncoderReporter();
     stepLidarMeasurements();
-    stepRearLed();
+    //stepRearLedStrip();
     stepLoopBlinker();
     stepLoopTimer();
   }

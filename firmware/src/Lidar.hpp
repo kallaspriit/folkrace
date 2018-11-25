@@ -34,7 +34,8 @@ public:
   bool isValid();
 
   void setTargetRpm(float targetRpm);
-  float getRpm();
+  float getTargetRpm() { return targetRpm; }
+  float getCurrentRpm();
 
   float getMotorPwm();
 

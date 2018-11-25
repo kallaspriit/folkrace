@@ -30,6 +30,7 @@ export interface State {
   readonly serials: SerialsMap;
   readonly batteryVoltage?: number;
   readonly remoteIp?: string;
+  readonly lastBeaconTime?: Date;
 }
 
 export enum BatteryState {
@@ -87,6 +88,12 @@ export default class StatusContainer extends Container<State> {
   setRemoteIp(remoteIp: string) {
     void this.setState({
       remoteIp
+    });
+  }
+
+  updateLastBeaconTime() {
+    void this.setState({
+      lastBeaconTime: new Date()
     });
   }
 
