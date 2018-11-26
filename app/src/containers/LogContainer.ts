@@ -1,9 +1,17 @@
 import { Container } from "unstated";
 
+export enum MessageType {
+  INFO = "INFO",
+  ERROR = "ERROR",
+  RX = "RX",
+  TX = "TX"
+}
+
 export interface LogEntry {
   id: string;
   time: Date;
   message: string;
+  type: MessageType;
   count: number;
 }
 
@@ -27,14 +35,12 @@ export default class LogContainer extends Container<LogState> {
         this.state.entries.length > 0
           ? this.state.entries[this.state.entries.length - 1]
           : null;
+      const type = this.resolveMessageType(message);
 
       // skip the message if requested not to add the same message twice in a row
       if (lastEntry !== null && avoidDuplicate) {
-        const [lastCommand] = lastEntry.message.split(":");
-        const [newCommand] = message.split(":");
-
-        // check whether the new command is the same as last
-        if (newCommand === lastCommand) {
+        // check whether the latest message is the same as last
+        if (message === lastEntry.message) {
           const updatedEntries: LogEntry[] = [
             // remove last entry
             ...previousState.entries.slice(0, this.state.entries.length - 1),
@@ -43,6 +49,7 @@ export default class LogContainer extends Container<LogState> {
               id: (this.lastId++).toString(),
               time: new Date(),
               message,
+              type,
               count: lastEntry.count + 1
             }
           ];
@@ -60,6 +67,7 @@ export default class LogContainer extends Container<LogState> {
           id: (this.lastId++).toString(),
           time: new Date(),
           message,
+          type,
           count: 1
         }
       ];
@@ -79,5 +87,26 @@ export default class LogContainer extends Container<LogState> {
     this.setState({
       entries: []
     }).catch(error => console.error(error));
+  }
+
+  private resolveMessageType(message: string): MessageType {
+    const firstCharacter = message.substr(0, 1);
+
+    switch (firstCharacter) {
+      case "<":
+        return MessageType.RX;
+
+      case ">":
+        return MessageType.TX;
+
+      case "@":
+        return MessageType.ERROR;
+
+      case "#":
+        return MessageType.INFO;
+
+      default:
+        return MessageType.INFO;
+    }
   }
 }

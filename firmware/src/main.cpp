@@ -131,16 +131,43 @@ bool isUsbConnected()
   return isUsbPowerPresent && isUsbReportingConnected;
 }
 
-// sends given printf-formatted message to app serial if connected
-void sendAppMessage(const char *fmt, ...)
+// writes app message using either blocking or non-blocking method (consider send instead as it supports printf arguments)
+void sendRaw(const char *message, int length, bool blocking = true)
 {
+  // don't attempt to send if not connected as writing is blocking
+  if (!isUsbConnected())
+  {
+    logSerial.printf("@ sending '%s' failed, usb serial is not connected\n", message);
 
-  // proxy the formatted message to serial
-  // va_list args;
-  // va_start(args, fmt);
-  // appSerial.vprintf(fmt, args);
-  // va_end(args);
+    return;
+  }
 
+  // write either as blocking or non-blocking
+  if (blocking)
+  {
+    appSerial.writeBlock((uint8_t *)message, length);
+  }
+  else
+  {
+    appSerial.writeNB(EPBULK_IN, (uint8_t *)message, length, MAX_PACKET_SIZE_EPBULK);
+  }
+
+  // only log messages that are not a single character (high speed data)
+  if (length > 2 && message[1] != ':')
+  {
+    logSerial.printf("> %s", message);
+  }
+
+  // reset the app message sent timer if at least twice the blink duration has passed
+  if (appMessageSentTimer.read_ms() >= APP_MESSAGE_SENT_BLINK_DURATION_MS * 2)
+  {
+    appMessageSentTimer.reset();
+  }
+}
+
+// sends given printf-formatted message to app serial if connected
+void send(const char *fmt, ...)
+{
   // create formatted message
   char buf[MAX_PACKET_SIZE_EPBULK];
   va_list args;
@@ -148,32 +175,22 @@ void sendAppMessage(const char *fmt, ...)
   int resultLength = vsnprintf(buf, MAX_PACKET_SIZE_EPBULK, fmt, args);
   va_end(args);
 
-  // don't attempt to send if not connected as writing is blocking
-  if (!isUsbConnected())
-  {
-    logSerial.printf("@ sending '%s' failed, usb serial is not connected\n", buf);
+  // write as non-blocking
+  sendRaw(buf, resultLength, true);
+}
 
-    return;
-  }
+// sends given printf-formatted message to app serial if connected
+void sendAsync(const char *fmt, ...)
+{
+  // create formatted message
+  char buf[MAX_PACKET_SIZE_EPBULK];
+  va_list args;
+  va_start(args, fmt);
+  int resultLength = vsnprintf(buf, MAX_PACKET_SIZE_EPBULK, fmt, args);
+  va_end(args);
 
-  // TODO: append crc? https://os.mbed.com/teams/WizziLab/code/CRC/
-  // send the message as non-blocking usb data
-  appSerial.writeNB(EPBULK_IN, (uint8_t *)buf, resultLength, MAX_PACKET_SIZE_EPBULK);
-
-  // const char *buf = "abcdefghi-abcdefghi-abcdefghi-abcdefghi-abcdefghi-abcdefghi-abc\n";
-  // bool isWriteSuccess = appSerial.writeNB(EPBULK_IN, (uint8_t *)buf, 64, MAX_PACKET_SIZE_EPBULK);
-  // const char *buf = "t\n";
-  // appSerial.write(EPBULK_IN, (uint8_t *)buf, resultLength, MAX_PACKET_SIZE_EPBULK);
-  // bool isWriteSuccess = appSerial.writeBlock((uint8_t *)buf, 64);
-
-  // mirror the message to log serial
-  logSerial.printf("> %s", buf);
-
-  // reset the app message sent timer if at least twice the blink duration has passed
-  if (appMessageSentTimer.read_ms() >= APP_MESSAGE_SENT_BLINK_DURATION_MS * 2)
-  {
-    appMessageSentTimer.reset();
-  }
+  // write as non-blocking
+  sendRaw(buf, resultLength, false);
 }
 
 // reports encoder values
@@ -206,13 +223,13 @@ void reportEncoderValues(bool force = false)
   lastEncoderDeltaM2 = encoderDeltaM2;
 
   // send the encoder values
-  sendAppMessage("e:%d:%d\n", encoderDeltaM1, encoderDeltaM2);
+  send("e:%d:%d\n", encoderDeltaM1, encoderDeltaM2);
 }
 
 // reports given button state
 void reportButtonState(string name, int state)
 {
-  sendAppMessage("button:%s:%d\n", name.c_str(), state);
+  send("button:%s:%d\n", name.c_str(), state);
 }
 
 void reportButtonStates()
@@ -224,12 +241,12 @@ void reportButtonStates()
 
 void reportTargetSpeed()
 {
-  sendAppMessage("s:%d:%d\n", targetSpeedM1, targetSpeedM2);
+  send("s:%d:%d\n", targetSpeedM1, targetSpeedM2);
 }
 
 void reportLidarState()
 {
-  sendAppMessage("lidar:%d:%d:%.1f:%.1f:%.2f\n", lidar.isStarted() ? 1 : 0, lidar.isValid() ? 1 : 0, lidar.getTargetRpm(), lidar.getCurrentRpm(), lidar.getMotorPwm());
+  send("lidar:%d:%d:%.1f:%.1f:%.2f\n", lidar.isStarted() ? 1 : 0, lidar.isValid() ? 1 : 0, lidar.getTargetRpm(), lidar.getCurrentRpm(), lidar.getMotorPwm());
 }
 
 void reportVoltage()
@@ -238,14 +255,14 @@ void reportVoltage()
   bool isValid;
   float voltage = motors.getMainBatteryVoltage(&isValid) * MAIN_VOLTAGE_CORRECTION_MULTIPLIER;
 
-  sendAppMessage("voltage:%.1f:%d\n", voltage, isValid ? 1 : 0);
+  send("voltage:%.1f:%d\n", voltage, isValid ? 1 : 0);
 }
 
 void reportCurrent()
 {
   CurrentMeasurement currents = motors.getCurrents();
 
-  sendAppMessage("current:%.2f:%.2f:%d\n", currents.currentM1, currents.currentM2, currents.isValid ? 1 : 0);
+  send("current:%.2f:%.2f:%d\n", currents.currentM1, currents.currentM2, currents.isValid ? 1 : 0);
 }
 
 // reports all current internal states
@@ -284,7 +301,7 @@ void handleSpeedCommand(Commander *commander)
   // make sure we got the right number of parameters
   if (argumentCount != 2)
   {
-    sendAppMessage("@ speed:A:B expects exactly two parameters (where A is motor 1 speed and B is motor 2 speed)\n");
+    send("@ speed:A:B expects exactly two parameters (where A is motor 1 speed and B is motor 2 speed)\n");
 
     // update target speed states
     targetSpeedM1 = 0;
@@ -313,7 +330,7 @@ void handleRpmCommand(Commander *commander)
   // make sure we got the right number of parameters
   if (argumentCount != 1)
   {
-    sendAppMessage("@ rpm:RPM expects exactly one parameter (where RPM is the new target lidar rpm)\n");
+    send("@ rpm:RPM expects exactly one parameter (where RPM is the new target lidar rpm)\n");
 
     // stop the lidar when receiving invalid command
     lidar.setTargetRpm(0);
@@ -326,7 +343,7 @@ void handleRpmCommand(Commander *commander)
   lidar.setTargetRpm(targetRpm);
 
   // report new target rpm
-  sendAppMessage("rpm:%d\n", targetRpm);
+  send("rpm:%d\n", targetRpm);
 }
 
 // handles lidar command, sends back lidar RPM, whether lidar is running and valid, queued command count
@@ -369,7 +386,7 @@ void handleProxyCommand(Commander *commander)
   Commander *otherCommander = commander == &logCommander ? &appCommander : &logCommander;
 
   // log forward attempt
-  sendAppMessage("# proxying \"%s\" to %s commander\n", command.c_str(), commander == &logCommander ? "robot" : "pc");
+  send("# proxying \"%s\" to %s commander\n", command.c_str(), commander == &logCommander ? "robot" : "pc");
 
   // forward the command to the other serial
   otherCommander->handleCommand(command);
@@ -378,7 +395,13 @@ void handleProxyCommand(Commander *commander)
 // handles ping command, responds with pong
 void handlePingCommand(Commander *commander)
 {
-  sendAppMessage("pong\n");
+  send("pong\n");
+}
+
+// handles state request command, responds with all internal states
+void handleStateCommand(Commander *commander)
+{
+  reportState();
 }
 
 void setupUsbPowerSensing()
@@ -440,8 +463,11 @@ void setupCommandHandlers()
   logCommander.registerCommandHandler("ping", callback(handlePingCommand, &logCommander));
   appCommander.registerCommandHandler("ping", callback(handlePingCommand, &appCommander));
 
+  // reports all internal state information
+  logCommander.registerCommandHandler("state", callback(handleStateCommand, &logCommander));
+  appCommander.registerCommandHandler("state", callback(handleStateCommand, &appCommander));
+
   // TODO: implement help handler
-  // TODO: implement report state handler
 }
 
 void setupMotors()
@@ -476,10 +502,7 @@ void stepUsbConnectionState()
     if (isConnected)
     {
       // notify of reset
-      sendAppMessage("reset\n");
-
-      // report initial state
-      reportState();
+      send("reset\n");
     }
 
     wasUsbConnected = isConnected;
@@ -586,7 +609,7 @@ void stepLidarMeasurements()
     // only send valid and strong measurements
     if (measurement->isValid && measurement->isStrong)
     {
-      sendAppMessage("m:%d:%d:%d\n", measurement->angle, measurement->distance / 10, measurement->quality);
+      sendAsync("m:%d:%d:%d\n", measurement->angle, measurement->distance / 10, measurement->quality);
     }
 
     // make sure to delete it afterwards
@@ -628,7 +651,7 @@ void stepLoopBlinker()
     led1 = 1;
 
     // send connection alive beacon message
-    sendAppMessage("b\n");
+    send("b\n");
   }
   else if (ledLoopCounter % LED_BLINK_LOOP_COUNT == 0)
   {

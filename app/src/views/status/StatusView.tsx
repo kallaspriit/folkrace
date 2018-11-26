@@ -15,6 +15,7 @@ import assertUnreachable from "../../services/assertUnreachable";
 import formatTime from "../../services/formatTime";
 
 import "./StatusView.scss";
+import robot from "../../services/robot";
 
 // TODO: add motor controller, http server, IMU, heartbeat
 const StatusView: React.SFC = () => (
@@ -63,6 +64,7 @@ const StatusView: React.SFC = () => (
                   ? "bg--good"
                   : "bg--bad"
               )}
+              onClick={() => robot.ping()}
             >
               <div className="grid__icon">
                 <i className="icon icon__web-socket" />
@@ -83,6 +85,7 @@ const StatusView: React.SFC = () => (
                 "grid-status",
                 getBatteryLevelClass(statusContainer.batteryState)
               )}
+              onClick={() => robot.requestVoltage()}
             >
               <div className="grid__icon">
                 <i className="icon icon__battery" />
@@ -102,7 +105,11 @@ const StatusView: React.SFC = () => (
                   <span className="log__entry__time">
                     {formatTime(entry.time)}
                   </span>{" "}
-                  <span className="log__entry__message">{entry.message}</span>
+                  <span
+                    className={`log__entry__message log__entry__message--${entry.type.toLowerCase()}`}
+                  >
+                    {entry.message}
+                  </span>
                   {entry.count > 1 ? (
                     <span className="log__entry__count">{entry.count}</span>
                   ) : null}

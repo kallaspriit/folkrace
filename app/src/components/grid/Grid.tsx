@@ -3,8 +3,14 @@ import * as React from "react";
 
 import "./Grid.scss";
 
-export type GridProps = React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>;
-export type GridItemProps = React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
+export type GridProps = React.DetailedHTMLProps<
+  React.HTMLAttributes<HTMLElement>,
+  HTMLElement
+>;
+export type GridItemProps = React.DetailedHTMLProps<
+  React.HTMLAttributes<HTMLElement>,
+  HTMLElement
+> & {
   scrollToBottom?: boolean;
 };
 
@@ -43,7 +49,11 @@ export class GridItem extends React.Component<GridItemProps> {
 
   render() {
     return (
-      <div ref={this.ref} className={classNames("grid__item", this.props.className)}>
+      <div
+        {...this.props}
+        ref={this.ref}
+        className={classNames("grid__item", this.props.className)}
+      >
         {this.props.children}
       </div>
     );

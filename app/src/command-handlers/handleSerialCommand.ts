@@ -18,8 +18,8 @@ export default function handleSerialCommand(
 
   // ask for some initial state info once a serial connection is established
   if (connectedSerial !== undefined && serialType === connectedSerial.type) {
-    // request current voltage
-    robot.requestVoltage();
+    // request current state
+    robot.requestState();
 
     // also setup an interval to ask the voltage level periodically
     // requestBatteryVoltageInterval = window.setInterval(() => {

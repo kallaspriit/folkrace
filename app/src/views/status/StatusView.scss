@@ -28,6 +28,26 @@
         background-color: $text-primary;
         color: $bg-tertiary;
       }
+
+      &__message {
+        padding-left: 6px;
+
+        &--info {
+          border-left: 2px solid #666;
+        }
+
+        &--rx {
+          border-left: 2px solid #090;
+        }
+
+        &--tx {
+          border-left: 2px solid #009;
+        }
+
+        &--error {
+          border-left: 2px solid #900;
+        }
+      }
     }
   }
   .clear-log-button {
