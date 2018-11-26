@@ -49,6 +49,7 @@ export default class ConnectionManager extends React.Component {
     // TODO: handle "speed"
     // TODO: handle "reset"
     // TODO: handle "button"
+    // TODO: handle "pong"
   };
 
   render() {

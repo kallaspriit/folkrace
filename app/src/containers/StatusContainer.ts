@@ -31,6 +31,8 @@ export interface State {
   readonly batteryVoltage?: number;
   readonly remoteIp?: string;
   readonly lastBeaconTime?: Date;
+  readonly loopFrequency?: number;
+  readonly loopTimeUs?: number;
 }
 
 export enum BatteryState {
@@ -91,9 +93,11 @@ export default class StatusContainer extends Container<State> {
     });
   }
 
-  updateLastBeaconTime() {
+  setLoopStatistics(loopFrequency: number, loopTimeUs: number) {
     void this.setState({
-      lastBeaconTime: new Date()
+      lastBeaconTime: new Date(),
+      loopFrequency,
+      loopTimeUs
     });
   }
 

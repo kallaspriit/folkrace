@@ -11,9 +11,9 @@
 
 // timing configuration
 const int REPORT_ENCODER_VALUES_INTERVAL_MS = 1000; // larger interval for testing
-const int LED_BLINK_LOOP_COUNT = 50000;             // every nth loop to blink the status led
-const int LED_BLINK_LOOPS = 100;                    // for how many main loops to keep the led on
 const int APP_MESSAGE_SENT_BLINK_DURATION_MS = 10;  // for how long to turn off the usb status led while transmitting
+const int LOOP_LED_INTERVAL_MS = 1000;
+const int LOOP_LED_BLINK_DURATION_MS = 10;
 
 // pin mapping configuration
 const PinName LOG_SERIAL_TX_PIN = USBTX;
@@ -77,8 +77,10 @@ Lidar lidar(LIDAR_TX_PIN, LIDAR_RX_PIN, LIDAR_PWM_PIN);
 // setup timers
 Timer reportEncoderValuesTimer;
 Timer loopTimer;
+Timer loopLedTimer;
 Timer rearLedUpdateTimer;
 Timer appMessageSentTimer;
+Timer debugTimer;
 
 // setup status leds
 DigitalOut led1(LED1);
@@ -115,11 +117,12 @@ bool wasUsbConnected = false;
 int targetSpeedM1 = 0;
 int targetSpeedM2 = 0;
 
-// this gets incremented every loop and reset every
-int ledLoopCounter = 0;
-
 // keep track of last loop time in microseconds
 int lastLoopTimeUs = 0;
+
+// keep track of last loop led state
+int lastLoopLedState = 0;
+int cycleCountSinceLastLoopBlink = 0;
 
 // returns whether usb serial is connected
 bool isUsbConnected()
@@ -201,6 +204,7 @@ void reportEncoderValues(bool force = false)
   bool validM1, validM2;
 
   // read encoder values
+  // TODO: could we do this asynchronously? takes 1-2ms
   int encoderDeltaM1 = (int)motors.getEncoderDeltaM1(&statusM1, &validM1);
   int encoderDeltaM2 = (int)motors.getEncoderDeltaM2(&statusM2, &validM2);
 
@@ -643,20 +647,33 @@ void stepRearLedStrip()
 
 void stepLoopBlinker()
 {
-  // blink the led briefly on every nth main loop run
-  ledLoopCounter++;
+  int timeSinceLastBlink = loopLedTimer.read_ms();
+  bool shouldReset = timeSinceLastBlink > LOOP_LED_INTERVAL_MS + LOOP_LED_BLINK_DURATION_MS;
+  int currentLoopLedState = !shouldReset && timeSinceLastBlink > LOOP_LED_INTERVAL_MS ? 1 : 0;
 
-  if (ledLoopCounter % (LED_BLINK_LOOP_COUNT - LED_BLINK_LOOPS) == 0)
+  // check whether loop led state has changed
+  if (currentLoopLedState != lastLoopLedState)
   {
-    led1 = 1;
+    // set new loop led state and update last state
+    led1 = currentLoopLedState;
+    lastLoopLedState = currentLoopLedState;
 
-    // send connection alive beacon message
-    send("b\n");
+    // send connection alive beacon message on rising edge
+    if (currentLoopLedState == 1)
+    {
+      send("b:%d:%d\n", timeSinceLastBlink, cycleCountSinceLastLoopBlink);
+    }
   }
-  else if (ledLoopCounter % LED_BLINK_LOOP_COUNT == 0)
+
+  // reset loop led timer if interval + blink duration has passed
+  if (shouldReset)
   {
-    led1 = 0;
-    ledLoopCounter = 0;
+    loopLedTimer.reset();
+    cycleCountSinceLastLoopBlink = 0;
+  }
+  else
+  {
+    cycleCountSinceLastLoopBlink++;
   }
 }
 
@@ -672,8 +689,27 @@ void setupTimers()
   // start timers
   reportEncoderValuesTimer.start();
   loopTimer.start();
+  loopLedTimer.start();
   rearLedUpdateTimer.start();
   appMessageSentTimer.start();
+  debugTimer.start();
+}
+
+const int SLOW_OPERATION_THRESHOLD_US = 1000; // 1ms
+
+void s()
+{
+  debugTimer.reset();
+}
+
+void d(const char *name, int slowThreshold = SLOW_OPERATION_THRESHOLD_US)
+{
+  int elapsedUs = debugTimer.read_us();
+
+  if (elapsedUs >= slowThreshold)
+  {
+    logSerial.printf("@ %s took %d us\n", name, elapsedUs);
+  }
 }
 
 int main()
@@ -691,15 +727,44 @@ int main()
   // run main loop
   while (true)
   {
+    s();
     stepUsbConnectionState();
+    d("stepUsbConnectionState");
+
+    s();
     stepStartButton();
+    d("stepStartButton");
+
+    s();
     stepLeftBumper();
+    d("stepLeftBumper");
+
+    s();
     stepRightBumper();
+    d("stepLeftBumper");
+
+    s();
     stepCommanders();
+    d("stepCommanders");
+
+    s();
     stepEncoderReporter();
+    d("stepEncoderReporter");
+
+    s();
     stepLidarMeasurements();
+    d("stepLidarMeasurements");
+
+    s();
     stepRearLedStrip();
+    d("stepRearLedStrip");
+
+    s();
     stepLoopBlinker();
+    d("stepLoopBlinker");
+
+    s();
     stepLoopTimer();
+    d("stepLoopTimer");
   }
 }
