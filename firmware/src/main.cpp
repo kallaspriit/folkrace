@@ -12,6 +12,7 @@
 const int REPORT_ENCODER_VALUES_INTERVAL_MS = 1000; // larger interval for testing
 const int LED_BLINK_LOOP_COUNT = 50000;             // every nth loop to blink the status led
 const int LED_BLINK_LOOPS = 100;                    // for how many main loops to keep the led on
+const int APP_MESSAGE_SENT_BLINK_DURATION_MS = 10;  // for how long to turn off the usb status led while transmitting
 
 // pin mapping configuration
 const PinName LOG_SERIAL_TX_PIN = USBTX;
@@ -27,23 +28,20 @@ const PinName START_SWITCH_PIN = p18;
 const PinName LEFT_BUMPER_PIN = p17;
 const PinName RIGHT_BUMPER_PIN = p16;
 const PinName REAR_LED_STRIP_DATA_PIN = p15;
+const PinName USB_POWER_SENSE_PIN = p22;
 
 // rear led configuration
 const int REAR_LED_COUNT = 8;
 
-// WS2812 led driver timing nop counts
-// const int WS2812_ZERO_HIGH_LENGTH = 5;
-// const int WS2812_ZERO_LOW_LENGTH = 10;
-// const int WS2812_ONE_HIGH_LENGTH = 10;
-// const int WS2812_ONE_LOW_LENGTH = 15;
+// WS2812 led driver timing NOP counts for timing
 const int WS2812_ZERO_HIGH_LENGTH = 3;
 const int WS2812_ZERO_LOW_LENGTH = 11;
 const int WS2812_ONE_HIGH_LENGTH = 10;
 const int WS2812_ONE_LOW_LENGTH = 11;
 
 // baud rates configuration
-const int LOG_SERIAL_BAUDRATE = 921600;
-const int APP_SERIAL_BAUDRATE = 921600;
+const int LOG_SERIAL_BAUDRATE = 921600; // log serial is the built-in usb of the mbed board
+// const int APP_SERIAL_BAUDRATE = 921600; // not used for usb serial
 const int MOTOR_SERIAL_BAUDRATE = 460800; // not default, make sure to update in the Ion Studio
 
 // component configuration
@@ -52,10 +50,15 @@ const uint8_t MOTOR_SERIAL_ADDRESS = 128;
 // behaviour configuration
 const int BUTTON_DEBOUNCE_US = 100000; // 100ms
 
+// usb serial configuration
+const uint16_t USB_VENDOR_ID = 0x0d28;  // ARM
+const uint16_t USB_PRODUCT_ID = 0x0204; // mbed
+const uint16_t USB_PRODUCT_RELEASE = 0x0001;
+
 // setup serials
 Serial logSerial(LOG_SERIAL_TX_PIN, USBRX, LOG_SERIAL_BAUDRATE);
 // Serial appSerial(APP_SERIAL_TX_PIN, APP_SERIAL_RX_PIN, APP_SERIAL_BAUDRATE);
-USBSerial appSerial(0x0d28, 0x0204, 0x0001, false); // ARM mbed
+USBSerial appSerial(USB_VENDOR_ID, USB_PRODUCT_ID, USB_PRODUCT_RELEASE, false); // ARM mbed
 
 // setup commanders
 Commander logCommander(&logSerial);
@@ -71,9 +74,14 @@ Lidar lidar(LIDAR_TX_PIN, LIDAR_RX_PIN, LIDAR_PWM_PIN);
 Timer reportEncoderValuesTimer;
 Timer loopTimer;
 Timer rearLedUpdateTimer;
+Timer appMessageSentTimer;
 
 // setup status leds
 DigitalOut led1(LED1);
+DigitalOut led2(LED2);
+
+// setup usb power sense (usb serial knows when it gets connected but not when disconnected)
+DigitalIn usbPowerSense(USB_POWER_SENSE_PIN);
 
 // setup rear led strip
 WS2812 rearLedController(REAR_LED_STRIP_DATA_PIN, REAR_LED_COUNT, WS2812_ZERO_HIGH_LENGTH, WS2812_ZERO_LOW_LENGTH, WS2812_ONE_HIGH_LENGTH, WS2812_ONE_LOW_LENGTH);
@@ -96,11 +104,101 @@ bool lastRightBumperState = 1;
 // track whether the rear led strip requires update
 bool rearLedNeedsUpdate = false;
 
+// track usb connection state
+bool wasUsbConnected = false;
+
 // this gets incremented every loop and reset every
 int ledLoopCounter = 0;
 
 // keep track of last loop time in microseconds
 int lastLoopTimeUs = 0;
+
+// returns whether usb serial is connected
+bool isUsbConnected()
+{
+  bool isUsbPowerPresent = usbPowerSense.read() == 1;
+  bool isUsbReportingConnected = appSerial.connected();
+
+  // require both usb power to be present as well as usb to report as connected (usb fails to detect disconnecting)
+  return isUsbPowerPresent && isUsbReportingConnected;
+}
+
+// sends given printf-formatted message to app serial if connected
+void sendAppMessage(const char *fmt, ...)
+{
+  // don't attempt to send if not connected as writing is blocking
+  if (!isUsbConnected())
+  {
+    logSerial.printf("@ sending app message failed, usb not connected\n");
+
+    return;
+  }
+
+  va_list args;
+  va_start(args, fmt);
+  appSerial.vprintf(fmt, args);
+  va_end(args);
+
+  appMessageSentTimer.reset();
+}
+
+// reports encoder values
+void reportEncoderValues()
+{
+  // variables to store status and validity
+  uint8_t statusM1, statusM2;
+  bool validM1, validM2;
+
+  // read encoder values
+  int encoderDeltaM1 = (int)motors.getEncoderDeltaM1(&statusM1, &validM1);
+  int encoderDeltaM2 = (int)motors.getEncoderDeltaM2(&statusM2, &validM2);
+
+  // make sure we got valid results
+  if (!validM1 || !validM2)
+  {
+    logSerial.printf("@ reading motor encoders failed, is the power supply to the motor controller missing?\n");
+
+    return;
+  }
+
+  // don't bother sending the update if the speeds have not changed
+  if (abs(encoderDeltaM1 - lastEncoderDeltaM1) == 0 && abs(encoderDeltaM2 - lastEncoderDeltaM2) == 0)
+  {
+    return;
+  }
+
+  // keep track of last values
+  lastEncoderDeltaM1 = encoderDeltaM1;
+  lastEncoderDeltaM2 = encoderDeltaM2;
+
+  // send the encoder values (TODO: only the app needs these)
+  logSerial.printf("e:%d:%d\n", encoderDeltaM1, encoderDeltaM2);
+  sendAppMessage("e:%d:%d\n", encoderDeltaM1, encoderDeltaM2);
+}
+
+// reports given button state
+void reportButtonState(string name, int state)
+{
+  sendAppMessage("button:%s:%d\n", name.c_str(), state);
+  logSerial.printf("button:%s:%d\n", name.c_str(), state);
+}
+
+// sets given strip led color
+void setLedColor(int index, unsigned char red, unsigned char green, unsigned char blue, unsigned char brightness = 255)
+{
+  rearLedStrip.SetI(index, brightness);
+  rearLedStrip.SetR(index, red);
+  rearLedStrip.SetG(index, green);
+  rearLedStrip.SetB(index, blue);
+
+  rearLedNeedsUpdate = true;
+}
+
+// returns random integer in given range (including)
+int getRandomInRange(int min, int max)
+{
+  return min + rand() / (RAND_MAX / (max - min + 1) + 1);
+}
 
 // handles set-speed:A:B command where A and B are the target speeds for motor 1 and 2
 void handleSetSpeedCommand(Commander *commander)
@@ -129,7 +227,7 @@ void handleSetSpeedCommand(Commander *commander)
 
   // report new target speeds
   logSerial.printf("set-speed:%d:%d\n", targetSpeedM1, targetSpeedM2);
-  appSerial.printf("set-speed:%d:%d\n", targetSpeedM1, targetSpeedM2);
+  sendAppMessage("set-speed:%d:%d\n", targetSpeedM1, targetSpeedM2);
 }
 
 // handles set-lidar-rpm:RPM command, starts or stops the lidar setting target RPM
@@ -154,7 +252,7 @@ void handleSetLidarRpmCommand(Commander *commander)
 
   // report new target rpm
   logSerial.printf("set-lidar-rpm:%d\n", targetRpm);
-  appSerial.printf("set-lidar-rpm:%d\n", targetRpm);
+  sendAppMessage("set-lidar-rpm:%d\n", targetRpm);
 }
 
 // handles get-lidar-state command, sends back lidar RPM, whether lidar is running and valid, queued command count
@@ -216,60 +314,110 @@ void handlePingCommand(Commander *commander)
   commander->serial->printf("pong\n");
 }
 
-// reports encoder values
-void reportEncoderValues()
+void setupUsbPowerSensing()
 {
-  // variables to store status and validity
-  uint8_t statusM1, statusM2;
-  bool validM1, validM2;
+  usbPowerSense.mode(PullDown);
+}
 
-  // read encoder values
-  int encoderDeltaM1 = (int)motors.getEncoderDeltaM1(&statusM1, &validM1);
-  int encoderDeltaM2 = (int)motors.getEncoderDeltaM2(&statusM2, &validM2);
+void setupStatusLeds()
+{
+  // set initial status led states
+  led1 = 0;
+  led2 = 0;
+}
 
-  // make sure we got valid results
-  if (!validM1 || !validM2)
+void setupButtons()
+{
+  // read initial button states
+  lastStartButtonState = startButton.read();
+  lastLeftBumperState = leftBumper.read();
+  lastRightBumperState = rightBumper.read();
+}
+
+void setupReset()
+{
+  // notify of reset/startup
+  logSerial.printf("reset\n");
+}
+
+void setupCommandHandlers()
+{
+  // sets target motor speeds
+  logCommander.registerCommandHandler("set-speed", callback(handleSetSpeedCommand, &logCommander));
+  appCommander.registerCommandHandler("set-speed", callback(handleSetSpeedCommand, &appCommander));
+
+  // sets target lidar rpm
+  logCommander.registerCommandHandler("set-lidar-rpm", callback(handleSetLidarRpmCommand, &logCommander));
+  appCommander.registerCommandHandler("set-lidar-rpm", callback(handleSetLidarRpmCommand, &appCommander));
+
+  // reports lidar state
+  logCommander.registerCommandHandler("get-lidar-state", callback(handleGetLidarStateCommand, &logCommander));
+  appCommander.registerCommandHandler("get-lidar-state", callback(handleGetLidarStateCommand, &appCommander));
+
+  // reports battery voltage
+  logCommander.registerCommandHandler("get-voltage", callback(handleGetVoltageCommand, &logCommander));
+  appCommander.registerCommandHandler("get-voltage", callback(handleGetVoltageCommand, &appCommander));
+
+  // reports motor currents
+  logCommander.registerCommandHandler("get-current", callback(handleGetCurrentCommand, &logCommander));
+  appCommander.registerCommandHandler("get-current", callback(handleGetCurrentCommand, &appCommander));
+
+  // proxy forwards the command to the other commander, useful for remote control etc
+  logCommander.registerCommandHandler("proxy", callback(handleProxyCommand, &logCommander));
+  appCommander.registerCommandHandler("proxy", callback(handleProxyCommand, &appCommander));
+
+  // proxy forwards the command to the other commander, useful for remote control etc
+  logCommander.registerCommandHandler("ping", callback(handlePingCommand, &logCommander));
+  appCommander.registerCommandHandler("ping", callback(handlePingCommand, &appCommander));
+}
+
+void setupMotors()
+{
+  motors.setSpeedM1(0);
+  motors.setSpeedM2(0);
+  motors.resetEncoders();
+}
+
+void setupRearLedStrip()
+{
+  rearLedController.useII(WS2812::PER_PIXEL); // use per-pixel intensity scaling
+
+  for (int i = 0; i < REAR_LED_COUNT; i++)
   {
-    logSerial.printf("@ reading motor encoders failed, is the power supply to the motor controller missing?\n");
+    setLedColor(i, 0, 255, 0, 255);
+  }
+}
 
-    return;
+void stepUsbConnectionState()
+{
+  // get usb connection state (also checks for usb power as the USBSerial fails to detect disconnect)
+  bool isConnected = isUsbConnected();
+
+  // light up status led 2 when the usb is connected
+  if (isConnected != wasUsbConnected)
+  {
+    // notify app of reset
+    if (isConnected)
+    {
+      sendAppMessage("reset\n");
+    }
+
+    // notify usb connection state change
+    logSerial.printf("usb %s\n", isConnected ? "connected" : "disconnected");
+
+    wasUsbConnected = isConnected;
   }
 
-  // don't bother sending the update if the speeds have not changed
-  if (abs(encoderDeltaM1 - lastEncoderDeltaM1) == 0 && abs(encoderDeltaM2 - lastEncoderDeltaM2) == 0)
+  if (isConnected && appMessageSentTimer.read_ms() < APP_MESSAGE_SENT_BLINK_DURATION_MS)
   {
-    return;
+    // turn the usb status led off for a brief duration when transmitting data
+    led2 = 0;
   }
-
-  // keep track of last values
-  lastEncoderDeltaM1 = encoderDeltaM1;
-  lastEncoderDeltaM2 = encoderDeltaM2;
-
-  // send the encoder values (TODO: only the app needs these)
-  logSerial.printf("e:%d:%d\n", encoderDeltaM1, encoderDeltaM2);
-  appSerial.printf("e:%d:%d\n", encoderDeltaM1, encoderDeltaM2);
-}
-
-// reports given button state
-void reportButtonState(string name, int state)
-{
-  appSerial.printf("button:%s:%d\n", name.c_str(), state);
-  logSerial.printf("button:%s:%d\n", name.c_str(), state);
-}
-
-void setLedColor(int index, unsigned char red, unsigned char green, unsigned char blue, unsigned char brightness = 255)
-{
-  rearLedStrip.SetI(index, brightness);
-  rearLedStrip.SetR(index, red);
-  rearLedStrip.SetG(index, green);
-  rearLedStrip.SetB(index, blue);
-
-  rearLedNeedsUpdate = true;
-}
-
-int getRandomInRange(int min, int max)
-{
-  return min + rand() / (RAND_MAX / (max - min + 1) + 1);
+  else
+  {
+    // turn the usb status led on when connected
+    led2 = isConnected ? 1 : 0;
+  }
 }
 
 void stepStartButton()
@@ -330,6 +478,28 @@ void stepEncoderReporter()
 
 void stepLidarMeasurements()
 {
+  int queuedMeasurementCount = lidar.getQueuedMeasurementCount();
+
+  // skip if nothing to send
+  if (queuedMeasurementCount == 0)
+  {
+    return;
+  }
+
+  // skip and remove queued measurements if app serial is not connected
+  if (!appSerial.connected())
+  {
+    // TODO: add method to lidar to clear all queued measurements
+    while (lidar.getQueuedMeasurementCount() > 0)
+    {
+      LidarMeasurement *measurement = lidar.popQueuedMeasurement();
+
+      delete measurement;
+    }
+
+    return;
+  }
+
   // output the queued lidar measurements
   while (lidar.getQueuedMeasurementCount() > 0)
   {
@@ -339,7 +509,8 @@ void stepLidarMeasurements()
     // only send valid and strong measurements
     if (measurement->isValid && measurement->isStrong)
     {
-      appSerial.printf("m:%d:%d:%d\n", measurement->angle, measurement->distance / 10, measurement->quality);
+      // sendAppMessage("m\n"); // dummy test
+      sendAppMessage("m:%d:%d:%d\n", measurement->angle, measurement->distance / 10, measurement->quality);
       // logSerial.printf("m:%d:%d:%d\n", measurement->angle, measurement->distance / 10, measurement->quality);
     }
 
@@ -382,7 +553,7 @@ void stepLoopBlinker()
     led1 = 1;
 
     // send connection alive beacon message
-    appSerial.printf("b\n");
+    // sendAppMessage("b\n");
   }
   else if (ledLoopCounter % LED_BLINK_LOOP_COUNT == 0)
   {
@@ -398,97 +569,38 @@ void stepLoopTimer()
   loopTimer.reset();
 }
 
-void setupButtons()
-{
-  // read initial button states
-  lastStartButtonState = startButton.read();
-  lastLeftBumperState = leftBumper.read();
-  lastRightBumperState = rightBumper.read();
-}
-
-void setupReset()
-{
-  // notify of reset/startup
-  logSerial.printf("reset\n");
-  appSerial.printf("reset\n");
-}
-
-void setupCommandHandlers()
-{
-  // sets target motor speeds
-  logCommander.registerCommandHandler("set-speed", callback(handleSetSpeedCommand, &logCommander));
-  appCommander.registerCommandHandler("set-speed", callback(handleSetSpeedCommand, &appCommander));
-
-  // sets target lidar rpm
-  logCommander.registerCommandHandler("set-lidar-rpm", callback(handleSetLidarRpmCommand, &logCommander));
-  appCommander.registerCommandHandler("set-lidar-rpm", callback(handleSetLidarRpmCommand, &appCommander));
-
-  // reports lidar state
-  logCommander.registerCommandHandler("get-lidar-state", callback(handleGetLidarStateCommand, &logCommander));
-  appCommander.registerCommandHandler("get-lidar-state", callback(handleGetLidarStateCommand, &appCommander));
-
-  // reports battery voltage
-  logCommander.registerCommandHandler("get-voltage", callback(handleGetVoltageCommand, &logCommander));
-  appCommander.registerCommandHandler("get-voltage", callback(handleGetVoltageCommand, &appCommander));
-
-  // reports motor currents
-  logCommander.registerCommandHandler("get-current", callback(handleGetCurrentCommand, &logCommander));
-  appCommander.registerCommandHandler("get-current", callback(handleGetCurrentCommand, &appCommander));
-
-  // proxy forwards the command to the other commander, useful for remote control etc
-  logCommander.registerCommandHandler("proxy", callback(handleProxyCommand, &logCommander));
-  appCommander.registerCommandHandler("proxy", callback(handleProxyCommand, &appCommander));
-
-  // proxy forwards the command to the other commander, useful for remote control etc
-  logCommander.registerCommandHandler("ping", callback(handlePingCommand, &logCommander));
-  appCommander.registerCommandHandler("ping", callback(handlePingCommand, &appCommander));
-}
-
-void setupMotors()
-{
-  motors.setSpeedM1(0);
-  motors.setSpeedM2(0);
-  motors.resetEncoders();
-}
-
-void setupRearLedStrip()
-{
-  rearLedController.useII(WS2812::PER_PIXEL); // use per-pixel intensity scaling
-
-  for (int i = 0; i < REAR_LED_COUNT; i++)
-  {
-    setLedColor(i, 0, 255, 0, 255);
-  }
-}
-
 void setupTimers()
 {
   // start timers
   reportEncoderValuesTimer.start();
   loopTimer.start();
   rearLedUpdateTimer.start();
+  appMessageSentTimer.start();
 }
 
 int main()
 {
   // setup resources
+  setupUsbPowerSensing();
+  setupStatusLeds();
   setupButtons();
   setupReset();
   setupCommandHandlers();
   setupMotors();
-  //setupRearLedStrip();
+  setupRearLedStrip();
   setupTimers();
 
   // run main loop
   while (true)
   {
+    stepUsbConnectionState();
     stepStartButton();
     stepLeftBumper();
     stepRightBumper();
     stepCommanders();
     stepEncoderReporter();
     stepLidarMeasurements();
-    //stepRearLedStrip();
+    stepRearLedStrip();
     stepLoopBlinker();
     stepLoopTimer();
   }
