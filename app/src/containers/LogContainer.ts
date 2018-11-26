@@ -4,6 +4,7 @@ export interface LogEntry {
   id: string;
   time: Date;
   message: string;
+  count: number;
 }
 
 export interface LogState {
@@ -41,7 +42,8 @@ export default class LogContainer extends Container<LogState> {
             {
               id: (this.lastId++).toString(),
               time: new Date(),
-              message
+              message,
+              count: lastEntry.count + 1
             }
           ];
 
@@ -57,7 +59,8 @@ export default class LogContainer extends Container<LogState> {
         {
           id: (this.lastId++).toString(),
           time: new Date(),
-          message
+          message,
+          count: 1
         }
       ];
 

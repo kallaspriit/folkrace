@@ -17,7 +17,7 @@ export default function handleSerialCommand(
   const connectedSerial = statusContainer.getConnectedSerial();
 
   // ask for some initial state info once a serial connection is established
-  if (connectedSerial !== undefined) {
+  if (connectedSerial !== undefined && serialType === connectedSerial.type) {
     // request current voltage
     robot.requestVoltage();
 

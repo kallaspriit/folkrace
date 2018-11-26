@@ -160,7 +160,7 @@ void sendAppMessage(const char *fmt, ...)
   // bool isWriteSuccess = appSerial.writeBlock((uint8_t *)buf, 64);
 
   // mirror the message to log serial
-  logSerial.printf("%s\n", buf);
+  logSerial.printf("> %s", buf);
 
   // reset the app message sent timer if at least twice the blink duration has passed
   if (appMessageSentTimer.read_ms() >= APP_MESSAGE_SENT_BLINK_DURATION_MS * 2)
@@ -360,7 +360,7 @@ void setupButtons()
 void setupReset()
 {
   // notify of reset/startup
-  logSerial.printf("reset\n");
+  logSerial.printf("# reset\n");
 }
 
 void setupCommandHandlers()
@@ -419,14 +419,14 @@ void stepUsbConnectionState()
   // light up status led 2 when the usb is connected
   if (isConnected != wasUsbConnected)
   {
+    // notify usb connection state change
+    logSerial.printf("# usb %s\n", isConnected ? "connected" : "disconnected");
+
     // notify app of reset
     if (isConnected)
     {
       sendAppMessage("reset\n");
     }
-
-    // notify usb connection state change
-    logSerial.printf("# usb %s\n", isConnected ? "connected" : "disconnected");
 
     wasUsbConnected = isConnected;
   }

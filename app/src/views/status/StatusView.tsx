@@ -103,6 +103,9 @@ const StatusView: React.SFC = () => (
                     {formatTime(entry.time)}
                   </span>{" "}
                   <span className="log__entry__message">{entry.message}</span>
+                  {entry.count > 1 ? (
+                    <span className="log__entry__count">{entry.count}</span>
+                  ) : null}
                 </div>
               ))}
             </GridItem>
