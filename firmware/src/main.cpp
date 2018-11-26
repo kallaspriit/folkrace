@@ -1,5 +1,6 @@
 #include <mbed.h>
 #include <USBSerial.h>
+#include <USBDevice.h>
 
 #include "WS2812.h"
 #include "PixelArray.h"
@@ -134,12 +135,33 @@ void sendAppMessage(const char *fmt, ...)
     return;
   }
 
+  // proxy the formatted message to serial
+  // va_list args;
+  // va_start(args, fmt);
+  // appSerial.vprintf(fmt, args);
+  // va_end(args);
+
+  // create formatted message
+  char buf[MAX_PACKET_SIZE_EPBULK];
   va_list args;
   va_start(args, fmt);
-  appSerial.vprintf(fmt, args);
+  int resultLength = vsnprintf(buf, MAX_PACKET_SIZE_EPBULK, fmt, args);
   va_end(args);
 
-  appMessageSentTimer.reset();
+  // send the message and non-blocking
+  appSerial.writeNB(EPBULK_IN, (uint8_t *)buf, resultLength, MAX_PACKET_SIZE_EPBULK);
+
+  // const char *buf = "abcdefghi-abcdefghi-abcdefghi-abcdefghi-abcdefghi-abcdefghi-abc\n";
+  // bool isWriteSuccess = appSerial.writeNB(EPBULK_IN, (uint8_t *)buf, 64, MAX_PACKET_SIZE_EPBULK);
+  // const char *buf = "t\n";
+  // appSerial.write(EPBULK_IN, (uint8_t *)buf, resultLength, MAX_PACKET_SIZE_EPBULK);
+  // bool isWriteSuccess = appSerial.writeBlock((uint8_t *)buf, 64);
+
+  // reset the app message sent timer if at least twice the blink duration has passed
+  if (appMessageSentTimer.read_ms() >= APP_MESSAGE_SENT_BLINK_DURATION_MS * 2)
+  {
+    appMessageSentTimer.reset();
+  }
 }
 
 // reports encoder values

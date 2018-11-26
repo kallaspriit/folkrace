@@ -47,6 +47,8 @@ export default class ConnectionManager extends React.Component {
     m: handleMeasurementCommand
 
     // TODO: handle "set-speed"
+    // TODO: handle "reset"
+    // TODO: handle "button"
   };
 
   render() {
@@ -137,7 +139,7 @@ export default class ConnectionManager extends React.Component {
 
     // log the message
     // TODO: let the command handlers only log what's interesting?
-    containers.logContainer.addEntry(`< ${message}`);
+    // containers.logContainer.addEntry(`< ${message}`);
 
     // parse message
     const [name, ...args] = message.split(":");
