@@ -19,6 +19,7 @@ export interface LidarMeasurements {
   readonly measurements: LidarMeasurement[];
 }
 
+// TODO: measure sampes per second
 export type State = LidarState & LidarMeasurements;
 
 export default class LidarContainer extends Container<State> {

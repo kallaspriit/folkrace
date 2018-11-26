@@ -22,10 +22,9 @@
 
       &__count {
         display: inline-block;
-        padding: 2px 4px;
+        padding: 0 4px;
         margin-left: 8px;
         border-radius: 8px;
-        font-size: 0.8em;
         background-color: $text-primary;
         color: $bg-tertiary;
       }

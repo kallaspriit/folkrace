@@ -39,14 +39,14 @@ export default class ConnectionManager extends React.Component {
   private isInitialized = false;
   private webSocketCommandHandlers: WebSocketCommandHandlersMap = {
     serial: handleSerialCommand,
-    "get-voltage": handleGetVoltageCommand,
     ip: handleIpCommand,
     usb: handleUsbCommand,
+    voltage: handleGetVoltageCommand,
     e: handleEncoderCommand,
     b: handleBeaconCommand,
     m: handleMeasurementCommand
 
-    // TODO: handle "set-speed"
+    // TODO: handle "speed"
     // TODO: handle "reset"
     // TODO: handle "button"
   };
@@ -62,6 +62,7 @@ export default class ConnectionManager extends React.Component {
           odometryContainer: OdometryContainer,
           lidarContainer: LidarContainer
         ) => {
+          // only initialize the connection logic once
           if (this.isInitialized) {
             return null;
           }
@@ -115,6 +116,13 @@ export default class ConnectionManager extends React.Component {
               }
             },
             onSendMessage: (_ws, message) => {
+              const [name] = message.split(":");
+
+              // don't log single-character fast commands ("s" for speed etc)
+              if (name.length === 1) {
+                return;
+              }
+
               logContainer.addEntry(`> ${message}`);
             }
           });
@@ -136,12 +144,13 @@ export default class ConnectionManager extends React.Component {
       return;
     }
 
-    // log the message
-    // TODO: let the command handlers only log what's interesting?
-    // containers.logContainer.addEntry(`< ${message}`);
-
     // parse message
     const [name, ...args] = message.split(":");
+
+    // dont log single-character commands (fast lidar measurements, encoders etc)
+    if (name.length > 1) {
+      containers.logContainer.addEntry(`< ${message}`);
+    }
 
     // attempt to handle command
     this.handleWebSocketCommand(name, args, containers);

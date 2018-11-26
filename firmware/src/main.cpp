@@ -51,6 +51,9 @@ const uint8_t MOTOR_SERIAL_ADDRESS = 128;
 // behaviour configuration
 const int BUTTON_DEBOUNCE_US = 100000; // 100ms
 
+// voltage measurement correction configuration
+const double MAIN_VOLTAGE_CORRECTION_MULTIPLIER = 1.02;
+
 // usb serial configuration
 const uint16_t USB_VENDOR_ID = 0x0d28;  // ARM
 const uint16_t USB_PRODUCT_ID = 0x0204; // mbed
@@ -107,6 +110,10 @@ bool rearLedNeedsUpdate = false;
 
 // track usb connection state
 bool wasUsbConnected = false;
+
+// track target speeds
+int targetSpeedM1 = 0;
+int targetSpeedM2 = 0;
 
 // this gets incremented every loop and reset every
 int ledLoopCounter = 0;
@@ -170,7 +177,7 @@ void sendAppMessage(const char *fmt, ...)
 }
 
 // reports encoder values
-void reportEncoderValues()
+void reportEncoderValues(bool force = false)
 {
   // variables to store status and validity
   uint8_t statusM1, statusM2;
@@ -189,7 +196,7 @@ void reportEncoderValues()
   }
 
   // don't bother sending the update if the speeds have not changed
-  if (abs(encoderDeltaM1 - lastEncoderDeltaM1) == 0 && abs(encoderDeltaM2 - lastEncoderDeltaM2) == 0)
+  if (!force && abs(encoderDeltaM1 - lastEncoderDeltaM1) == 0 && abs(encoderDeltaM2 - lastEncoderDeltaM2) == 0)
   {
     return;
   }
@@ -206,6 +213,50 @@ void reportEncoderValues()
 void reportButtonState(string name, int state)
 {
   sendAppMessage("button:%s:%d\n", name.c_str(), state);
+}
+
+void reportButtonStates()
+{
+  reportButtonState("start", startButton.read());
+  reportButtonState("left", leftBumper.read());
+  reportButtonState("right", rightBumper.read());
+}
+
+void reportTargetSpeed()
+{
+  sendAppMessage("s:%d:%d\n", targetSpeedM1, targetSpeedM2);
+}
+
+void reportLidarState()
+{
+  sendAppMessage("lidar:%d:%d:%.1f:%.1f:%.2f\n", lidar.isStarted() ? 1 : 0, lidar.isValid() ? 1 : 0, lidar.getTargetRpm(), lidar.getCurrentRpm(), lidar.getMotorPwm());
+}
+
+void reportVoltage()
+{
+  // apparently the reported value is slightly off
+  bool isValid;
+  float voltage = motors.getMainBatteryVoltage(&isValid) * MAIN_VOLTAGE_CORRECTION_MULTIPLIER;
+
+  sendAppMessage("voltage:%.1f:%d\n", voltage, isValid ? 1 : 0);
+}
+
+void reportCurrent()
+{
+  CurrentMeasurement currents = motors.getCurrents();
+
+  sendAppMessage("current:%.2f:%.2f:%d\n", currents.currentM1, currents.currentM2, currents.isValid ? 1 : 0);
+}
+
+// reports all current internal states
+void reportState()
+{
+  reportButtonStates();
+  reportTargetSpeed();
+  reportLidarState();
+  reportVoltage();
+  reportCurrent();
+  reportEncoderValues(true);
 }
 
 // sets given strip led color
@@ -225,44 +276,44 @@ int getRandomInRange(int min, int max)
   return min + rand() / (RAND_MAX / (max - min + 1) + 1);
 }
 
-// handles set-speed:A:B command where A and B are the target speeds for motor 1 and 2
-void handleSetSpeedCommand(Commander *commander)
+// handles speed:A:B command where A and B are the target speeds for motor 1 and 2
+void handleSpeedCommand(Commander *commander)
 {
   unsigned int argumentCount = commander->getArgumentCount();
 
   // make sure we got the right number of parameters
   if (argumentCount != 2)
   {
-    sendAppMessage("@ set-speed:A:B expects exactly two parameters (where A is motor 1 speed and B is motor 2 speed)\n");
+    sendAppMessage("@ speed:A:B expects exactly two parameters (where A is motor 1 speed and B is motor 2 speed)\n");
 
-    // stop the motors when receiving invalid command
-    motors.setSpeedM1(0);
-    motors.setSpeedM2(0);
-
-    return;
+    // update target speed states
+    targetSpeedM1 = 0;
+    targetSpeedM2 = 0;
   }
-
-  // get target motor speeds
-  int targetSpeedM1 = commander->getIntArgument(0);
-  int targetSpeedM2 = commander->getIntArgument(1);
+  else
+  {
+    // get target motor speeds
+    targetSpeedM1 = commander->getIntArgument(0);
+    targetSpeedM2 = commander->getIntArgument(1);
+  }
 
   // set motor speeds
   motors.setSpeedM1(targetSpeedM1);
   motors.setSpeedM2(targetSpeedM2);
 
   // report new target speeds
-  sendAppMessage("set-speed:%d:%d\n", targetSpeedM1, targetSpeedM2);
+  reportTargetSpeed();
 }
 
-// handles set-lidar-rpm:RPM command, starts or stops the lidar setting target RPM
-void handleSetLidarRpmCommand(Commander *commander)
+// handles rpm:RPM command, starts or stops the lidar setting target RPM
+void handleRpmCommand(Commander *commander)
 {
   unsigned int argumentCount = commander->getArgumentCount();
 
   // make sure we got the right number of parameters
   if (argumentCount != 1)
   {
-    sendAppMessage("@ set-lidar-rpm:RPM expects exactly one parameter (where RPM is the new target lidar rpm)\n");
+    sendAppMessage("@ rpm:RPM expects exactly one parameter (where RPM is the new target lidar rpm)\n");
 
     // stop the lidar when receiving invalid command
     lidar.setTargetRpm(0);
@@ -275,32 +326,25 @@ void handleSetLidarRpmCommand(Commander *commander)
   lidar.setTargetRpm(targetRpm);
 
   // report new target rpm
-  sendAppMessage("set-lidar-rpm:%d\n", targetRpm);
+  sendAppMessage("rpm:%d\n", targetRpm);
 }
 
-// handles get-lidar-state command, sends back lidar RPM, whether lidar is running and valid, queued command count
-void handleGetLidarStateCommand(Commander *commander)
+// handles lidar command, sends back lidar RPM, whether lidar is running and valid, queued command count
+void handleLidarCommand(Commander *commander)
 {
-  sendAppMessage("get-lidar-state:%d:%d:%.1f:%.1f:%.2f\n", lidar.isStarted() ? 1 : 0, lidar.isValid() ? 1 : 0, lidar.getTargetRpm(), lidar.getCurrentRpm(), lidar.getMotorPwm());
+  reportLidarState();
 }
 
-// handles get-voltage command, responds with main battery voltage
-void handleGetVoltageCommand(Commander *commander)
+// handles voltage command, responds with main battery voltage
+void handleVoltageCommand(Commander *commander)
 {
-  // apparently the reported values is slightly off
-  bool isValid;
-  float voltage = motors.getMainBatteryVoltage(&isValid) * 1.02;
-
-  // report the voltage
-  sendAppMessage("get-voltage:%.1f:%d\n", voltage, isValid ? 1 : 0);
+  reportVoltage();
 }
 
-// handles get-current command, responds with current draws of both motors
-void handleGetCurrentCommand(Commander *commander)
+// handles current command, responds with current draws of both motors
+void handleCurrentCommand(Commander *commander)
 {
-  CurrentMeasurement currents = motors.getCurrents();
-
-  sendAppMessage("get-current:%.2f:%.2f:%d\n", currents.currentM1, currents.currentM2, currents.isValid ? 1 : 0);
+  reportCurrent();
 }
 
 // handles proxy:xxx:yyy etc command where xxx:yyy gets handled by the other commander
@@ -365,25 +409,28 @@ void setupReset()
 
 void setupCommandHandlers()
 {
-  // sets target motor speeds
-  logCommander.registerCommandHandler("set-speed", callback(handleSetSpeedCommand, &logCommander));
-  appCommander.registerCommandHandler("set-speed", callback(handleSetSpeedCommand, &appCommander));
+  // TODO: implement helper that adds both?
+  // registerCommandHandler("speed", handleSpeedCommand);
+
+  // sets target motor speeds (alias as just "s" for less bandwidth)
+  logCommander.registerCommandHandler("s", callback(handleSpeedCommand, &logCommander));
+  appCommander.registerCommandHandler("s", callback(handleSpeedCommand, &appCommander));
 
   // sets target lidar rpm
-  logCommander.registerCommandHandler("set-lidar-rpm", callback(handleSetLidarRpmCommand, &logCommander));
-  appCommander.registerCommandHandler("set-lidar-rpm", callback(handleSetLidarRpmCommand, &appCommander));
+  logCommander.registerCommandHandler("rpm", callback(handleRpmCommand, &logCommander));
+  appCommander.registerCommandHandler("rpm", callback(handleRpmCommand, &appCommander));
 
   // reports lidar state
-  logCommander.registerCommandHandler("get-lidar-state", callback(handleGetLidarStateCommand, &logCommander));
-  appCommander.registerCommandHandler("get-lidar-state", callback(handleGetLidarStateCommand, &appCommander));
+  logCommander.registerCommandHandler("lidar", callback(handleLidarCommand, &logCommander));
+  appCommander.registerCommandHandler("lidar", callback(handleLidarCommand, &appCommander));
 
   // reports battery voltage
-  logCommander.registerCommandHandler("get-voltage", callback(handleGetVoltageCommand, &logCommander));
-  appCommander.registerCommandHandler("get-voltage", callback(handleGetVoltageCommand, &appCommander));
+  logCommander.registerCommandHandler("voltage", callback(handleVoltageCommand, &logCommander));
+  appCommander.registerCommandHandler("voltage", callback(handleVoltageCommand, &appCommander));
 
   // reports motor currents
-  logCommander.registerCommandHandler("get-current", callback(handleGetCurrentCommand, &logCommander));
-  appCommander.registerCommandHandler("get-current", callback(handleGetCurrentCommand, &appCommander));
+  logCommander.registerCommandHandler("current", callback(handleCurrentCommand, &logCommander));
+  appCommander.registerCommandHandler("current", callback(handleCurrentCommand, &appCommander));
 
   // proxy forwards the command to the other commander, useful for remote control etc
   logCommander.registerCommandHandler("proxy", callback(handleProxyCommand, &logCommander));
@@ -392,6 +439,9 @@ void setupCommandHandlers()
   // proxy forwards the command to the other commander, useful for remote control etc
   logCommander.registerCommandHandler("ping", callback(handlePingCommand, &logCommander));
   appCommander.registerCommandHandler("ping", callback(handlePingCommand, &appCommander));
+
+  // TODO: implement help handler
+  // TODO: implement report state handler
 }
 
 void setupMotors()
@@ -425,7 +475,11 @@ void stepUsbConnectionState()
     // notify app of reset
     if (isConnected)
     {
+      // notify of reset
       sendAppMessage("reset\n");
+
+      // report initial state
+      reportState();
     }
 
     wasUsbConnected = isConnected;
@@ -574,7 +628,7 @@ void stepLoopBlinker()
     led1 = 1;
 
     // send connection alive beacon message
-    // sendAppMessage("b\n");
+    sendAppMessage("b\n");
   }
   else if (ledLoopCounter % LED_BLINK_LOOP_COUNT == 0)
   {

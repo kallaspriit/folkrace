@@ -5,6 +5,7 @@ import WebSocketClient from "../web-socket-client/index";
 import TrackedVehicleKinematics, {
   TrackedVehicleOptions
 } from "../tracked-vehicle-kinematics";
+import robot from "../../services/robot";
 
 export interface RemoteControllerOptions {
   webSocketClient: WebSocketClient;
@@ -52,8 +53,6 @@ export default class RemoteController {
     const encoderSpeeds = this.kinematics.getEncoderSpeeds(motorSpeeds);
 
     // TODO: only send if sufficiently different from last sent values
-    this.options.webSocketClient.send(
-      `set-speed:${encoderSpeeds.left}:${encoderSpeeds.right}`
-    );
+    robot.setSpeed(encoderSpeeds.left, encoderSpeeds.right);
   }
 }
