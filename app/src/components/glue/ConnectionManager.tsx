@@ -62,7 +62,6 @@ export default class ConnectionManager extends React.Component {
           odometryContainer: OdometryContainer,
           lidarContainer: LidarContainer
         ) => {
-          // return if already set up
           if (this.isInitialized) {
             return null;
           }

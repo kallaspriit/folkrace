@@ -127,13 +127,6 @@ bool isUsbConnected()
 // sends given printf-formatted message to app serial if connected
 void sendAppMessage(const char *fmt, ...)
 {
-  // don't attempt to send if not connected as writing is blocking
-  if (!isUsbConnected())
-  {
-    logSerial.printf("@ sending app message failed, usb not connected\n");
-
-    return;
-  }
 
   // proxy the formatted message to serial
   // va_list args;
@@ -148,7 +141,16 @@ void sendAppMessage(const char *fmt, ...)
   int resultLength = vsnprintf(buf, MAX_PACKET_SIZE_EPBULK, fmt, args);
   va_end(args);
 
-  // send the message and non-blocking
+  // don't attempt to send if not connected as writing is blocking
+  if (!isUsbConnected())
+  {
+    logSerial.printf("@ sending '%s' failed, usb serial is not connected\n", buf);
+
+    return;
+  }
+
+  // TODO: append crc? https://os.mbed.com/teams/WizziLab/code/CRC/
+  // send the message as non-blocking usb data
   appSerial.writeNB(EPBULK_IN, (uint8_t *)buf, resultLength, MAX_PACKET_SIZE_EPBULK);
 
   // const char *buf = "abcdefghi-abcdefghi-abcdefghi-abcdefghi-abcdefghi-abcdefghi-abc\n";
@@ -156,6 +158,9 @@ void sendAppMessage(const char *fmt, ...)
   // const char *buf = "t\n";
   // appSerial.write(EPBULK_IN, (uint8_t *)buf, resultLength, MAX_PACKET_SIZE_EPBULK);
   // bool isWriteSuccess = appSerial.writeBlock((uint8_t *)buf, 64);
+
+  // mirror the message to log serial
+  logSerial.printf("%s\n", buf);
 
   // reset the app message sent timer if at least twice the blink duration has passed
   if (appMessageSentTimer.read_ms() >= APP_MESSAGE_SENT_BLINK_DURATION_MS * 2)
@@ -193,8 +198,7 @@ void reportEncoderValues()
   lastEncoderDeltaM1 = encoderDeltaM1;
   lastEncoderDeltaM2 = encoderDeltaM2;
 
-  // send the encoder values (TODO: only the app needs these)
-  logSerial.printf("e:%d:%d\n", encoderDeltaM1, encoderDeltaM2);
+  // send the encoder values
   sendAppMessage("e:%d:%d\n", encoderDeltaM1, encoderDeltaM2);
 }
 
@@ -202,7 +206,6 @@ void reportEncoderValues()
 void reportButtonState(string name, int state)
 {
   sendAppMessage("button:%s:%d\n", name.c_str(), state);
-  logSerial.printf("button:%s:%d\n", name.c_str(), state);
 }
 
 // sets given strip led color
@@ -230,7 +233,7 @@ void handleSetSpeedCommand(Commander *commander)
   // make sure we got the right number of parameters
   if (argumentCount != 2)
   {
-    commander->serial->printf("@ set-speed:A:B expects exactly two parameters (where A is motor 1 speed and B is motor 2 speed)\n");
+    sendAppMessage("@ set-speed:A:B expects exactly two parameters (where A is motor 1 speed and B is motor 2 speed)\n");
 
     // stop the motors when receiving invalid command
     motors.setSpeedM1(0);
@@ -248,7 +251,6 @@ void handleSetSpeedCommand(Commander *commander)
   motors.setSpeedM2(targetSpeedM2);
 
   // report new target speeds
-  logSerial.printf("set-speed:%d:%d\n", targetSpeedM1, targetSpeedM2);
   sendAppMessage("set-speed:%d:%d\n", targetSpeedM1, targetSpeedM2);
 }
 
@@ -260,7 +262,7 @@ void handleSetLidarRpmCommand(Commander *commander)
   // make sure we got the right number of parameters
   if (argumentCount != 1)
   {
-    commander->serial->printf("@ set-lidar-rpm:RPM expects exactly one parameter (where RPM is the new target lidar rpm)\n");
+    sendAppMessage("@ set-lidar-rpm:RPM expects exactly one parameter (where RPM is the new target lidar rpm)\n");
 
     // stop the lidar when receiving invalid command
     lidar.setTargetRpm(0);
@@ -273,14 +275,13 @@ void handleSetLidarRpmCommand(Commander *commander)
   lidar.setTargetRpm(targetRpm);
 
   // report new target rpm
-  logSerial.printf("set-lidar-rpm:%d\n", targetRpm);
   sendAppMessage("set-lidar-rpm:%d\n", targetRpm);
 }
 
 // handles get-lidar-state command, sends back lidar RPM, whether lidar is running and valid, queued command count
 void handleGetLidarStateCommand(Commander *commander)
 {
-  commander->serial->printf("get-lidar-state:%d:%d:%.1f:%.1f:%.2f\n", lidar.isStarted() ? 1 : 0, lidar.isValid() ? 1 : 0, lidar.getTargetRpm(), lidar.getCurrentRpm(), lidar.getMotorPwm());
+  sendAppMessage("get-lidar-state:%d:%d:%.1f:%.1f:%.2f\n", lidar.isStarted() ? 1 : 0, lidar.isValid() ? 1 : 0, lidar.getTargetRpm(), lidar.getCurrentRpm(), lidar.getMotorPwm());
 }
 
 // handles get-voltage command, responds with main battery voltage
@@ -291,7 +292,7 @@ void handleGetVoltageCommand(Commander *commander)
   float voltage = motors.getMainBatteryVoltage(&isValid) * 1.02;
 
   // report the voltage
-  commander->serial->printf("get-voltage:%.1f:%d\n", voltage, isValid ? 1 : 0);
+  sendAppMessage("get-voltage:%.1f:%d\n", voltage, isValid ? 1 : 0);
 }
 
 // handles get-current command, responds with current draws of both motors
@@ -299,7 +300,7 @@ void handleGetCurrentCommand(Commander *commander)
 {
   CurrentMeasurement currents = motors.getCurrents();
 
-  logSerial.printf("get-current:%.2f:%.2f:%d\n", currents.currentM1, currents.currentM2, currents.isValid ? 1 : 0);
+  sendAppMessage("get-current:%.2f:%.2f:%d\n", currents.currentM1, currents.currentM2, currents.isValid ? 1 : 0);
 }
 
 // handles proxy:xxx:yyy etc command where xxx:yyy gets handled by the other commander
@@ -324,7 +325,7 @@ void handleProxyCommand(Commander *commander)
   Commander *otherCommander = commander == &logCommander ? &appCommander : &logCommander;
 
   // log forward attempt
-  commander->serial->printf("# proxying \"%s\" to %s commander\n", command.c_str(), commander == &logCommander ? "robot" : "pc");
+  sendAppMessage("# proxying \"%s\" to %s commander\n", command.c_str(), commander == &logCommander ? "robot" : "pc");
 
   // forward the command to the other serial
   otherCommander->handleCommand(command);
@@ -333,7 +334,7 @@ void handleProxyCommand(Commander *commander)
 // handles ping command, responds with pong
 void handlePingCommand(Commander *commander)
 {
-  commander->serial->printf("pong\n");
+  sendAppMessage("pong\n");
 }
 
 void setupUsbPowerSensing()
@@ -425,7 +426,7 @@ void stepUsbConnectionState()
     }
 
     // notify usb connection state change
-    logSerial.printf("usb %s\n", isConnected ? "connected" : "disconnected");
+    logSerial.printf("# usb %s\n", isConnected ? "connected" : "disconnected");
 
     wasUsbConnected = isConnected;
   }
@@ -531,9 +532,7 @@ void stepLidarMeasurements()
     // only send valid and strong measurements
     if (measurement->isValid && measurement->isStrong)
     {
-      // sendAppMessage("m\n"); // dummy test
       sendAppMessage("m:%d:%d:%d\n", measurement->angle, measurement->distance / 10, measurement->quality);
-      // logSerial.printf("m:%d:%d:%d\n", measurement->angle, measurement->distance / 10, measurement->quality);
     }
 
     // make sure to delete it afterwards
