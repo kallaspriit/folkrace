@@ -6,6 +6,7 @@ import { LidarContainer } from "../containers/LidarContainer";
 import { LogContainer } from "../containers/LogContainer";
 import { OdometryContainer } from "../containers/OdometryContainer";
 import { RobotContainer } from "../containers/RobotContainer";
+import { MeasurementsContainer } from "../containers/MeasurementsContainer";
 import {
   SerialState,
   SerialType,
@@ -27,12 +28,13 @@ import { WebSocketState } from "../lib/web-socket-client/index";
 import { webSocketClient } from "../services/webSocketClient";
 
 export interface ContainerMap {
-  logContainer: LogContainer;
-  statusContainer: StatusContainer;
-  odometryContainer: OdometryContainer;
-  lidarContainer: LidarContainer;
-  buttonContainer: ButtonContainer;
-  robotContainer: RobotContainer;
+  log: LogContainer;
+  status: StatusContainer;
+  odometry: OdometryContainer;
+  lidar: LidarContainer;
+  button: ButtonContainer;
+  robot: RobotContainer;
+  measurements: MeasurementsContainer;
 }
 
 export type WebSocketCommandHandlerFn = (
@@ -73,16 +75,18 @@ export class Router extends React.Component {
           OdometryContainer,
           LidarContainer,
           ButtonContainer,
-          RobotContainer
+          RobotContainer,
+          MeasurementsContainer
         ]}
       >
         {(
-          logContainer: LogContainer,
-          statusContainer: StatusContainer,
-          odometryContainer: OdometryContainer,
-          lidarContainer: LidarContainer,
-          buttonContainer: ButtonContainer,
-          robotContainer: RobotContainer
+          log: LogContainer,
+          status: StatusContainer,
+          odometry: OdometryContainer,
+          lidar: LidarContainer,
+          button: ButtonContainer,
+          robot: RobotContainer,
+          measurements: MeasurementsContainer
         ) => {
           // only initialize the connection logic once
           if (this.isInitialized) {
@@ -90,53 +94,49 @@ export class Router extends React.Component {
           }
 
           // set initial state
-          statusContainer.setWebSocketState(webSocketClient.state);
+          status.setWebSocketState(webSocketClient.state);
 
           // subscribe to web-socket events
           webSocketClient.subscribe({
             onConnecting: (_ws, _wasConnected) => {
-              logContainer.addEntry("# web-socket connecting..");
+              log.addEntry("# web-socket connecting..");
             },
             onOpen: (_ws, _event) => {
-              logContainer.addEntry("# web-socket connection established");
+              log.addEntry("# web-socket connection established");
             },
             onClose: (_ws, _event, wasConnected) => {
               if (wasConnected) {
-                logContainer.addEntry("# web-socket connection was lost");
+                log.addEntry("# web-socket connection was lost");
               } else {
-                logContainer.addEntry(
-                  "# establishing web-socket connection failed"
-                );
+                log.addEntry("# establishing web-socket connection failed");
               }
             },
             onError: (_ws, _event, _wasConnected) => {
-              logContainer.addEntry("# get web-socket error");
+              log.addEntry("# get web-socket error");
             },
             onMessage: (_ws, message) => {
               // handle the message
               this.handleWebSocketMessage(message, {
-                logContainer,
-                statusContainer,
-                odometryContainer,
-                lidarContainer,
-                buttonContainer,
-                robotContainer
+                log,
+                status,
+                odometry,
+                lidar,
+                button,
+                robot,
+                measurements
               });
             },
             onStateChanged: (_ws, newState, _oldState) => {
-              statusContainer.setWebSocketState(newState);
+              status.setWebSocketState(newState);
 
               // also reset other statuses if web-socket connection is lost
               if (newState === WebSocketState.DISCONNECTED) {
-                statusContainer.setSerialState(
+                status.setSerialState(
                   SerialType.BLUETOOTH,
                   SerialState.DISCONNECTED
                 );
-                statusContainer.setSerialState(
-                  SerialType.USB,
-                  SerialState.DISCONNECTED
-                );
-                statusContainer.setBatteryVoltage(undefined);
+                status.setSerialState(SerialType.USB, SerialState.DISCONNECTED);
+                status.setBatteryVoltage(undefined);
               }
             },
             onSendMessage: (_ws, message) => {
@@ -147,7 +147,7 @@ export class Router extends React.Component {
                 return;
               }
 
-              logContainer.addEntry(`> ${message}`);
+              log.addEntry(`> ${message}`);
             }
           });
 
@@ -173,7 +173,7 @@ export class Router extends React.Component {
 
     // dont log single-character commands (fast lidar measurements, encoders etc)
     if (name.length > 1) {
-      containers.logContainer.addEntry(`< ${message}`);
+      containers.log.addEntry(`< ${message}`);
     }
 
     // attempt to handle command

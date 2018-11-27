@@ -1,10 +1,7 @@
 import { ContainerMap } from "../components/Router";
 
-export function handleVoltageCommand(
-  args: string[],
-  { statusContainer }: ContainerMap
-) {
+export function handleVoltageCommand(args: string[], { status }: ContainerMap) {
   const voltage = parseFloat(args[0]);
 
-  statusContainer.setBatteryVoltage(voltage);
+  status.setBatteryVoltage(voltage);
 }

@@ -1,6 +1,6 @@
 import { Container } from "unstated";
 
-export interface LidarState {
+export interface State {
   readonly isStarted: boolean;
   readonly isValid: boolean;
   readonly targetRpm: number;
@@ -8,40 +8,18 @@ export interface LidarState {
   readonly motorPwm: number;
 }
 
-export interface LidarMeasurement {
-  readonly angle: number;
-  readonly distance: number;
-  readonly quality: number;
-  readonly date: Date;
-}
-
-export interface LidarMeasurements {
-  readonly measurements: LidarMeasurement[];
-}
-
-// TODO: measure samples per second
-export type State = LidarState & LidarMeasurements;
-
-// TODO: move measurements to a different container?
 export class LidarContainer extends Container<State> {
   readonly state: State = {
     isStarted: false,
     isValid: false,
     targetRpm: 0,
     currentRpm: 0,
-    motorPwm: 0,
-    measurements: []
+    motorPwm: 0
   };
 
-  updateLidarState(state: LidarState) {
+  update(state: State) {
     return this.setState({
       ...state
-    });
-  }
-
-  addMeasurement(measurement: LidarMeasurement) {
-    return this.setState({
-      measurements: [...this.state.measurements, measurement]
     });
   }
 }

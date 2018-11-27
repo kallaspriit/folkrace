@@ -1,10 +1,7 @@
 import { ContainerMap } from "../components/Router";
 
-export function handleIpCommand(
-  args: string[],
-  { statusContainer }: ContainerMap
-) {
+export function handleIpCommand(args: string[], { status }: ContainerMap) {
   const remoteIp = args[0];
 
-  statusContainer.setRemoteIp(remoteIp);
+  status.setRemoteIp(remoteIp);
 }

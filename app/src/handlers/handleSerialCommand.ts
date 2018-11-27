@@ -4,7 +4,7 @@ import { robot } from "../services/robot";
 
 export async function handleSerialCommand(
   args: string[],
-  { statusContainer }: ContainerMap
+  { status }: ContainerMap
 ) {
   // extract serial info
   const serialType = args[0] as SerialType;
@@ -12,22 +12,9 @@ export async function handleSerialCommand(
   const serialDeviceName = typeof args[2] === "string" ? args[2] : undefined;
 
   // update serial state
-  await statusContainer.setSerialState(
-    serialType,
-    serialState,
-    serialDeviceName
-  );
+  await status.setSerialState(serialType, serialState, serialDeviceName);
 
-  const connectedSerial = statusContainer.getConnectedSerial();
-
-  console.log({
-    serialType,
-    serialState,
-    serialDeviceName,
-    connectedSerial,
-    type: connectedSerial ? connectedSerial.type : "n/a",
-    eq: connectedSerial ? serialType === connectedSerial.type : "n/a"
-  });
+  const connectedSerial = status.getConnectedSerial();
 
   // ask for some initial state info once a serial connection is established
   if (connectedSerial !== undefined && serialType === connectedSerial.type) {
@@ -47,6 +34,6 @@ export async function handleSerialCommand(
     // }
 
     // no serial connection so we can't be sure of battery voltage
-    statusContainer.setBatteryVoltage(undefined);
+    status.setBatteryVoltage(undefined);
   }
 }
