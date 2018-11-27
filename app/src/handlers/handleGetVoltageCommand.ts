@@ -1,6 +1,6 @@
 import { ContainerMap } from "../components/Router";
 
-export default function handleGetVoltageCommand(
+export function handleVoltageCommand(
   args: string[],
   { statusContainer }: ContainerMap
 ) {

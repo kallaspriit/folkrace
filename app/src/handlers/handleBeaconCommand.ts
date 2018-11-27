@@ -1,6 +1,6 @@
 import { ContainerMap } from "../components/Router";
 
-export default function handleBeaconCommand(
+export function handleBeaconCommand(
   args: string[],
   { statusContainer }: ContainerMap
 ) {

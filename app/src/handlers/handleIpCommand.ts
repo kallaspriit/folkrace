@@ -1,6 +1,6 @@
 import { ContainerMap } from "../components/Router";
 
-export default function handleIpCommand(
+export function handleIpCommand(
   args: string[],
   { statusContainer }: ContainerMap
 ) {

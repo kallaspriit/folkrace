@@ -1,13 +1,14 @@
 import { ContainerMap } from "../components/Router";
 
-export default function handleUsbCommand(args: string[], {  }: ContainerMap) {
+export function handleUsbCommand(args: string[], {  }: ContainerMap) {
   const vendorId = parseInt(args[0], 10);
   const productId = parseInt(args[1], 10);
   const productName = args[2];
 
-  // console.log("usb", {
-  //   vendorId,
-  //   productId,
-  //   productName
-  // });
+  // TODO: store in status?
+  console.log("usb", {
+    vendorId,
+    productId,
+    productName
+  });
 }

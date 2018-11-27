@@ -1,6 +1,6 @@
 import { ContainerMap } from "../components/Router";
 
-export default function handleEncoderCommand(
+export function handleEncoderCommand(
   args: string[],
   { odometryContainer }: ContainerMap
 ) {

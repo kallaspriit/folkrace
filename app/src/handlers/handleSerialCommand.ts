@@ -2,7 +2,7 @@ import { ContainerMap } from "../components/Router";
 import { SerialType, SerialState } from "../containers/StatusContainer";
 import robot from "../services/robot";
 
-export default function handleSerialCommand(
+export function handleSerialCommand(
   args: string[],
   { statusContainer }: ContainerMap
 ) {

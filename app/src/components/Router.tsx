@@ -7,23 +7,26 @@ import {
   SerialState,
   SerialType
 } from "../containers/StatusContainer";
-import { WebSocketState } from "../lib/web-socket-client/index";
 import webSocketClient from "../services/webSocketClient";
-import handleSerialCommand from "../command-handlers/handleSerialCommand";
-import handleGetVoltageCommand from "../command-handlers/handleGetVoltageCommand";
-import handleIpCommand from "../command-handlers/handleIpCommand";
-import handleUsbCommand from "../command-handlers/handleUsbCommand";
+import { WebSocketState } from "../lib/web-socket-client/index";
 import { OdometryContainer } from "../containers/OdometryContainer";
-import handleEncoderCommand from "../command-handlers/handleEncoderCommand";
-import handleBeaconCommand from "../command-handlers/handleBeaconCommand";
 import { LidarContainer } from "../containers/LidarContainer";
-import handleMeasurementCommand from "../command-handlers/handleMeasurementCommand";
+import { ButtonContainer } from "../containers/ButtonContainer";
+import { handleSerialCommand } from "../handlers/handleSerialCommand";
+import { handleVoltageCommand } from "../handlers/handleGetVoltageCommand";
+import { handleIpCommand } from "../handlers/handleIpCommand";
+import { handleUsbCommand } from "../handlers/handleUsbCommand";
+import { handleEncoderCommand } from "../handlers/handleEncoderCommand";
+import { handleBeaconCommand } from "../handlers/handleBeaconCommand";
+import { handleMeasurementCommand } from "../handlers/handleMeasurementCommand";
+import { handleButtonCommand } from "../handlers/handleButtonCommand";
 
 export interface ContainerMap {
   logContainer: LogContainer;
   statusContainer: StatusContainer;
   odometryContainer: OdometryContainer;
   lidarContainer: LidarContainer;
+  buttonContainer: ButtonContainer;
 }
 
 export type WebSocketCommandHandlerFn = (
@@ -42,27 +45,34 @@ export class Router extends React.Component {
     serial: handleSerialCommand,
     ip: handleIpCommand,
     usb: handleUsbCommand,
-    voltage: handleGetVoltageCommand,
+    voltage: handleVoltageCommand,
+    button: handleButtonCommand,
     e: handleEncoderCommand,
     b: handleBeaconCommand,
     m: handleMeasurementCommand
 
     // TODO: handle "speed"
     // TODO: handle "reset"
-    // TODO: handle "button"
     // TODO: handle "pong"
   };
 
   render() {
     return (
       <Subscribe
-        to={[LogContainer, StatusContainer, OdometryContainer, LidarContainer]}
+        to={[
+          LogContainer,
+          StatusContainer,
+          OdometryContainer,
+          LidarContainer,
+          ButtonContainer
+        ]}
       >
         {(
           logContainer: LogContainer,
           statusContainer: StatusContainer,
           odometryContainer: OdometryContainer,
-          lidarContainer: LidarContainer
+          lidarContainer: LidarContainer,
+          buttonContainer: ButtonContainer
         ) => {
           // only initialize the connection logic once
           if (this.isInitialized) {
@@ -98,7 +108,8 @@ export class Router extends React.Component {
                 logContainer,
                 statusContainer,
                 odometryContainer,
-                lidarContainer
+                lidarContainer,
+                buttonContainer
               });
             },
             onStateChanged: (_ws, newState, _oldState) => {

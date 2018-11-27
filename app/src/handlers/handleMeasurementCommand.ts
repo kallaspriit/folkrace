@@ -1,6 +1,6 @@
 import { ContainerMap } from "../components/Router";
 
-export default function handleMeasurementCommand(
+export function handleMeasurementCommand(
   args: string[],
   { lidarContainer }: ContainerMap
 ) {
