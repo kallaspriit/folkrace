@@ -1,5 +1,5 @@
+import update from "immutability-helper";
 import { Container } from "unstated";
-
 import { config } from "../config";
 import { WebSocketState } from "../lib/web-socket-client/index";
 
@@ -18,12 +18,12 @@ export enum SerialState {
 }
 
 export interface Serial {
-  type: SerialType;
-  state: SerialState;
-  deviceName?: string;
+  readonly type: SerialType;
+  readonly state: SerialState;
+  readonly deviceName?: string;
 }
 
-export type SerialsMap = { [type in keyof typeof SerialType]: Serial };
+export type SerialsMap = { readonly [type in keyof typeof SerialType]: Serial };
 
 export enum BatteryState {
   UNKNOWN = "UNKNOWN",
@@ -64,16 +64,15 @@ export class StatusContainer extends Container<State> {
     const typeKey = Object.keys(SerialType).find(
       typeName => SerialType[typeName as keyof typeof SerialType] === type
     ) as keyof typeof SerialType;
-    const serials = this.state.serials;
-
-    // update given serial state and status
-    serials[typeKey].state = state;
-    serials[typeKey].deviceName = deviceName;
 
     // update serial state
-    void this.setState({
-      serials
-    });
+    return this.setState(
+      update(this.state, {
+        serials: {
+          [typeKey]: { $merge: { state, deviceName } }
+        }
+      })
+    );
   }
 
   setWebSocketState(newState: WebSocketState) {

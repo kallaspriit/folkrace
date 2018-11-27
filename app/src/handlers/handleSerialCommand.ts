@@ -2,7 +2,7 @@ import { ContainerMap } from "../components/Router";
 import { SerialType, SerialState } from "../containers/StatusContainer";
 import { robot } from "../services/robot";
 
-export function handleSerialCommand(
+export async function handleSerialCommand(
   args: string[],
   { statusContainer }: ContainerMap
 ) {
@@ -12,9 +12,22 @@ export function handleSerialCommand(
   const serialDeviceName = typeof args[2] === "string" ? args[2] : undefined;
 
   // update serial state
-  statusContainer.setSerialState(serialType, serialState, serialDeviceName);
+  await statusContainer.setSerialState(
+    serialType,
+    serialState,
+    serialDeviceName
+  );
 
   const connectedSerial = statusContainer.getConnectedSerial();
+
+  console.log({
+    serialType,
+    serialState,
+    serialDeviceName,
+    connectedSerial,
+    type: connectedSerial ? connectedSerial.type : "n/a",
+    eq: connectedSerial ? serialType === connectedSerial.type : "n/a"
+  });
 
   // ask for some initial state info once a serial connection is established
   if (connectedSerial !== undefined && serialType === connectedSerial.type) {

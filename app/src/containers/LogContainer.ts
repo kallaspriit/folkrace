@@ -8,15 +8,15 @@ export enum MessageType {
 }
 
 export interface LogEntry {
-  id: string;
-  time: Date;
-  message: string;
-  type: MessageType;
-  count: number;
+  readonly id: string;
+  readonly time: Date;
+  readonly message: string;
+  readonly type: MessageType;
+  readonly count: number;
 }
 
 export interface LogState {
-  entries: LogEntry[];
+  readonly entries: LogEntry[];
 }
 
 export const MAX_LOG_ENTRY_COUNT = 200;

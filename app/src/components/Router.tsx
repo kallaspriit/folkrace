@@ -19,6 +19,7 @@ import { handleVoltageCommand } from "../handlers/handleGetVoltageCommand";
 import { handleButtonCommand } from "../handlers/handleButtonCommand";
 import { handleResetCommand } from "../handlers/handleResetCommand";
 import { handleCurrentCommand } from "../handlers/handleCurrentCommand";
+import { handleLidarCommand } from "../handlers/handleLidarCommand";
 import { handleEncoderCommand } from "../handlers/handleEncoderCommand";
 import { handleBeaconCommand } from "../handlers/handleBeaconCommand";
 import { handleMeasurementCommand } from "../handlers/handleMeasurementCommand";
@@ -53,13 +54,13 @@ export class Router extends React.Component {
     button: handleButtonCommand,
     reset: handleResetCommand,
     current: handleCurrentCommand,
+    lidar: handleLidarCommand,
     e: handleEncoderCommand,
     b: handleBeaconCommand,
     m: handleMeasurementCommand,
     s: handleSpeedCommand
 
     // TODO: handle "pong"
-    // TODO: handle "lidar"
   };
 
   render() {

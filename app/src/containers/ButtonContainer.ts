@@ -12,7 +12,7 @@ export enum ButtonState {
   RELEASED = "RELEASED"
 }
 
-export type State = { [key in keyof typeof Button]: ButtonState };
+export type State = { readonly [key in keyof typeof Button]: ButtonState };
 
 export class ButtonContainer extends Container<State> {
   readonly state: State = {
