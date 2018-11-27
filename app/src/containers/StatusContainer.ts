@@ -77,25 +77,25 @@ export class StatusContainer extends Container<State> {
   }
 
   setWebSocketState(newState: WebSocketState) {
-    void this.setState({
+    return this.setState({
       webSocketState: newState
     });
   }
 
   setBatteryVoltage(batteryVoltage: number | undefined) {
-    void this.setState({
+    return this.setState({
       batteryVoltage
     });
   }
 
   setRemoteIp(remoteIp: string) {
-    void this.setState({
+    return this.setState({
       remoteIp
     });
   }
 
   setLoopStatistics(loopFrequency: number, loopTimeUs: number) {
-    void this.setState({
+    return this.setState({
       lastBeaconTime: new Date(),
       loopFrequency,
       loopTimeUs
@@ -103,7 +103,7 @@ export class StatusContainer extends Container<State> {
   }
 
   setResetReceived() {
-    void this.setState({
+    return this.setState({
       lastResetTime: new Date()
     });
   }

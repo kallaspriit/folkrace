@@ -22,7 +22,7 @@ export class ButtonContainer extends Container<State> {
   };
 
   setButtonState(button: Button, state: ButtonState) {
-    void this.setState({
+    return this.setState({
       [button]: state
     });
   }

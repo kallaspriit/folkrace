@@ -12,7 +12,7 @@ export class OdometryContainer extends Container<State> {
   };
 
   update(left: number, right: number) {
-    void this.setState({
+    return this.setState({
       left,
       right
     });

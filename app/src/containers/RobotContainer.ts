@@ -24,7 +24,7 @@ export class RobotContainer extends Container<State> {
   };
 
   setTargetSpeed(left: number, right: number) {
-    void this.setState({
+    return this.setState({
       targetSpeed: {
         left,
         right
@@ -33,7 +33,7 @@ export class RobotContainer extends Container<State> {
   }
 
   setCurrent(left: number, right: number) {
-    void this.setState({
+    return this.setState({
       current: {
         left,
         right

@@ -34,13 +34,13 @@ export class LidarContainer extends Container<State> {
   };
 
   updateLidarState(state: LidarState) {
-    void this.setState({
+    return this.setState({
       ...state
     });
   }
 
   addMeasurement(measurement: LidarMeasurement) {
-    void this.setState({
+    return this.setState({
       measurements: [...this.state.measurements, measurement]
     });
   }
