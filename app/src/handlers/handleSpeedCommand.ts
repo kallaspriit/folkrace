@@ -2,10 +2,10 @@ import { ContainerMap } from "../components/Router";
 
 export function handleSpeedCommand(
   args: string[],
-  { odometryContainer }: ContainerMap
+  { robotContainer }: ContainerMap
 ) {
   const left = parseInt(args[0], 10);
   const right = parseInt(args[1], 10);
 
-  odometryContainer.setTargetSpeed(left, right);
+  robotContainer.setTargetSpeed(left, right);
 }

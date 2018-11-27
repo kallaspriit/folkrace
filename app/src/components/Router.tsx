@@ -11,12 +11,14 @@ import { WebSocketState } from "../lib/web-socket-client/index";
 import { OdometryContainer } from "../containers/OdometryContainer";
 import { LidarContainer } from "../containers/LidarContainer";
 import { ButtonContainer } from "../containers/ButtonContainer";
+import { RobotContainer } from "../containers/RobotContainer";
 import { handleSerialCommand } from "../handlers/handleSerialCommand";
 import { handleIpCommand } from "../handlers/handleIpCommand";
 import { handleUsbCommand } from "../handlers/handleUsbCommand";
 import { handleVoltageCommand } from "../handlers/handleGetVoltageCommand";
 import { handleButtonCommand } from "../handlers/handleButtonCommand";
 import { handleResetCommand } from "../handlers/handleResetCommand";
+import { handleCurrentCommand } from "../handlers/handleCurrentCommand";
 import { handleEncoderCommand } from "../handlers/handleEncoderCommand";
 import { handleBeaconCommand } from "../handlers/handleBeaconCommand";
 import { handleMeasurementCommand } from "../handlers/handleMeasurementCommand";
@@ -28,6 +30,7 @@ export interface ContainerMap {
   odometryContainer: OdometryContainer;
   lidarContainer: LidarContainer;
   buttonContainer: ButtonContainer;
+  robotContainer: RobotContainer;
 }
 
 export type WebSocketCommandHandlerFn = (
@@ -49,6 +52,7 @@ export class Router extends React.Component {
     voltage: handleVoltageCommand,
     button: handleButtonCommand,
     reset: handleResetCommand,
+    current: handleCurrentCommand,
     e: handleEncoderCommand,
     b: handleBeaconCommand,
     m: handleMeasurementCommand,
@@ -56,7 +60,6 @@ export class Router extends React.Component {
 
     // TODO: handle "pong"
     // TODO: handle "lidar"
-    // TODO: handle "current"
   };
 
   render() {
@@ -67,7 +70,8 @@ export class Router extends React.Component {
           StatusContainer,
           OdometryContainer,
           LidarContainer,
-          ButtonContainer
+          ButtonContainer,
+          RobotContainer
         ]}
       >
         {(
@@ -75,7 +79,8 @@ export class Router extends React.Component {
           statusContainer: StatusContainer,
           odometryContainer: OdometryContainer,
           lidarContainer: LidarContainer,
-          buttonContainer: ButtonContainer
+          buttonContainer: ButtonContainer,
+          robotContainer: RobotContainer
         ) => {
           // only initialize the connection logic once
           if (this.isInitialized) {
@@ -112,7 +117,8 @@ export class Router extends React.Component {
                 statusContainer,
                 odometryContainer,
                 lidarContainer,
-                buttonContainer
+                buttonContainer,
+                robotContainer
               });
             },
             onStateChanged: (_ws, newState, _oldState) => {
