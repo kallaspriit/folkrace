@@ -1,4 +1,4 @@
-import { ContainerMap } from "../components/glue/ConnectionManager";
+import { ContainerMap } from "../components/ConnectionManager";
 import { SerialType, SerialState } from "../containers/StatusContainer";
 import robot from "../services/robot";
 

@@ -10,6 +10,8 @@ export interface JoystickProps {
     event: nipplejs.JoystickEvent,
     info: nipplejs.JoystickInstance
   ): void;
+  x?: boolean;
+  y?: boolean;
 }
 
 export default class Joystick extends React.Component<JoystickProps> {
@@ -34,7 +36,9 @@ export default class Joystick extends React.Component<JoystickProps> {
         left: "50%",
         top: "50%"
       },
-      mode: "static"
+      mode: "static",
+      lockX: this.props.x === true,
+      lockY: this.props.y === true
     });
 
     const { onEvent } = this.props;

@@ -1,7 +1,8 @@
 import * as React from "react";
+import { View } from "../components/View";
 
-const SettingsView: React.SFC<{}> = () => <div className="view view--text settings-view">
+const SettingsView: React.SFC<{}> = () => <View text>
   <button onClick={() => window.location.href = "http://kallaspriit"}>Open http://kallaspriit</button>
-</div>;
+</View>;
 
 export default SettingsView;

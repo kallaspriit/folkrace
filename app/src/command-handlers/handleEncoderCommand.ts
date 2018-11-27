@@ -1,4 +1,4 @@
-import { ContainerMap } from "../components/glue/ConnectionManager";
+import { ContainerMap } from "../components/ConnectionManager";
 
 export default function handleEncoderCommand(
   args: string[],

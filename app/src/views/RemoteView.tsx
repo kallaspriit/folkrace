@@ -1,12 +1,18 @@
 import * as React from "react";
 
-import Joystick from "../../components/joystick/Joystick";
+import Joystick from "../components/Joystick";
 import { JoystickEvent, JoystickEventName, JoystickInstance } from "nipplejs";
-import config from "../../config";
-import RemoteController from "../../lib/remote-controller";
-import webSocketClient from "../../services/webSocketClient";
+import config from "../config";
+import RemoteController from "../lib/remote-controller";
+import webSocketClient from "../services/webSocketClient";
 
-import "./RemoteView.scss";
+import { View } from "../components/View";
+import { Grid, GridItem } from "../components/Grid";
+import { styled } from "../styled";
+
+const JoystickGrid = styled(Grid)`
+  grid-template-columns: 1fr;
+`;
 
 // TODO: show track speeds on edges (target and real)
 export default class RemoteView extends React.Component {
@@ -18,26 +24,28 @@ export default class RemoteView extends React.Component {
 
   render() {
     return (
-      <div className="view view--grid remote-view">
-        <div className="joystick-grid">
-          <div className="joystick-grid__item">
+      <View grid>
+        <JoystickGrid>
+          <GridItem>
             <Joystick
+              x
               name="speed"
               onEvent={(name, event, info) =>
                 this.onJoystickEvent(name, event, info)
               }
             />
-          </div>
-          <div className="joystick-grid__item">
+          </GridItem>
+          <GridItem>
             <Joystick
+              y
               name="omega"
               onEvent={(name, event, info) =>
                 this.onJoystickEvent(name, event, info)
               }
             />
-          </div>
-        </div>
-      </div>
+          </GridItem>
+        </JoystickGrid>
+      </View>
     );
   }
 

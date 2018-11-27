@@ -20,6 +20,8 @@ declare module "nipplejs" {
     restJoystick?: boolean;
     restOpacity?: number;
     catchDistance?: number;
+    lockX?: boolean;
+    lockY?: boolean;
   }
 
   export type JoystickEventName =

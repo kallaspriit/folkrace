@@ -1,4 +1,4 @@
-import { ContainerMap } from "../components/glue/ConnectionManager";
+import { ContainerMap } from "../components/ConnectionManager";
 
 export default function handleUsbCommand(args: string[], {  }: ContainerMap) {
   const vendorId = parseInt(args[0], 10);
