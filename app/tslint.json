@@ -29,6 +29,7 @@
     "no-unnecessary-qualifier": true,
     "object-literal-key-quotes": [true, "as-needed"],
     "object-literal-sort-keys": false,
+    "no-unused-variable": false,
     "interface-name": [true, "never-prefix"],
     "no-console": false,
     "quotemark": [

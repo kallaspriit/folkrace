@@ -6,5 +6,5 @@ export function handleBeaconCommand(args: string[], { status }: ContainerMap) {
   const loopFrequency = (cycleCount / durationMs) * 1000;
   const loopTimeUs = (durationMs / cycleCount) * 1000;
 
-  status.setLoopStatistics(loopFrequency, loopTimeUs);
+  void status.setLoopStatistics(loopFrequency, loopTimeUs);
 }

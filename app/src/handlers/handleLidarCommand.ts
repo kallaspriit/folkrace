@@ -7,7 +7,7 @@ export function handleLidarCommand(args: string[], { lidar }: ContainerMap) {
   const currentRpm = parseFloat(args[3]);
   const motorPwm = parseFloat(args[4]);
 
-  lidar.update({
+  void lidar.update({
     isStarted,
     isValid,
     targetRpm,

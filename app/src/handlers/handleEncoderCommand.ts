@@ -7,5 +7,5 @@ export function handleEncoderCommand(
   const left = parseInt(args[0], 10);
   const right = parseInt(args[1], 10);
 
-  odometry.update(left, right);
+  void odometry.update(left, right);
 }

@@ -34,6 +34,6 @@ export async function handleSerialCommand(
     // }
 
     // no serial connection so we can't be sure of battery voltage
-    status.setBatteryVoltage(undefined);
+    void status.setBatteryVoltage(undefined);
   }
 }

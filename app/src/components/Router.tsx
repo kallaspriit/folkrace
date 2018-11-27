@@ -4,9 +4,9 @@ import { Subscribe } from "unstated";
 import { ButtonContainer } from "../containers/ButtonContainer";
 import { LidarContainer } from "../containers/LidarContainer";
 import { LogContainer } from "../containers/LogContainer";
+import { MeasurementsContainer } from "../containers/MeasurementsContainer";
 import { OdometryContainer } from "../containers/OdometryContainer";
 import { RobotContainer } from "../containers/RobotContainer";
-import { MeasurementsContainer } from "../containers/MeasurementsContainer";
 import {
   SerialState,
   SerialType,
@@ -94,7 +94,7 @@ export class Router extends React.Component {
           }
 
           // set initial state
-          status.setWebSocketState(webSocketClient.state);
+          void status.setWebSocketState(webSocketClient.state);
 
           // subscribe to web-socket events
           webSocketClient.subscribe({
@@ -127,16 +127,19 @@ export class Router extends React.Component {
               });
             },
             onStateChanged: (_ws, newState, _oldState) => {
-              status.setWebSocketState(newState);
+              void status.setWebSocketState(newState);
 
               // also reset other statuses if web-socket connection is lost
               if (newState === WebSocketState.DISCONNECTED) {
-                status.setSerialState(
+                void status.setSerialState(
                   SerialType.BLUETOOTH,
                   SerialState.DISCONNECTED
                 );
-                status.setSerialState(SerialType.USB, SerialState.DISCONNECTED);
-                status.setBatteryVoltage(undefined);
+                void status.setSerialState(
+                  SerialType.USB,
+                  SerialState.DISCONNECTED
+                );
+                void status.setBatteryVoltage(undefined);
               }
             },
             onSendMessage: (_ws, message) => {

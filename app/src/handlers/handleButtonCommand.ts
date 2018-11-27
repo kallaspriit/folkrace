@@ -6,5 +6,5 @@ export function handleButtonCommand(args: string[], { button }: ContainerMap) {
   const state =
     parseInt(args[1], 10) === 0 ? ButtonState.PRESSED : ButtonState.RELEASED;
 
-  button.setButtonState(name.toUpperCase() as Button, state);
+  void button.setButtonState(name.toUpperCase() as Button, state);
 }
