@@ -1,20 +1,43 @@
 import { Container } from "unstated";
 
 export interface State {
-  readonly left: number;
-  readonly right: number;
+  readonly odometry: {
+    readonly left: number;
+    readonly right: number;
+  };
+  readonly targetSpeed: {
+    readonly left: number;
+    readonly right: number;
+  };
 }
 
 export class OdometryContainer extends Container<State> {
   readonly state: State = {
-    left: 0,
-    right: 0
+    odometry: {
+      left: 0,
+      right: 0
+    },
+    targetSpeed: {
+      left: 0,
+      right: 0
+    }
   };
 
-  update(left: number, right: number) {
+  setOdometry(left: number, right: number) {
     void this.setState({
-      left,
-      right
+      odometry: {
+        left,
+        right
+      }
+    });
+  }
+
+  setTargetSpeed(left: number, right: number) {
+    void this.setState({
+      targetSpeed: {
+        left,
+        right
+      }
     });
   }
 }

@@ -12,13 +12,14 @@ import { OdometryContainer } from "../containers/OdometryContainer";
 import { LidarContainer } from "../containers/LidarContainer";
 import { ButtonContainer } from "../containers/ButtonContainer";
 import { handleSerialCommand } from "../handlers/handleSerialCommand";
-import { handleVoltageCommand } from "../handlers/handleGetVoltageCommand";
 import { handleIpCommand } from "../handlers/handleIpCommand";
 import { handleUsbCommand } from "../handlers/handleUsbCommand";
+import { handleVoltageCommand } from "../handlers/handleGetVoltageCommand";
+import { handleButtonCommand } from "../handlers/handleButtonCommand";
 import { handleEncoderCommand } from "../handlers/handleEncoderCommand";
 import { handleBeaconCommand } from "../handlers/handleBeaconCommand";
 import { handleMeasurementCommand } from "../handlers/handleMeasurementCommand";
-import { handleButtonCommand } from "../handlers/handleButtonCommand";
+import { handleSpeedCommand } from "../handlers/handleSpeedCommand";
 
 export interface ContainerMap {
   logContainer: LogContainer;
@@ -48,7 +49,8 @@ export class Router extends React.Component {
     button: handleButtonCommand,
     e: handleEncoderCommand,
     b: handleBeaconCommand,
-    m: handleMeasurementCommand
+    m: handleMeasurementCommand,
+    s: handleSpeedCommand
 
     // TODO: handle "speed"
     // TODO: handle "reset"

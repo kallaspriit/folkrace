@@ -25,6 +25,13 @@ export interface Serial {
 
 export type SerialsMap = { [type in keyof typeof SerialType]: Serial };
 
+export enum BatteryState {
+  UNKNOWN = "UNKNOWN",
+  FULL = "FULL",
+  LOW = "LOW",
+  CRITICAL = "CRITICAL"
+}
+
 export interface State {
   readonly webSocketState: WebSocketState;
   readonly serials: SerialsMap;
@@ -33,13 +40,6 @@ export interface State {
   readonly lastBeaconTime?: Date;
   readonly loopFrequency?: number;
   readonly loopTimeUs?: number;
-}
-
-export enum BatteryState {
-  UNKNOWN = "UNKNOWN",
-  FULL = "FULL",
-  LOW = "LOW",
-  CRITICAL = "CRITICAL"
 }
 
 export class StatusContainer extends Container<State> {
