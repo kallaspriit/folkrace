@@ -3,6 +3,8 @@ import { WebSocketClient } from "../web-socket-client";
 export type SendArgument = string | number;
 
 export class Robot {
+  private pingSentTime?: number;
+
   constructor(private readonly webSocketClient: WebSocketClient) {}
 
   requestVoltage() {
@@ -18,7 +20,21 @@ export class Robot {
   }
 
   ping() {
+    this.pingSentTime = Date.now();
+
     this.send("ping");
+  }
+
+  getPingTimeTaken() {
+    if (!this.pingSentTime) {
+      return -1;
+    }
+
+    const timeTaken = Date.now() - this.pingSentTime;
+
+    this.pingSentTime = undefined;
+
+    return timeTaken;
   }
 
   // don't use directly, add new robot method
