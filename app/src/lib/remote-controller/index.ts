@@ -6,17 +6,19 @@ import {
   TrackedVehicleKinematics,
   TrackedVehicleOptions
 } from "../tracked-vehicle-kinematics";
-import robot from "../../services/robot";
+import { Robot } from "../robot";
 
 export interface RemoteControllerOptions {
   webSocketClient: WebSocketClient;
+  robot: Robot;
   vehicle: TrackedVehicleOptions;
   log?: Logger;
 }
 
-export default class RemoteController {
+export class RemoteController {
   private readonly options: Required<RemoteControllerOptions>;
   private readonly kinematics: TrackedVehicleKinematics;
+  private readonly robot: Robot;
   private speed = 0;
   private omega = 0;
   private readonly scheduleUpdateMotorSpeeds: () => void;
@@ -26,6 +28,7 @@ export default class RemoteController {
       log: dummyLogger,
       ...options
     };
+    this.robot = this.options.robot;
     this.kinematics = new TrackedVehicleKinematics(this.options.vehicle);
 
     this.scheduleUpdateMotorSpeeds = throttle(
@@ -54,6 +57,6 @@ export default class RemoteController {
     const encoderSpeeds = this.kinematics.getEncoderSpeeds(motorSpeeds);
 
     // TODO: only send if sufficiently different from last sent values
-    robot.setSpeed(encoderSpeeds.left, encoderSpeeds.right);
+    this.robot.setSpeed(encoderSpeeds.left, encoderSpeeds.right);
   }
 }

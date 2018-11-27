@@ -1,14 +1,14 @@
 import * as React from "react";
 
+import config from "../config";
+import { RemoteController } from "../lib/remote-controller";
 import { Joystick } from "../components/Joystick";
 import { JoystickEvent, JoystickEventName, JoystickInstance } from "nipplejs";
-import config from "../config";
-import RemoteController from "../lib/remote-controller";
-import webSocketClient from "../services/webSocketClient";
-
+import { webSocketClient } from "../services/webSocketClient";
 import { View } from "../components/View";
 import { Grid, GridItem } from "../components/Grid";
 import { styled } from "../styled";
+import { robot } from "../services/robot";
 
 const JoystickGrid = styled(Grid)`
   grid-template-columns: 1fr;
@@ -19,7 +19,8 @@ export class RemoteView extends React.Component {
   private readonly remoteController = new RemoteController({
     webSocketClient,
     log: console,
-    vehicle: config.vehicle
+    vehicle: config.vehicle,
+    robot
   });
 
   render() {

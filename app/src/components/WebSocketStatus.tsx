@@ -1,10 +1,10 @@
 import * as React from "react";
+import titleCase from "title-case";
 import { Subscribe } from "unstated";
 import { StatusContainer } from "../containers/StatusContainer";
 import { GridItem, GridItemStatus } from "./Grid";
-import titleCase from "title-case";
 import { WebSocketState } from "../lib/web-socket-client";
-import robot from "../services/robot";
+import { robot } from "../services/robot";
 import { WebSocketIcon } from "./Icon";
 import { Text } from "./Text";
 

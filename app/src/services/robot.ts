@@ -1,6 +1,4 @@
 import { Robot } from "../lib/robot";
-import webSocketClient from "./webSocketClient";
+import { webSocketClient } from "./webSocketClient";
 
-const robot = new Robot(webSocketClient);
-
-export default robot;
+export const robot = new Robot(webSocketClient);

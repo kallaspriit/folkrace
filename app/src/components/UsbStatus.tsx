@@ -1,9 +1,9 @@
 import * as React from "react";
+import titleCase from "title-case";
 import { Subscribe } from "unstated";
 import { StatusContainer, SerialType } from "../containers/StatusContainer";
 import { GridItem, GridItemStatus } from "./Grid";
-import titleCase from "title-case";
-import { StatusIcon, BluetoothIcon, SerialIcon } from "./Icon";
+import { BluetoothIcon, SerialIcon } from "./Icon";
 import { Text } from "./Text";
 
 export const UsbStatus: React.SFC = () => (

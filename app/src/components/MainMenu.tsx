@@ -1,8 +1,7 @@
 import * as React from "react";
 import { NavLink } from "react-router-dom";
-
-import { styled } from "../styled";
 import { darken } from "polished";
+import { styled } from "../styled";
 import { StatusIcon, MapIcon, BotIcon, RemoteIcon, SettingsIcon } from "./Icon";
 import { Text } from "./Text";
 

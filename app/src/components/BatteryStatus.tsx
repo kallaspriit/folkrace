@@ -2,8 +2,8 @@ import * as React from "react";
 import { Subscribe } from "unstated";
 import { StatusContainer, BatteryState } from "../containers/StatusContainer";
 import { GridItem, GridItemStatus } from "./Grid";
-import assertUnreachable from "../services/assertUnreachable";
-import robot from "../services/robot";
+import { assertUnreachable } from "../services/assertUnreachable";
+import { robot } from "../services/robot";
 import { BatteryIcon } from "./Icon";
 import { Text } from "./Text";
 

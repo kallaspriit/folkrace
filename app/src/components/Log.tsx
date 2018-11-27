@@ -1,11 +1,11 @@
 import * as React from "react";
 import { Subscribe } from "unstated";
+import { formatTime } from "../services/formatTime";
+import { styled, ElProps } from "../styled";
 import { LogContainer, MessageType } from "../containers/LogContainer";
 import { GridItem } from "./Grid";
-import formatTime from "../services/formatTime";
 import { ClearIcon } from "./Icon";
 import { AutoScroll } from "./AutoScroll";
-import { styled, ElProps } from "../styled";
 
 const StatusGridItem = styled(GridItem)`
   grid-column: 1 / 4;

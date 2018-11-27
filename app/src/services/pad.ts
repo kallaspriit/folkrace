@@ -1,7 +1,7 @@
-export default function pad(
+export function pad(
   data: string | number,
   length: number,
-  padder = " "
+  padCharacter = " "
 ): string {
   const str = typeof data === "string" ? data : data.toString();
 
@@ -12,5 +12,5 @@ export default function pad(
 
   const missingLength = length - str.length;
 
-  return `${new Array(missingLength + 1).join(padder)}${str}`;
+  return `${new Array(missingLength + 1).join(padCharacter)}${str}`;
 }

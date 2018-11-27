@@ -1,13 +1,12 @@
 import * as React from "react";
 import { Subscribe } from "unstated";
-
 import { LogContainer } from "../containers/LogContainer";
 import {
   StatusContainer,
   SerialState,
   SerialType
 } from "../containers/StatusContainer";
-import webSocketClient from "../services/webSocketClient";
+import { webSocketClient } from "../services/webSocketClient";
 import { WebSocketState } from "../lib/web-socket-client/index";
 import { OdometryContainer } from "../containers/OdometryContainer";
 import { LidarContainer } from "../containers/LidarContainer";
