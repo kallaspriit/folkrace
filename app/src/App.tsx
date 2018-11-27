@@ -18,7 +18,7 @@ const AppWrap = styled.div`
   animation: ${props => props.theme.animation.fadeIn} 300ms;
 `;
 
-class App extends React.Component {
+export class App extends React.Component {
   render() {
     return (
       <ThemeProvider theme={theme}>
@@ -45,5 +45,3 @@ class App extends React.Component {
     );
   }
 }
-
-export default App;

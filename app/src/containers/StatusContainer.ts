@@ -1,6 +1,6 @@
 import { Container } from "unstated";
 
-import config from "../config";
+import { config } from "../config";
 import { WebSocketState } from "../lib/web-socket-client/index";
 
 export enum SerialType {

@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import config from "../config";
+import { config } from "../config";
 import { RemoteController } from "../lib/remote-controller";
 import { Joystick } from "../components/Joystick";
 import { JoystickEvent, JoystickEventName, JoystickInstance } from "nipplejs";

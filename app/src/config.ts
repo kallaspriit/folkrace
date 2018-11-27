@@ -14,7 +14,7 @@ export interface Config {
   vehicle: TrackedVehicleOptions;
 }
 
-const config: Config = {
+export const config: Config = {
   webSocket: {
     // allow overriding web-socket options via local storage
     host:
@@ -43,5 +43,3 @@ const config: Config = {
     speedUpdateInterval: 50 // 20Hz
   }
 };
-
-export default config;
