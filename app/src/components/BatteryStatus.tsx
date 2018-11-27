@@ -1,9 +1,11 @@
 import * as React from "react";
 import { Subscribe } from "unstated";
-import { StatusContainer, BatteryState } from "../containers/StatusContainer";
-import { GridItem, GridItemStatus } from "./Grid";
+
+import { BatteryState, StatusContainer } from "../containers/StatusContainer";
 import { assertUnreachable } from "../services/assertUnreachable";
 import { robot } from "../services/robot";
+
+import { GridItem, GridItemStatus } from "./Grid";
 import { BatteryIcon } from "./Icon";
 import { Text } from "./Text";
 
@@ -18,7 +20,7 @@ export const BatteryStatus: React.SFC = () => (
       return (
         <GridItem status={status} onClick={() => robot.requestVoltage()}>
           <BatteryIcon />
-          <Text primary>Battery</Text>
+          <Text primary={true}>Battery</Text>
           <Text>{description}</Text>
         </GridItem>
       );

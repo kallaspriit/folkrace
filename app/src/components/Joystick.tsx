@@ -5,13 +5,13 @@ export interface JoystickProps {
   name: string;
   config?: nipplejs.JoystickOptions;
   bind?: string;
+  x?: boolean;
+  y?: boolean;
   onEvent?(
     name: string,
     event: nipplejs.JoystickEvent,
     info: nipplejs.JoystickInstance
   ): void;
-  x?: boolean;
-  y?: boolean;
 }
 
 export class Joystick extends React.Component<JoystickProps> {

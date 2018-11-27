@@ -1,14 +1,14 @@
+import { JoystickEvent, JoystickEventName, JoystickInstance } from "nipplejs";
 import * as React from "react";
 
+import { Grid, GridItem } from "../components/Grid";
+import { Joystick } from "../components/Joystick";
+import { View } from "../components/View";
 import { config } from "../config";
 import { RemoteController } from "../lib/remote-controller";
-import { Joystick } from "../components/Joystick";
-import { JoystickEvent, JoystickEventName, JoystickInstance } from "nipplejs";
-import { webSocketClient } from "../services/webSocketClient";
-import { View } from "../components/View";
-import { Grid, GridItem } from "../components/Grid";
-import { styled } from "../styled";
 import { robot } from "../services/robot";
+import { webSocketClient } from "../services/webSocketClient";
+import { styled } from "../styled";
 
 const JoystickGrid = styled(Grid)`
   grid-template-columns: 1fr;
@@ -25,11 +25,11 @@ export class RemoteView extends React.Component {
 
   render() {
     return (
-      <View grid>
+      <View grid={true}>
         <JoystickGrid>
           <GridItem>
             <Joystick
-              x
+              x={true}
               name="speed"
               onEvent={(name, event, info) =>
                 this.onJoystickEvent(name, event, info)
@@ -38,7 +38,7 @@ export class RemoteView extends React.Component {
           </GridItem>
           <GridItem>
             <Joystick
-              y
+              y={true}
               name="omega"
               onEvent={(name, event, info) =>
                 this.onJoystickEvent(name, event, info)

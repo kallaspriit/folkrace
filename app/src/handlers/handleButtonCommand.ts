@@ -1,5 +1,5 @@
 import { ContainerMap } from "../components/Router";
-import { ButtonState, Button } from "../containers/ButtonContainer";
+import { Button, ButtonState } from "../containers/ButtonContainer";
 
 export function handleButtonCommand(
   args: string[],

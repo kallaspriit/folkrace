@@ -1,11 +1,12 @@
 import * as React from "react";
-import { Grid } from "../components/Grid";
-import { UsbStatus } from "../components/UsbStatus";
-import { WebSocketStatus } from "../components/WebSocketStatus";
+
 import { BatteryStatus } from "../components/BatteryStatus";
+import { Grid } from "../components/Grid";
 import { Log } from "../components/Log";
-import { styled } from "../styled";
+import { UsbStatus } from "../components/UsbStatus";
 import { View } from "../components/View";
+import { WebSocketStatus } from "../components/WebSocketStatus";
+import { styled } from "../styled";
 
 const StatusGrid = styled(Grid)`
   grid-template-columns: 1fr 1fr 1fr;
@@ -17,7 +18,7 @@ const StatusGrid = styled(Grid)`
 // TODO: add lidar (tiny map?)
 // TODO: add buttons (state for each?)
 export const StatusView: React.SFC = () => (
-  <View grid>
+  <View grid={true}>
     <StatusGrid>
       <UsbStatus />
       <WebSocketStatus />

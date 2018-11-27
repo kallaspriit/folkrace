@@ -1,7 +1,9 @@
 import * as React from "react";
 import titleCase from "title-case";
 import { Subscribe } from "unstated";
-import { StatusContainer, SerialType } from "../containers/StatusContainer";
+
+import { SerialType, StatusContainer } from "../containers/StatusContainer";
+
 import { GridItem, GridItemStatus } from "./Grid";
 import { BluetoothIcon, SerialIcon } from "./Icon";
 import { Text } from "./Text";
@@ -26,7 +28,7 @@ export const UsbStatus: React.SFC = () => (
       return (
         <GridItem status={status}>
           <Icon />
-          <Text primary>{title}</Text>
+          <Text primary={true}>{title}</Text>
           <Text>{description}</Text>
         </GridItem>
       );

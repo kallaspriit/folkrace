@@ -1,8 +1,10 @@
+import { darken } from "polished";
 import * as React from "react";
 import { NavLink } from "react-router-dom";
-import { darken } from "polished";
+
 import { styled } from "../styled";
-import { StatusIcon, MapIcon, BotIcon, RemoteIcon, SettingsIcon } from "./Icon";
+
+import { BotIcon, MapIcon, RemoteIcon, SettingsIcon, StatusIcon } from "./Icon";
 import { Text } from "./Text";
 
 const Wrap = styled.div`

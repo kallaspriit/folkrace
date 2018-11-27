@@ -1,12 +1,12 @@
 import throttle from "lodash.throttle";
 import { dummyLogger, Logger } from "ts-log";
 
-import { WebSocketClient } from "../web-socket-client/index";
+import { Robot } from "../robot";
 import {
   TrackedVehicleKinematics,
   TrackedVehicleOptions
 } from "../tracked-vehicle-kinematics";
-import { Robot } from "../robot";
+import { WebSocketClient } from "../web-socket-client/index";
 
 export interface RemoteControllerOptions {
   webSocketClient: WebSocketClient;

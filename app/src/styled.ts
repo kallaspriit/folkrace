@@ -1,10 +1,9 @@
-import baseStyled, {
-  ThemedStyledInterface,
-  keyframes,
-  createGlobalStyle,
-  ThemedGlobalStyledClassProps
-} from "styled-components";
 import { lighten } from "polished";
+import baseStyled, {
+  createGlobalStyle,
+  keyframes,
+  ThemedStyledInterface
+} from "styled-components";
 
 // common visual configuration used by various components
 export const theme = {

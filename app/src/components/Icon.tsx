@@ -1,11 +1,12 @@
 import * as React from "react";
+
 import { styled } from "../styled";
 
-export type IconProps = {
+export interface IconProps {
   url: string;
   width: number;
   height: number;
-};
+}
 
 export const Icon = styled.i<IconProps>`
   display: block;

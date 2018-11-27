@@ -1,29 +1,30 @@
 import * as React from "react";
 import { Subscribe } from "unstated";
-import { LogContainer } from "../containers/LogContainer";
-import {
-  StatusContainer,
-  SerialState,
-  SerialType
-} from "../containers/StatusContainer";
-import { webSocketClient } from "../services/webSocketClient";
-import { WebSocketState } from "../lib/web-socket-client/index";
-import { OdometryContainer } from "../containers/OdometryContainer";
-import { LidarContainer } from "../containers/LidarContainer";
+
 import { ButtonContainer } from "../containers/ButtonContainer";
+import { LidarContainer } from "../containers/LidarContainer";
+import { LogContainer } from "../containers/LogContainer";
+import { OdometryContainer } from "../containers/OdometryContainer";
 import { RobotContainer } from "../containers/RobotContainer";
-import { handleSerialCommand } from "../handlers/handleSerialCommand";
-import { handleIpCommand } from "../handlers/handleIpCommand";
-import { handleUsbCommand } from "../handlers/handleUsbCommand";
-import { handleVoltageCommand } from "../handlers/handleGetVoltageCommand";
-import { handleButtonCommand } from "../handlers/handleButtonCommand";
-import { handleResetCommand } from "../handlers/handleResetCommand";
-import { handleCurrentCommand } from "../handlers/handleCurrentCommand";
-import { handleLidarCommand } from "../handlers/handleLidarCommand";
-import { handleEncoderCommand } from "../handlers/handleEncoderCommand";
+import {
+  SerialState,
+  SerialType,
+  StatusContainer
+} from "../containers/StatusContainer";
 import { handleBeaconCommand } from "../handlers/handleBeaconCommand";
+import { handleButtonCommand } from "../handlers/handleButtonCommand";
+import { handleCurrentCommand } from "../handlers/handleCurrentCommand";
+import { handleEncoderCommand } from "../handlers/handleEncoderCommand";
+import { handleVoltageCommand } from "../handlers/handleGetVoltageCommand";
+import { handleIpCommand } from "../handlers/handleIpCommand";
+import { handleLidarCommand } from "../handlers/handleLidarCommand";
 import { handleMeasurementCommand } from "../handlers/handleMeasurementCommand";
+import { handleResetCommand } from "../handlers/handleResetCommand";
+import { handleSerialCommand } from "../handlers/handleSerialCommand";
 import { handleSpeedCommand } from "../handlers/handleSpeedCommand";
+import { handleUsbCommand } from "../handlers/handleUsbCommand";
+import { WebSocketState } from "../lib/web-socket-client/index";
+import { webSocketClient } from "../services/webSocketClient";
 
 export interface ContainerMap {
   logContainer: LogContainer;
@@ -46,7 +47,7 @@ export interface WebSocketCommandHandlersMap {
 // connection manager component, connects external data to containers, does not render anything visual
 export class Router extends React.Component {
   private isInitialized = false;
-  private webSocketCommandHandlers: WebSocketCommandHandlersMap = {
+  private readonly webSocketCommandHandlers: WebSocketCommandHandlersMap = {
     serial: handleSerialCommand,
     ip: handleIpCommand,
     usb: handleUsbCommand,

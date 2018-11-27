@@ -1,15 +1,16 @@
 import * as React from "react";
 import { BrowserRouter, Redirect, Route, Switch } from "react-router-dom";
-import { Provider } from "unstated";
 import { ThemeProvider } from "styled-components";
-import { Router } from "./components/Router";
+import { Provider } from "unstated";
+
 import { MainMenu } from "./components/MainMenu";
+import { Router } from "./components/Router";
+import { GlobalStyle, styled, theme } from "./styled";
 import { BotView } from "./views/BotView";
 import { MapView } from "./views/MapView";
 import { RemoteView } from "./views/RemoteView";
 import { SettingsView } from "./views/SettingsView";
 import { StatusView } from "./views/StatusView";
-import { theme, styled, GlobalStyle } from "./styled";
 
 const AppWrap = styled.div`
   height: 100vh;

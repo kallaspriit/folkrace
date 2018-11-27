@@ -1,6 +1,6 @@
 import { ContainerMap } from "../components/Router";
 
-export function handleUsbCommand(args: string[], {  }: ContainerMap) {
+export function handleUsbCommand(args: string[], _containerMap: ContainerMap) {
   const vendorId = parseInt(args[0], 10);
   const productId = parseInt(args[1], 10);
   const productName = args[2];

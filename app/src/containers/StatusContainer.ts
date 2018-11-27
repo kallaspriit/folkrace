@@ -1,5 +1,6 @@
 import update from "immutability-helper";
 import { Container } from "unstated";
+
 import { config } from "../config";
 import { WebSocketState } from "../lib/web-socket-client/index";
 

@@ -1,5 +1,6 @@
-import { styled, ElProps, theme } from "../styled";
 import { css } from "styled-components";
+
+import { ElProps, styled, theme } from "../styled";
 
 export enum GridItemStatus {
   GOOD = "GOOD",

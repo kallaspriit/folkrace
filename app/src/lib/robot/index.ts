@@ -3,7 +3,7 @@ import { WebSocketClient } from "../web-socket-client";
 export type SendArgument = string | number;
 
 export class Robot {
-  constructor(private webSocketClient: WebSocketClient) {}
+  constructor(private readonly webSocketClient: WebSocketClient) {}
 
   requestVoltage() {
     this.send("voltage");

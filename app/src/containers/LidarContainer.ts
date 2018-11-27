@@ -22,6 +22,7 @@ export interface LidarMeasurements {
 // TODO: measure samples per second
 export type State = LidarState & LidarMeasurements;
 
+// TODO: move measurements to a different container?
 export class LidarContainer extends Container<State> {
   readonly state: State = {
     isStarted: false,
