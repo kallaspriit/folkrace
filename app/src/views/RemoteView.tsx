@@ -15,7 +15,7 @@ const JoystickGrid = styled(Grid)`
 `;
 
 // TODO: show track speeds on edges (target and real)
-export default class RemoteView extends React.Component {
+export class RemoteView extends React.Component {
   private readonly remoteController = new RemoteController({
     webSocketClient,
     log: console,

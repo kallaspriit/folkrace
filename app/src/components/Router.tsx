@@ -36,7 +36,7 @@ export interface WebSocketCommandHandlersMap {
 }
 
 // connection manager component, connects external data to containers, does not render anything visual
-export class ConnectionManager extends React.Component {
+export class Router extends React.Component {
   private isInitialized = false;
   private webSocketCommandHandlers: WebSocketCommandHandlersMap = {
     serial: handleSerialCommand,

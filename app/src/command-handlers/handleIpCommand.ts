@@ -1,4 +1,4 @@
-import { ContainerMap } from "../components/ConnectionManager";
+import { ContainerMap } from "../components/Router";
 
 export default function handleIpCommand(
   args: string[],

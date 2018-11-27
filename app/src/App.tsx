@@ -1,20 +1,14 @@
 import * as React from "react";
-import {
-  BrowserRouter as Router,
-  Redirect,
-  Route,
-  Switch
-} from "react-router-dom";
+import { BrowserRouter, Redirect, Route, Switch } from "react-router-dom";
 import { Provider } from "unstated";
 import { ThemeProvider } from "styled-components";
-
-import { ConnectionManager } from "./components/ConnectionManager";
+import { Router } from "./components/Router";
 import { MainMenu } from "./components/MainMenu";
-import BotView from "./views/BotView";
-import MapView from "./views/MapView";
-import RemoteView from "./views/RemoteView";
-import SettingsView from "./views/SettingsView";
-import StatusView from "./views/StatusView";
+import { BotView } from "./views/BotView";
+import { MapView } from "./views/MapView";
+import { RemoteView } from "./views/RemoteView";
+import { SettingsView } from "./views/SettingsView";
+import { StatusView } from "./views/StatusView";
 import { theme, styled, GlobalStyle } from "./styled";
 
 const AppWrap = styled.div`
@@ -30,8 +24,8 @@ class App extends React.Component {
       <ThemeProvider theme={theme}>
         <Provider>
           <GlobalStyle />
-          <ConnectionManager />
-          <Router>
+          <Router />
+          <BrowserRouter>
             <AppWrap>
               <Switch>
                 <Route path="/status" component={StatusView} />
@@ -45,7 +39,7 @@ class App extends React.Component {
               </Switch>
               <MainMenu />
             </AppWrap>
-          </Router>
+          </BrowserRouter>
         </Provider>
       </ThemeProvider>
     );

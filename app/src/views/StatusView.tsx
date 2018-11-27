@@ -16,7 +16,7 @@ const StatusGrid = styled(Grid)`
 // TODO: add odometry (visualize path?)
 // TODO: add lidar (tiny map?)
 // TODO: add buttons (state for each?)
-const StatusView: React.SFC = () => (
+export const StatusView: React.SFC = () => (
   <View grid>
     <StatusGrid>
       <UsbStatus />
@@ -26,5 +26,3 @@ const StatusView: React.SFC = () => (
     </StatusGrid>
   </View>
 );
-
-export default StatusView;

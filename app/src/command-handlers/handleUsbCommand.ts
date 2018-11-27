@@ -1,4 +1,4 @@
-import { ContainerMap } from "../components/ConnectionManager";
+import { ContainerMap } from "../components/Router";
 
 export default function handleUsbCommand(args: string[], {  }: ContainerMap) {
   const vendorId = parseInt(args[0], 10);
