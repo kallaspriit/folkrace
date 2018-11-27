@@ -4,7 +4,7 @@ import LogContainer, { MessageType } from "../containers/LogContainer";
 import { GridItem } from "./Grid";
 import formatTime from "../services/formatTime";
 import { ClearIcon } from "./Icon";
-import AutoScroll from "./AutoScroll";
+import { AutoScroll } from "./AutoScroll";
 import { styled, ElProps } from "../styled";
 
 const StatusGridItem = styled(GridItem)`
@@ -67,7 +67,7 @@ const ClearLogIcon = styled(ClearIcon)`
   background-color: ${props => props.theme.text.secondary};
 `;
 
-const Log: React.SFC = () => (
+export const Log: React.SFC = () => (
   <Subscribe to={[LogContainer]}>
     {(logContainer: LogContainer) => (
       <StatusGridItem>
@@ -91,5 +91,3 @@ const Log: React.SFC = () => (
     )}
   </Subscribe>
 );
-
-export default Log;

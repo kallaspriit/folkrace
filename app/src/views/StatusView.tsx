@@ -1,11 +1,9 @@
 import * as React from "react";
-
 import { Grid } from "../components/Grid";
-
-import UsbStatus from "../components/UsbStatus";
-import WebSocketStatus from "../components/WebSocketStatus";
-import BatteryStatus from "../components/BatteryStatus";
-import Log from "../components/Log";
+import { UsbStatus } from "../components/UsbStatus";
+import { WebSocketStatus } from "../components/WebSocketStatus";
+import { BatteryStatus } from "../components/BatteryStatus";
+import { Log } from "../components/Log";
 import { styled } from "../styled";
 import { View } from "../components/View";
 

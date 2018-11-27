@@ -55,7 +55,7 @@ const Label = styled(Text)`
   padding-top: 4px;
 `;
 
-const MainMenu: React.SFC<{}> = () => (
+export const MainMenu: React.SFC<{}> = () => (
   <Wrap>
     <Items>
       <Item>
@@ -91,5 +91,3 @@ const MainMenu: React.SFC<{}> = () => (
     </Items>
   </Wrap>
 );
-
-export default MainMenu;

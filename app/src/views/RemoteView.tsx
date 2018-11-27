@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import Joystick from "../components/Joystick";
+import { Joystick } from "../components/Joystick";
 import { JoystickEvent, JoystickEventName, JoystickInstance } from "nipplejs";
 import config from "../config";
 import RemoteController from "../lib/remote-controller";

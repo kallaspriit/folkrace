@@ -8,7 +8,7 @@ export type Props = React.DetailedHTMLProps<
   scrollToBottom?: boolean;
 };
 
-export default class AutoScroll extends React.Component<Props> {
+export class AutoScroll extends React.Component<Props> {
   private readonly ref = React.createRef<HTMLDivElement>();
 
   componentDidUpdate() {

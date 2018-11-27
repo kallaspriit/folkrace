@@ -8,8 +8,8 @@ import {
 import { Provider } from "unstated";
 import { ThemeProvider } from "styled-components";
 
-import ConnectionManager from "./components/ConnectionManager";
-import MainMenu from "./components/MainMenu";
+import { ConnectionManager } from "./components/ConnectionManager";
+import { MainMenu } from "./components/MainMenu";
 import BotView from "./views/BotView";
 import MapView from "./views/MapView";
 import RemoteView from "./views/RemoteView";

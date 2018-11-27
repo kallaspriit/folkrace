@@ -7,7 +7,7 @@ import robot from "../services/robot";
 import { BatteryIcon } from "./Icon";
 import { Text } from "./Text";
 
-const BatteryStatus: React.SFC = () => (
+export const BatteryStatus: React.SFC = () => (
   <Subscribe to={[StatusContainer]}>
     {(statusContainer: StatusContainer) => {
       const status = getBatteryStatus(statusContainer.batteryState);
@@ -44,5 +44,3 @@ function getBatteryStatus(batteryState: BatteryState): GridItemStatus {
       return assertUnreachable(batteryState, "got unexpected battery state");
   }
 }
-
-export default BatteryStatus;

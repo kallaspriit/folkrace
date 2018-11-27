@@ -6,6 +6,7 @@ import baseStyled, {
 } from "styled-components";
 import { lighten } from "polished";
 
+// common visual configuration used by various components
 export const theme = {
   text: {
     primary: "#f0f0f0",
@@ -48,14 +49,17 @@ export const theme = {
   }
 };
 
+// use "styled" from this file not the package directly
 export type Theme = typeof theme;
 export const styled = baseStyled as ThemedStyledInterface<Theme>;
 
+// common html element props such as onClick etc
 export type ElProps = React.DetailedHTMLProps<
   React.HTMLAttributes<HTMLDivElement>,
   HTMLDivElement
 >;
 
+// these global styles get injected in the document above all else
 export const GlobalStyle = createGlobalStyle`
   // main font
   @font-face {

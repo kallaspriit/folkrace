@@ -14,7 +14,7 @@ export interface JoystickProps {
   y?: boolean;
 }
 
-export default class Joystick extends React.Component<JoystickProps> {
+export class Joystick extends React.Component<JoystickProps> {
   private readonly ref = React.createRef<HTMLDivElement>();
 
   componentDidMount() {

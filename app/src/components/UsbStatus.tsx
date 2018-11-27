@@ -6,7 +6,7 @@ import titleCase from "title-case";
 import { StatusIcon, BluetoothIcon, SerialIcon } from "./Icon";
 import { Text } from "./Text";
 
-const UsbStatus: React.SFC = () => (
+export const UsbStatus: React.SFC = () => (
   <Subscribe to={[StatusContainer]}>
     {(statusContainer: StatusContainer) => {
       const connectedSerial = statusContainer.getConnectedSerial();
@@ -33,5 +33,3 @@ const UsbStatus: React.SFC = () => (
     }}
   </Subscribe>
 );
-
-export default UsbStatus;
