@@ -94,6 +94,12 @@ export class StatusContainer extends Container<State> {
     });
   }
 
+  setOffline() {
+    return this.setState({
+      remoteIp: undefined
+    });
+  }
+
   setLoopStatistics(loopFrequency: number, loopTimeUs: number) {
     return this.setState({
       lastBeaconTime: new Date(),

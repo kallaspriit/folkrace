@@ -24,7 +24,12 @@ export const WebSocketStatus: React.SFC = () => (
           : statusContainer.state.remoteIp;
 
       return (
-        <GridItem status={status} onClick={() => robot.ping()}>
+        <GridItem
+          status={status}
+          onClick={() =>
+            robot.ping(statusContainer.getConnectedSerial() === undefined)
+          }
+        >
           <WebSocketIcon />
           <Text primary={true}>Web Socket</Text>
           <Text>{description}</Text>

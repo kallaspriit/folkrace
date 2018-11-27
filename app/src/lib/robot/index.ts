@@ -3,7 +3,7 @@ import { WebSocketClient } from "../web-socket-client";
 export type SendArgument = string | number;
 
 export class Robot {
-  private pingSentTime?: number;
+  pingSentTime?: number;
 
   constructor(private readonly webSocketClient: WebSocketClient) {}
 
@@ -19,22 +19,16 @@ export class Robot {
     this.send("s", left, right);
   }
 
-  ping() {
+  ping(transportOnly = false) {
     this.pingSentTime = Date.now();
 
-    this.send("ping");
-  }
-
-  getPingTimeTaken() {
-    if (!this.pingSentTime) {
-      return -1;
+    if (transportOnly) {
+      // send internal ping command if testing the transport only (Android responds to this)
+      this.webSocketClient.send("!ping", false);
+    } else {
+      // send full ping, responded by the MCU
+      this.send("ping");
     }
-
-    const timeTaken = Date.now() - this.pingSentTime;
-
-    this.pingSentTime = undefined;
-
-    return timeTaken;
   }
 
   // don't use directly, add new robot method

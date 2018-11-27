@@ -1,23 +1,24 @@
-import { TrackedVehicleOptions } from "./lib/tracked-vehicle-kinematics";
-import { WebSocketClientOptions } from "./lib/web-socket-client/index";
+// import { TrackedVehicleOptions } from "./lib/tracked-vehicle-kinematics";
+// import { WebSocketClientOptions } from "./lib/web-socket-client/index";
 
-export interface RulesConfig {
-  battery: {
-    low: number;
-    critical: number;
-  };
-}
+// export interface RulesConfig {
+//   battery: {
+//     low: number;
+//     critical: number;
+//   };
+// }
 
-export interface Config {
-  webSocket: WebSocketClientOptions;
-  rules: RulesConfig;
-  vehicle: TrackedVehicleOptions;
-}
+// export interface Config {
+//   webSocket: WebSocketClientOptions;
+//   rules: RulesConfig;
+//   vehicle: TrackedVehicleOptions;
+// }
 
-export const config: Config = {
+export const config = {
   webSocket: {
     // allow overriding web-socket options via local storage
     host:
+      // process.env.NODE_ENV === "development" &&
       localStorage.webSocketHost !== undefined
         ? localStorage.webSocketHost
         : "127.0.0.1",

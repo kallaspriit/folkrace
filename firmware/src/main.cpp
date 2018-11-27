@@ -659,7 +659,7 @@ void stepLoopBlinker()
     lastLoopLedState = currentLoopLedState;
 
     // send connection alive beacon message on rising edge
-    if (currentLoopLedState == 1)
+    if (currentLoopLedState == 1 && isUsbConnected())
     {
       send("b:%d:%d\n", timeSinceLastBlink, cycleCountSinceLastLoopBlink);
     }

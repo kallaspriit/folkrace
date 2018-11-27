@@ -18,6 +18,7 @@ public class WebSocketServer extends org.java_websocket.server.WebSocketServer {
     super(new InetSocketAddress(port), Collections.singletonList(draft));
 
     this.setReuseAddr(true);
+    this.setTcpNoDelay(true);
   }
 
   public void setListener(WebSocketEventListener listener) {

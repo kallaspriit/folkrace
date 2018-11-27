@@ -30,12 +30,16 @@ export enum WebSocketState {
 }
 
 export class WebSocketClient {
+  url: string;
+  get state() {
+    return this.connectionState;
+  }
   private connectionState: WebSocketState = WebSocketState.DISCONNECTED;
   private listeners: WebSocketClientListener[] = [];
-  private ws: WebSocket;
   private readonly options: Required<WebSocketClientOptions>;
   private readonly log: Logger;
   private wasConnected = false;
+  private ws?: WebSocket;
 
   constructor(options: WebSocketClientOptions) {
     this.options = {
@@ -45,12 +49,9 @@ export class WebSocketClient {
       ...options
     };
     this.log = this.options.log;
-
-    const url = `${this.options.useSSL ? "wss" : "ws"}://${this.options.host}:${
+    this.url = `${this.options.useSSL ? "wss" : "ws"}://${this.options.host}:${
       this.options.port
     }`;
-
-    this.ws = this.connect(url);
   }
 
   subscribe(listener: WebSocketClientListener) {
@@ -61,13 +62,9 @@ export class WebSocketClient {
     this.listeners = this.listeners.filter(item => item !== listener);
   }
 
-  get state() {
-    return this.connectionState;
-  }
-
   send(message: string, addNewLine = true) {
     // we can only send messages if we're connected
-    if (this.state !== WebSocketState.CONNECTED) {
+    if (!this.ws || this.state !== WebSocketState.CONNECTED) {
       this.log.warn(
         `sending message "${message}" requested but web-socket is ${
           this.connectionState
@@ -84,24 +81,12 @@ export class WebSocketClient {
     this.ws.send(`${message}${addNewLine ? "\n" : ""}`);
   }
 
-  private setState(newState: WebSocketState) {
-    // return if state has not changed
-    if (newState === this.connectionState) {
-      return;
-    }
-
-    const oldState = this.connectionState;
-
-    this.connectionState = newState;
-
-    // notify the listeners
-    this.listeners.forEach(listener =>
-      listener.onStateChanged(this, newState, oldState)
-    );
+  toast(message: string) {
+    this.send(`!toast:${message}`);
   }
 
-  private connect(url: string): WebSocket {
-    this.log.info(`connecting to web-socket server at ${url}`);
+  connect() {
+    this.log.info(`connecting to web-socket server at ${this.url}`);
 
     // update state
     this.setState(
@@ -116,7 +101,7 @@ export class WebSocketClient {
     );
 
     // attempt to open web-socket connection
-    this.ws = new WebSocket(url);
+    this.ws = new WebSocket(this.url);
 
     // handle open event
     this.ws.onopen = event => {
@@ -148,7 +133,7 @@ export class WebSocketClient {
 
       // attempt to reconnect
       setTimeout(() => {
-        this.ws = this.connect(url);
+        this.connect();
       }, this.options.reconnectInterval);
 
       // notify the listeners
@@ -172,7 +157,21 @@ export class WebSocketClient {
       // notify the listeners
       this.listeners.forEach(listener => listener.onMessage(this, event.data));
     };
+  }
 
-    return this.ws;
+  private setState(newState: WebSocketState) {
+    // return if state has not changed
+    if (newState === this.connectionState) {
+      return;
+    }
+
+    const oldState = this.connectionState;
+
+    this.connectionState = newState;
+
+    // notify the listeners
+    this.listeners.forEach(listener =>
+      listener.onStateChanged(this, newState, oldState)
+    );
   }
 }

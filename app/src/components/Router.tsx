@@ -98,8 +98,8 @@ export class Router extends React.Component {
 
           // subscribe to web-socket events
           webSocketClient.subscribe({
-            onConnecting: (_ws, _wasConnected) => {
-              log.addEntry("# web-socket connecting..");
+            onConnecting: (ws, _wasConnected) => {
+              log.addEntry(`# connecting to ${ws.url}`);
             },
             onOpen: (_ws, _event) => {
               log.addEntry("# web-socket connection established");
@@ -153,6 +153,9 @@ export class Router extends React.Component {
               log.addEntry(`> ${message}`);
             }
           });
+
+          // attempt to establish web-socket connection
+          webSocketClient.connect();
 
           // don't run this logic again
           this.isInitialized = true;

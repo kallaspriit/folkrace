@@ -18,7 +18,7 @@ const destinationPath = path.join(
 );
 
 // configure list of files to copy from the source path
-const filesToCopy = ["index.html", "static"];
+const filesToCopy = ["index.html", "static", "fonts", "icons"];
 
 // execute the script
 (async () => {

@@ -40,13 +40,13 @@ public class HttpServer extends NanoHTTPD {
     try {
       contents = getAssetContents(filename);
     } catch (IOException e) {
-      Log.d(TAG, "asset for requested uri '" + filename + "' could not be found");
+      Log.w(TAG, "asset for requested uri '" + filename + "' could not be found");
 
       contents = "requested resource could not be found";
       mimeType = NanoHTTPD.MIME_PLAINTEXT;
     }
 
-    Log.i(TAG, "sending file '" + filename + "' of mime type type '" + mimeType + "' (" + contents.length() + " bytes)");
+    Log.i(TAG, "sending file '" + filename + "' of mime type '" + mimeType + "' (" + contents.length() + " bytes)");
 
     // send the response
     return newFixedLengthResponse(Response.Status.OK, mimeType, contents);
@@ -80,6 +80,9 @@ public class HttpServer extends NanoHTTPD {
     } else if (filename.contains(".js")) {
       mimeType = "application/javascript";
     }
+
+    Log.d(TAG, "resolved '" + filename + "' to mime type '" + mimeType + "'");
+
     return mimeType;
   }
 

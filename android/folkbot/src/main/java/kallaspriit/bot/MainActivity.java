@@ -126,6 +126,13 @@ public class MainActivity extends Activity implements SerialProxy.SerialProxyEve
       case "reload":
         webView.reload();
         break;
+
+      case "ping":
+        webSocketServer.broadcast("pong");
+        break;
+
+      default:
+        Log.w(TAG, "received unsupported internal command: '" + command + "'");
     }
 
     Log.i(TAG, "handling internal command: '" + command + "'");
