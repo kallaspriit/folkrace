@@ -16,6 +16,7 @@ import { handleIpCommand } from "../handlers/handleIpCommand";
 import { handleUsbCommand } from "../handlers/handleUsbCommand";
 import { handleVoltageCommand } from "../handlers/handleGetVoltageCommand";
 import { handleButtonCommand } from "../handlers/handleButtonCommand";
+import { handleResetCommand } from "../handlers/handleResetCommand";
 import { handleEncoderCommand } from "../handlers/handleEncoderCommand";
 import { handleBeaconCommand } from "../handlers/handleBeaconCommand";
 import { handleMeasurementCommand } from "../handlers/handleMeasurementCommand";
@@ -47,14 +48,15 @@ export class Router extends React.Component {
     usb: handleUsbCommand,
     voltage: handleVoltageCommand,
     button: handleButtonCommand,
+    reset: handleResetCommand,
     e: handleEncoderCommand,
     b: handleBeaconCommand,
     m: handleMeasurementCommand,
     s: handleSpeedCommand
 
-    // TODO: handle "speed"
-    // TODO: handle "reset"
     // TODO: handle "pong"
+    // TODO: handle "lidar"
+    // TODO: handle "current"
   };
 
   render() {

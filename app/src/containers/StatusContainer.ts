@@ -38,6 +38,7 @@ export interface State {
   readonly batteryVoltage?: number;
   readonly remoteIp?: string;
   readonly lastBeaconTime?: Date;
+  readonly lastResetTime?: Date;
   readonly loopFrequency?: number;
   readonly loopTimeUs?: number;
 }
@@ -98,6 +99,12 @@ export class StatusContainer extends Container<State> {
       lastBeaconTime: new Date(),
       loopFrequency,
       loopTimeUs
+    });
+  }
+
+  setResetReceived() {
+    void this.setState({
+      lastResetTime: new Date()
     });
   }
 
