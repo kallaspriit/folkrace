@@ -1,8 +1,8 @@
-import WebSocketClient from "../web-socket-client";
+import { WebSocketClient } from "../web-socket-client";
 
 export type SendArgument = string | number;
 
-export default class Robot {
+export class Robot {
   constructor(private webSocketClient: WebSocketClient) {}
 
   requestVoltage() {

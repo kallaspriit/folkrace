@@ -13,7 +13,7 @@ export interface MotorSpeeds {
 }
 
 // https://pdfs.semanticscholar.org/29ae/0bc974737b58afd63b6edb8d0837a3383321.pdf
-export default class TrackedVehicleKinematics {
+export class TrackedVehicleKinematics {
   constructor(private readonly options: TrackedVehicleOptions) {}
 
   /**

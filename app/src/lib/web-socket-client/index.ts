@@ -29,7 +29,7 @@ export enum WebSocketState {
   CONNECTED = "CONNECTED"
 }
 
-export default class WebSocketClient {
+export class WebSocketClient {
   private connectionState: WebSocketState = WebSocketState.DISCONNECTED;
   private listeners: WebSocketClientListener[] = [];
   private ws: WebSocket;
