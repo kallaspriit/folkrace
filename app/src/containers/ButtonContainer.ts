@@ -14,7 +14,7 @@ export enum ButtonState {
 
 export type State = { [key in keyof typeof Button]: ButtonState };
 
-export default class ButtonContainer extends Container<State> {
+export class ButtonContainer extends Container<State> {
   readonly state: State = {
     [Button.START]: ButtonState.UNKNOWN,
     [Button.LEFT]: ButtonState.UNKNOWN,

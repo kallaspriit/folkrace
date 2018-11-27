@@ -5,7 +5,7 @@ export interface State {
   readonly right: number;
 }
 
-export default class OdometryContainer extends Container<State> {
+export class OdometryContainer extends Container<State> {
   readonly state: State = {
     left: 0,
     right: 0

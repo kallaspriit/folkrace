@@ -1,8 +1,9 @@
 import * as React from "react";
 import { Subscribe } from "unstated";
 
-import LogContainer from "../containers/LogContainer";
-import StatusContainer, {
+import { LogContainer } from "../containers/LogContainer";
+import {
+  StatusContainer,
   SerialState,
   SerialType
 } from "../containers/StatusContainer";
@@ -12,10 +13,10 @@ import handleSerialCommand from "../command-handlers/handleSerialCommand";
 import handleGetVoltageCommand from "../command-handlers/handleGetVoltageCommand";
 import handleIpCommand from "../command-handlers/handleIpCommand";
 import handleUsbCommand from "../command-handlers/handleUsbCommand";
-import OdometryContainer from "../containers/OdometryContainer";
+import { OdometryContainer } from "../containers/OdometryContainer";
 import handleEncoderCommand from "../command-handlers/handleEncoderCommand";
 import handleBeaconCommand from "../command-handlers/handleBeaconCommand";
-import LidarContainer from "../containers/LidarContainer";
+import { LidarContainer } from "../containers/LidarContainer";
 import handleMeasurementCommand from "../command-handlers/handleMeasurementCommand";
 
 export interface ContainerMap {

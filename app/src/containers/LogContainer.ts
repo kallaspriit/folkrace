@@ -21,7 +21,7 @@ export interface LogState {
 
 export const MAX_LOG_ENTRY_COUNT = 200;
 
-export default class LogContainer extends Container<LogState> {
+export class LogContainer extends Container<LogState> {
   readonly state: LogState = {
     entries: []
   };

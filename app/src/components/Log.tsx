@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Subscribe } from "unstated";
-import LogContainer, { MessageType } from "../containers/LogContainer";
+import { LogContainer, MessageType } from "../containers/LogContainer";
 import { GridItem } from "./Grid";
 import formatTime from "../services/formatTime";
 import { ClearIcon } from "./Icon";

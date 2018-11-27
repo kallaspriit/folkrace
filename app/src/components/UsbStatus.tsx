@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Subscribe } from "unstated";
-import StatusContainer, { SerialType } from "../containers/StatusContainer";
+import { StatusContainer, SerialType } from "../containers/StatusContainer";
 import { GridItem, GridItemStatus } from "./Grid";
 import titleCase from "title-case";
 import { StatusIcon, BluetoothIcon, SerialIcon } from "./Icon";

@@ -42,7 +42,7 @@ export enum BatteryState {
   CRITICAL = "CRITICAL"
 }
 
-export default class StatusContainer extends Container<State> {
+export class StatusContainer extends Container<State> {
   readonly state: State = {
     serials: {
       BLUETOOTH: {

@@ -22,7 +22,7 @@ export interface LidarMeasurements {
 // TODO: measure sampes per second
 export type State = LidarState & LidarMeasurements;
 
-export default class LidarContainer extends Container<State> {
+export class LidarContainer extends Container<State> {
   readonly state: State = {
     isStarted: false,
     isValid: false,
