@@ -26,6 +26,8 @@ import { handleSerialCommand } from "../handlers/handleSerialCommand";
 import { handleSpeedCommand } from "../handlers/handleSpeedCommand";
 import { handleUsbCommand } from "../handlers/handleUsbCommand";
 import { WebSocketState } from "../lib/web-socket-client/index";
+import { javascriptInterface } from "../services/javascriptInterface";
+import { addLogListener } from "../services/log";
 import { webSocketClient } from "../services/webSocketClient";
 
 export interface ContainerMap {
@@ -93,6 +95,9 @@ export class Router extends React.Component {
             return null;
           }
 
+          // register as log listener and proxy to log container
+          addLogListener(message => log.addEntry(message));
+
           // set initial state
           void status.setWebSocketState(webSocketClient.state);
 
@@ -156,6 +161,9 @@ export class Router extends React.Component {
 
           // attempt to establish web-socket connection
           webSocketClient.connect();
+
+          // test javascript bridge
+          javascriptInterface.send("Hello from app!");
 
           // don't run this logic again
           this.isInitialized = true;

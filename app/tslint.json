@@ -32,6 +32,7 @@
     "no-unused-variable": false,
     "interface-name": [true, "never-prefix"],
     "no-console": false,
+    "max-classes-per-file": false,
     "quotemark": [
       true,
       "double",

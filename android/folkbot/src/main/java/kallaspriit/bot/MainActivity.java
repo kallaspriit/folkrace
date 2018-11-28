@@ -30,6 +30,7 @@ public class MainActivity extends Activity implements SerialProxy.SerialProxyEve
 
   private WebSocketServer webSocketServer;
   private SerialProxy serialProxy;
+  private RobotJavascriptInterface robotJavascriptInterface;
 
   @SuppressLint("SetJavaScriptEnabled")
   @Override
@@ -62,6 +63,10 @@ public class MainActivity extends Activity implements SerialProxy.SerialProxyEve
     // set background color to match the application
     webView.setBackgroundColor(Color.parseColor("#282828"));
 
+    // setup javascript interface
+    robotJavascriptInterface = new RobotJavascriptInterface(this, webView);
+    webView.addJavascriptInterface(robotJavascriptInterface, "robot");
+
     // get reference to the progress bar widget
     progressBar = findViewById(R.id.progressBar);
 
@@ -75,6 +80,9 @@ public class MainActivity extends Activity implements SerialProxy.SerialProxyEve
 
         // hide the progress bar
         progressBar.setVisibility(View.GONE);
+
+        // test javascript interface
+        robotJavascriptInterface.send("Hello from Android!");
       }
     });
 
