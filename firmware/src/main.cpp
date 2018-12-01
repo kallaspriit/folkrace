@@ -83,8 +83,8 @@ Timer appMessageSentTimer;
 Timer debugTimer;
 
 // setup status leds
-DigitalOut led1(LED1);
-DigitalOut led2(LED2);
+DigitalOut loopStatusLed(LED1);
+DigitalOut usbStatusLed(LED2);
 
 // setup usb power sense (usb serial knows when it gets connected but not when disconnected)
 DigitalIn usbPowerSense(USB_POWER_SENSE_PIN);
@@ -416,8 +416,8 @@ void setupUsbPowerSensing()
 void setupStatusLeds()
 {
   // set initial status led states
-  led1 = 0;
-  led2 = 0;
+  loopStatusLed = 0;
+  usbStatusLed = 0;
 }
 
 void setupButtons()
@@ -515,12 +515,12 @@ void stepUsbConnectionState()
   if (isConnected && appMessageSentTimer.read_ms() < APP_MESSAGE_SENT_BLINK_DURATION_MS)
   {
     // turn the usb status led off for a brief duration when transmitting data
-    led2 = 0;
+    usbStatusLed = 0;
   }
   else
   {
     // turn the usb status led on when connected
-    led2 = isConnected ? 1 : 0;
+    usbStatusLed = isConnected ? 1 : 0;
   }
 }
 
@@ -655,7 +655,7 @@ void stepLoopBlinker()
   if (currentLoopLedState != lastLoopLedState)
   {
     // set new loop led state and update last state
-    led1 = currentLoopLedState;
+    loopStatusLed = currentLoopLedState;
     lastLoopLedState = currentLoopLedState;
 
     // send connection alive beacon message on rising edge
