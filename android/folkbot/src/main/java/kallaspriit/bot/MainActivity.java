@@ -150,7 +150,7 @@ public class MainActivity extends Activity implements SerialProxy.SerialProxyEve
     Log.i(TAG, "starting http server");
 
     try {
-      HttpServer httpServer = new HttpServer(this, HTTP_SERVER_PORT);
+      new HttpServer(this, HTTP_SERVER_PORT);
     } catch (IOException e) {
       Log.e(TAG, "starting http server failed");
 
@@ -175,7 +175,7 @@ public class MainActivity extends Activity implements SerialProxy.SerialProxyEve
   }
 
   private void setupSerialProxy() {
-    serialProxy = new SerialProxy(this, webSocketServer);
+    serialProxy = new SerialProxy(this, this, webSocketServer);
   }
 
   private void setupSerials() {

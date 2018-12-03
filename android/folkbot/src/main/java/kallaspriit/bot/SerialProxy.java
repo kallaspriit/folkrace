@@ -1,5 +1,6 @@
 package kallaspriit.bot;
 
+import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -14,11 +15,13 @@ import java.util.List;
 public class SerialProxy implements WebSocketServer.WebSocketEventListener, AbstractSerial.SerialEventListener {
 
   private static final String TAG = "SerialProxy";
+  private Context context;
   private WebSocketServer webSocketServer;
   private SerialProxyEventListener listener;
   private List<AbstractSerial> serials = new ArrayList<>();
 
-  SerialProxy(SerialProxyEventListener listener, WebSocketServer webSocketServer) {
+  SerialProxy(Context context, SerialProxyEventListener listener, WebSocketServer webSocketServer) {
+    this.context = context;
     this.listener = listener;
     this.webSocketServer = webSocketServer;
 
@@ -41,7 +44,7 @@ public class SerialProxy implements WebSocketServer.WebSocketEventListener, Abst
   @Override
   public void onWebSocketOpen(WebSocket connection, ClientHandshake handshake) {
     // send own ip address
-    connection.send("ip:" + Util.getIpAddress());
+    connection.send("ip:" + Util.getIpAddress(context));
 
     // send serial states
     serials.forEach(serial -> connection.send("serial:" + serial.getName() + ":" + serial.getState()));
