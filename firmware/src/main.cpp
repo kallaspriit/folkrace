@@ -8,12 +8,6 @@
 #include "Lidar.hpp"
 #include "DebouncedInterruptIn.hpp"
 
-// timing configuration
-const int REPORT_ENCODER_VALUES_INTERVAL_MS = 1000; // larger interval for testing
-const int APP_MESSAGE_SENT_BLINK_DURATION_MS = 10;  // for how long to turn off the usb status led while transmitting
-const int LOOP_LED_INTERVAL_MS = 1000;
-const int LOOP_LED_BLINK_DURATION_MS = 10;
-
 // pin mapping configuration
 const PinName LOG_SERIAL_TX_PIN = USBTX;
 const PinName LOG_SERIAL_RX_PIN = USBRX;
@@ -30,6 +24,28 @@ const PinName RIGHT_BUMPER_PIN = p16;
 const PinName REAR_LED_STRIP_DATA_PIN = p15;
 const PinName USB_POWER_SENSE_PIN = p22;
 
+// baud rates configuration
+const int LOG_SERIAL_BAUDRATE = 921600;   // log serial is the built-in usb of the mbed board
+const int MOTOR_SERIAL_BAUDRATE = 460800; // not default, make sure to update in the Ion Studio
+
+// timing configuration
+const int REPORT_ENCODER_VALUES_INTERVAL_MS = 1000; // larger interval for testing
+const int APP_MESSAGE_SENT_BLINK_DURATION_MS = 10;  // for how long to turn off the usb status led while transmitting
+const int LOOP_LED_INTERVAL_MS = 1000;
+const int LOOP_LED_BLINK_DURATION_MS = 10;
+const int BUTTON_DEBOUNCE_US = 100000; // 100ms
+
+// component configuration
+const uint8_t MOTOR_SERIAL_ADDRESS = 128;
+
+// voltage measurement correction configuration
+const double MAIN_VOLTAGE_CORRECTION_MULTIPLIER = 1.02;
+
+// usb serial configuration (simulate ARM mbed board)
+const uint16_t USB_VENDOR_ID = 0x0d28;  // ARM
+const uint16_t USB_PRODUCT_ID = 0x0204; // mbed
+const uint16_t USB_PRODUCT_RELEASE = 0x0001;
+
 // rear led configuration
 const int REAR_LED_COUNT = 8;
 
@@ -39,31 +55,12 @@ const int WS2812_ZERO_LOW_LENGTH = 11;
 const int WS2812_ONE_HIGH_LENGTH = 10;
 const int WS2812_ONE_LOW_LENGTH = 11;
 
-// baud rates configuration
-const int LOG_SERIAL_BAUDRATE = 921600; // log serial is the built-in usb of the mbed board
-// const int APP_SERIAL_BAUDRATE = 921600; // not used for usb serial
-const int MOTOR_SERIAL_BAUDRATE = 460800; // not default, make sure to update in the Ion Studio
-
-// component configuration
-const uint8_t MOTOR_SERIAL_ADDRESS = 128;
-
-// behaviour configuration
-const int BUTTON_DEBOUNCE_US = 100000; // 100ms
-
-// voltage measurement correction configuration
-const double MAIN_VOLTAGE_CORRECTION_MULTIPLIER = 1.02;
-
-// usb serial configuration
-const uint16_t USB_VENDOR_ID = 0x0d28;  // ARM
-const uint16_t USB_PRODUCT_ID = 0x0204; // mbed
-const uint16_t USB_PRODUCT_RELEASE = 0x0001;
-
 // setup serials
 Serial logSerial(LOG_SERIAL_TX_PIN, USBRX, LOG_SERIAL_BAUDRATE);
 // Serial appSerial(APP_SERIAL_TX_PIN, APP_SERIAL_RX_PIN, APP_SERIAL_BAUDRATE);
-USBSerial appSerial(USB_VENDOR_ID, USB_PRODUCT_ID, USB_PRODUCT_RELEASE, false); // ARM mbed
+USBSerial appSerial(USB_VENDOR_ID, USB_PRODUCT_ID, USB_PRODUCT_RELEASE, false);
 
-// setup commanders
+// setup commanders (handle serial commands)
 Commander logCommander(&logSerial);
 Commander appCommander(&appSerial);
 
@@ -101,10 +98,10 @@ DebouncedInterruptIn rightBumper(RIGHT_BUMPER_PIN, PullUp, BUTTON_DEBOUNCE_US);
 int lastEncoderDeltaM1 = 0;
 int lastEncoderDeltaM2 = 0;
 
-// track button state changes
-bool lastStartButtonState = 1;
-bool lastLeftBumperState = 1;
-bool lastRightBumperState = 1;
+// track button state changes (default to unknown)
+int lastStartButtonState = -1;
+int lastLeftBumperState = -1;
+int lastRightBumperState = -1;
 
 // track whether the rear led strip requires update
 bool rearLedNeedsUpdate = false;
@@ -119,17 +116,18 @@ int targetSpeedM2 = 0;
 // keep track of last loop time in microseconds
 int lastLoopTimeUs = 0;
 
-// keep track of last loop led state
+// keep track of last loop led state and cycle count
 int lastLoopLedState = 0;
 int cycleCountSinceLastLoopBlink = 0;
 
 // returns whether usb serial is connected
 bool isUsbConnected()
 {
+  // get both whether power from the OTG device is detected and serial connection state
   bool isUsbPowerPresent = usbPowerSense.read() == 1;
   bool isUsbReportingConnected = appSerial.connected();
 
-  // require both usb power to be present as well as usb to report as connected (usb fails to detect disconnecting)
+  // require both usb power to be present as well as usb to report as connected (as usb fails to detect disconnects)
   return isUsbPowerPresent && isUsbReportingConnected;
 }
 
