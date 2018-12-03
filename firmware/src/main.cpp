@@ -137,7 +137,7 @@ void sendRaw(const char *message, int length, bool blocking = true)
   // don't attempt to send if not connected as writing is blocking
   if (!isUsbConnected())
   {
-    logSerial.printf("@ sending '%s' failed, usb serial is not connected\n", message);
+    logSerial.printf("@ no serial connected, failed sending: %s", message);
 
     return;
   }
@@ -425,12 +425,6 @@ void setupButtons()
   lastRightBumperState = rightBumper.read();
 }
 
-void setupReset()
-{
-  // notify of reset/startup
-  logSerial.printf("# reset\n");
-}
-
 void setupCommandHandlers()
 {
   // TODO: implement helper that adds both?
@@ -521,43 +515,35 @@ void stepUsbConnectionState()
   }
 }
 
+void stepButton(DebouncedInterruptIn *button, string name, int *lastState)
+{
+  // get current state
+  int currentState = button->read();
+
+  // check whether the state has changed
+  if (currentState != *lastState)
+  {
+    // report button state change if different
+    reportButtonState(name, currentState);
+
+    // update last reported state
+    *lastState = currentState;
+  }
+}
+
 void stepStartButton()
 {
-  int currentStartButtonState = startButton.read();
-
-  // report start button state change
-  if (currentStartButtonState != lastStartButtonState)
-  {
-    reportButtonState("start", currentStartButtonState);
-
-    lastStartButtonState = currentStartButtonState;
-  }
+  stepButton(&startButton, "start", &lastStartButtonState);
 }
 
 void stepLeftBumper()
 {
-  int currentLeftBumperState = leftBumper.read();
-
-  // report left bumper state change
-  if (currentLeftBumperState != lastLeftBumperState)
-  {
-    reportButtonState("left", currentLeftBumperState);
-
-    lastLeftBumperState = currentLeftBumperState;
-  }
+  stepButton(&leftBumper, "left", &lastLeftBumperState);
 }
 
 void stepRightBumper()
 {
-  int currentRightBumperState = rightBumper.read();
-
-  // report right bumper state change
-  if (currentRightBumperState != lastRightBumperState)
-  {
-    reportButtonState("right", currentRightBumperState);
-
-    lastRightBumperState = currentRightBumperState;
-  }
+  stepButton(&rightBumper, "right", &lastRightBumperState);
 }
 
 void stepCommanders()
@@ -711,15 +697,18 @@ void d(const char *name, int slowThreshold = SLOW_OPERATION_THRESHOLD_US)
 
 int main()
 {
+  logSerial.printf("# initializing.. ");
+
   // setup resources
   setupUsbPowerSensing();
   setupStatusLeds();
   setupButtons();
-  setupReset();
   setupCommandHandlers();
   setupMotors();
   setupRearLedStrip();
   setupTimers();
+
+  logSerial.printf("done!\n");
 
   // run main loop
   while (true)
