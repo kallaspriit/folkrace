@@ -158,14 +158,14 @@ int Commander::getIntArgument(unsigned int index)
     return 0;
   }
 
-  try
-  {
-    return std::stoi(arg);
-  }
-  catch (...)
-  {
-    serial->printf("@ commander argument with index of %d - \"%s\" could not be converted to integer, returning 0\n", index, arg.c_str());
+  // try
+  // {
+  return std::stoi(arg);
+  // }
+  // catch (...)
+  // {
+  //   serial->printf("@ commander argument with index of %d - \"%s\" could not be converted to integer, returning 0\n", index, arg.c_str());
 
-    return 0;
-  }
+  //   return 0;
+  // }
 }

@@ -12,8 +12,7 @@ export class Robot {
   }
 
   requestState() {
-    // TODO: restore requesting state
-    // this.send("state");
+    this.send("state");
   }
 
   setSpeed(left: number, right: number) {
