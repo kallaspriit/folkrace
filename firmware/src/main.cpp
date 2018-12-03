@@ -1,6 +1,5 @@
 #include <mbed.h>
 #include <USBSerial.h>
-#include <USBDevice.h>
 
 #include "WS2812.h"
 #include "PixelArray.h"
