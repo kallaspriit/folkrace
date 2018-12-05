@@ -47,8 +47,12 @@ export const SerialIcon: React.SFC = props => (
   <Icon {...props} url="icons/serial.svg" width={32} height={32} />
 );
 
-export const WebSocketIcon: React.SFC = props => (
-  <Icon {...props} url="icons/web-socket.svg" width={32} height={32} />
+export const WebsocketIcon: React.SFC = props => (
+  <Icon {...props} url="icons/websocket.svg" width={32} height={32} />
+);
+
+export const NativeIcon: React.SFC = props => (
+  <Icon {...props} url="icons/native.svg" width={32} height={32} />
 );
 
 export const BatteryIcon: React.SFC = props => (

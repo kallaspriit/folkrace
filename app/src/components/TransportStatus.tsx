@@ -8,7 +8,7 @@ import { multiTransport } from "../services/multiTransport";
 import { robot } from "../services/robot";
 
 import { GridItem, GridItemStatus } from "./Grid";
-import { WebSocketIcon } from "./Icon";
+import { NativeIcon, WebsocketIcon } from "./Icon";
 import { Text } from "./Text";
 
 export const TransportStatus: React.SFC = () => (
@@ -31,7 +31,11 @@ export const TransportStatus: React.SFC = () => (
             robot.ping(statusContainer.getConnectedSerial() === undefined)
           }
         >
-          <WebSocketIcon />
+          {multiTransport.getName() === "Native" ? (
+            <NativeIcon />
+          ) : (
+            <WebsocketIcon />
+          )}
           <Text primary={true}>{multiTransport.getName()}</Text>
           <Text>{description}</Text>
         </GridItem>

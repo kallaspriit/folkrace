@@ -1,5 +1,3 @@
-import { log } from "../services/log";
-
 import { ContainerMap } from "./";
 
 export function handleIpCommand(args: string[], { status }: ContainerMap) {
@@ -8,8 +6,6 @@ export function handleIpCommand(args: string[], { status }: ContainerMap) {
 
   if (!isOffline) {
     void status.setRemoteIp(remoteIp);
-
-    log("# remote ip: ${remoteIp}");
   } else {
     void status.setOffline();
   }

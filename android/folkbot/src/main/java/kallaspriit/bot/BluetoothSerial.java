@@ -68,8 +68,8 @@ public class BluetoothSerial extends AbstractSerial {
     }
   };
 
-  BluetoothSerial(Context context, SerialEventListener listener, String devicePrefix) {
-    super(NAME, context, listener);
+  BluetoothSerial(Context context, String devicePrefix) {
+    super(NAME, context);
 
     this.devicePrefix = devicePrefix.toUpperCase();
   }
@@ -373,7 +373,8 @@ public class BluetoothSerial extends AbstractSerial {
           // notify the message handler if any bytes were onBluetoothSerialMessage
           if (bufferSize > 0) {
             String message = new String(buffer, 0, bufferSize, "UTF-8");
-            bluetoothSerial.listener.onSerialMessage(NAME, message);
+
+            bluetoothSerial.listeners.forEach(listener -> listener.onSerialMessage(NAME, message));
 
             bufferSize = 0;
           } else {
@@ -392,31 +393,4 @@ public class BluetoothSerial extends AbstractSerial {
       Log.i(TAG, "stopped serial reader");
     }
   }
-
-    /*
-    public void write(byte[] buffer) throws IOException {
-        if (!connected) {
-            throw new RuntimeException("bluetooth connection lost");
-        }
-
-        serialOutputStream.write(buffer);
-    }
-
-    public void write(int oneByte) throws IOException {
-        if (!connected) {
-            throw new RuntimeException("bluetooth connection lost");
-        }
-
-        serialOutputStream.write(oneByte);
-    }
-
-    public void write(byte[] buffer, int offset, int count) throws IOException {
-        if (!connected) {
-            throw new RuntimeException("bluetooth connection lost");
-        }
-
-        serialOutputStream.write(buffer, offset, count);
-    }
-    */
-
 }

@@ -3,22 +3,27 @@ package kallaspriit.bot;
 import android.content.Context;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 abstract class AbstractSerial {
 
   protected Context context;
-  protected SerialEventListener listener;
+  protected List<Listener> listeners = new ArrayList<>();
   private String name;
   private State state = State.DISCONNECTED;
 
-  public AbstractSerial(String name, Context context, SerialEventListener listener) {
+  AbstractSerial(String name, Context context) {
     this.name = name;
     this.context = context;
-    this.listener = listener;
   }
 
   public String getName() {
     return name;
+  }
+
+  public void addListener(Listener listener) {
+    this.listeners.add(listener);
   }
 
   public State getState() {
@@ -30,11 +35,11 @@ abstract class AbstractSerial {
       return;
     }
 
-    State oldState = state;
+    State previousState = state;
 
     state = newState;
 
-    listener.onSerialStateChanged(name, newState, oldState);
+    listeners.forEach(listener -> listener.onSerialStateChanged(name, newState, previousState));
   }
 
   public boolean isConnected() {
@@ -56,9 +61,9 @@ abstract class AbstractSerial {
     DISABLED
   }
 
-  public interface SerialEventListener {
+  public interface Listener {
     void onSerialMessage(String name, String message);
 
-    void onSerialStateChanged(String name, State newState, State oldState);
+    void onSerialStateChanged(String name, State newState, State previousState);
   }
 }

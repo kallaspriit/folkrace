@@ -14,6 +14,7 @@ import android.os.Message;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.util.List;
 import java.util.Set;
 
 public class UsbSerial extends AbstractSerial {
@@ -86,13 +87,13 @@ public class UsbSerial extends AbstractSerial {
     }
   };
 
-  UsbSerial(Context context, SerialEventListener listener) {
-    super(NAME, context, listener);
+  UsbSerial(Context context) {
+    super(NAME, context);
   }
 
   @Override
   public void open() {
-    handler = new UsbSerialHandler(context, listener);
+    handler = new UsbSerialHandler(context, listeners);
 
     registerBroadcastReceiver();
     startService(UsbService.class, serviceConnection, null);
@@ -154,12 +155,12 @@ public class UsbSerial extends AbstractSerial {
 
   private static class UsbSerialHandler extends Handler {
     private final Context context;
-    private final SerialEventListener listener;
+    private final List<Listener> listeners;
     private String commandBuffer = "";
 
-    UsbSerialHandler(Context context, SerialEventListener listener) {
+    UsbSerialHandler(Context context, List<Listener> listeners) {
       this.context = context;
-      this.listener = listener;
+      this.listeners = listeners;
     }
 
     @Override
@@ -170,7 +171,7 @@ public class UsbSerial extends AbstractSerial {
           UsbDevice device = (UsbDevice) msg.obj;
 
           // send usb info to listener
-          listener.onSerialMessage(NAME, "usb:" + device.getVendorId() + ":" + device.getProductId() + ":" + device.getProductName());
+          listeners.forEach(listener -> listener.onSerialMessage(NAME, "usb:" + device.getVendorId() + ":" + device.getProductId() + ":" + device.getProductName()));
           break;
 
         case UsbService.MESSAGE_FROM_SERIAL_PORT:
@@ -204,7 +205,7 @@ public class UsbSerial extends AbstractSerial {
         buffer = buffer.substring(newLineIndex + 1);
 
         // emit the serial message event
-        listener.onSerialMessage(NAME, message);
+        listeners.forEach(listener -> listener.onSerialMessage(NAME, message));
 
         Log.d(TAG, "got usb serial message: '" + message + "'");
 

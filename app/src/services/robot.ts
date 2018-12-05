@@ -1,5 +1,5 @@
 import { Robot } from "../lib/robot";
 
-import { websocketTransport } from "./websocketTransport";
+import { multiTransport } from "./multiTransport";
 
-export const robot = new Robot(websocketTransport);
+export const robot = new Robot(multiTransport);

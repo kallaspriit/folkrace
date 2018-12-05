@@ -52,9 +52,9 @@ export class Hub extends React.Component {
 
           // subscribe to transport events
           multiTransport.addListener({
-            onStateChanged: (transport, newState, previousState) => {
+            onStateChanged: (transport, newState, _previousState) => {
               log.addEntry(
-                `# ${transport.getName()} state changed from ${previousState} to ${newState}`
+                `# ${transport.getName()} state changed to ${newState}`
               );
 
               void status.setTransportState(newState);
@@ -71,10 +71,11 @@ export class Hub extends React.Component {
               message,
               wasSentSuccessfully: boolean
             ) => {
-              const [name] = message.split(":");
+              const [command] = message.split(":");
+              const noLogCommands = ["ping", "!ping"];
 
               // don't log single-character recurring commands ("s" for speed etc)
-              if (name.length === 1) {
+              if (command.length === 1 || noLogCommands.includes(command)) {
                 return;
               }
 
@@ -119,14 +120,15 @@ export class Hub extends React.Component {
     }
 
     // parse message
-    const [name, ...args] = message.split(":");
+    const [command, ...args] = message.split(":");
+    const noLogCommands = ["pong"];
 
     // dont log single-character commands (fast lidar measurements, encoders etc)
-    if (name.length > 1) {
+    if (command.length > 1 && noLogCommands.indexOf(command) === -1) {
       containers.log.addEntry(`< ${message}`);
     }
 
     // attempt to handle command
-    handleCommand(name, args, containers);
+    handleCommand(command, args, containers);
   }
 }
