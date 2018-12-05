@@ -1,4 +1,4 @@
-import { ContainerMap } from "../components/Router";
+import { ContainerMap } from "./";
 
 export function handleEncoderCommand(
   args: string[],

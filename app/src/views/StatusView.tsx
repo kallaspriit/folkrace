@@ -3,9 +3,9 @@ import * as React from "react";
 import { BatteryStatus } from "../components/BatteryStatus";
 import { Grid } from "../components/Grid";
 import { Log } from "../components/Log";
+import { TransportStatus } from "../components/TransportStatus";
 import { UsbStatus } from "../components/UsbStatus";
 import { View } from "../components/View";
-import { WebSocketStatus } from "../components/WebSocketStatus";
 import { styled } from "../styled";
 
 const StatusGrid = styled(Grid)`
@@ -21,7 +21,7 @@ export const StatusView: React.SFC = () => (
   <View grid={true}>
     <StatusGrid>
       <UsbStatus />
-      <WebSocketStatus />
+      <TransportStatus />
       <BatteryStatus />
       <Log />
     </StatusGrid>

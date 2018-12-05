@@ -6,10 +6,8 @@ import {
   TrackedVehicleKinematics,
   TrackedVehicleOptions
 } from "../tracked-vehicle-kinematics";
-import { WebSocketClient } from "../web-socket-client/index";
 
 export interface RemoteControllerOptions {
-  webSocketClient: WebSocketClient;
   robot: Robot;
   vehicle: TrackedVehicleOptions;
   log?: Logger;

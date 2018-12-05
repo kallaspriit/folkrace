@@ -1,4 +1,4 @@
-import { ContainerMap } from "../components/Router";
+import { ContainerMap } from "./";
 
 export function handleUsbCommand(args: string[], _containerMap: ContainerMap) {
   const vendorId = parseInt(args[0], 10);

@@ -1,11 +1,11 @@
-import { WebSocketClient } from "../web-socket-client";
+import { Transport } from "../transport/Transport";
 
 export type SendArgument = string | number;
 
 export class Robot {
   pingSentTime?: number;
 
-  constructor(private readonly webSocketClient: WebSocketClient) {}
+  constructor(private readonly transport: Transport) {}
 
   requestVoltage() {
     this.send("voltage");
@@ -24,7 +24,7 @@ export class Robot {
 
     if (transportOnly) {
       // send internal ping command if testing the transport only (Android responds to this)
-      this.webSocketClient.send("!ping", false);
+      this.send("!ping");
     } else {
       // send full ping, responded by the MCU
       this.send("ping");
@@ -35,6 +35,6 @@ export class Robot {
   private send(command: string, ...args: SendArgument[]) {
     const message = `${command}${args.length > 0 ? ":" : ""}${args.join(":")}`;
 
-    this.webSocketClient.send(message);
+    this.transport.send(message);
   }
 }

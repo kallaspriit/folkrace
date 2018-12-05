@@ -1,4 +1,4 @@
-import { ContainerMap } from "../components/Router";
+import { ContainerMap } from "./";
 
 export function handleLidarCommand(args: string[], { lidar }: ContainerMap) {
   const isStarted = parseInt(args[0], 10) === 1;

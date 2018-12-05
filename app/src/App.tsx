@@ -3,8 +3,8 @@ import { BrowserRouter, Redirect, Route, Switch } from "react-router-dom";
 import { ThemeProvider } from "styled-components";
 import { Provider } from "unstated";
 
+import { Hub } from "./components/Hub";
 import { MainMenu } from "./components/MainMenu";
-import { Router } from "./components/Router";
 import { GlobalStyle, styled, theme } from "./styled";
 import { BotView } from "./views/BotView";
 import { MapView } from "./views/MapView";
@@ -25,7 +25,7 @@ export class App extends React.Component {
       <ThemeProvider theme={theme}>
         <Provider>
           <GlobalStyle />
-          <Router />
+          <Hub />
           <BrowserRouter>
             <AppWrap>
               <Switch>

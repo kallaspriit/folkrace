@@ -19,7 +19,7 @@ import org.java_websocket.drafts.Draft_6455;
 import java.io.IOException;
 import java.util.Arrays;
 
-public class MainActivity extends Activity implements SerialProxy.SerialProxyEventListener {
+public class MainActivity extends Activity implements Hub.SerialProxyEventListener {
   public static final String BLUETOOTH_DEVICE_NAME_PREFIX = "HC-06";
   private static final String TAG = "MainActivity";
   private static final int HTTP_SERVER_PORT = 8080;
@@ -29,8 +29,8 @@ public class MainActivity extends Activity implements SerialProxy.SerialProxyEve
   ProgressBar progressBar;
 
   private WebSocketServer webSocketServer;
-  private SerialProxy serialProxy;
-  private RobotJavascriptInterface robotJavascriptInterface;
+  private Hub hub;
+  private NativeInterface nativeInterface;
 
   @SuppressLint("SetJavaScriptEnabled")
   @Override
@@ -64,8 +64,8 @@ public class MainActivity extends Activity implements SerialProxy.SerialProxyEve
     webView.setBackgroundColor(Color.parseColor("#282828"));
 
     // setup javascript interface
-    robotJavascriptInterface = new RobotJavascriptInterface(this, webView);
-    webView.addJavascriptInterface(robotJavascriptInterface, "robot");
+    nativeInterface = new NativeInterface(this, webView);
+    webView.addJavascriptInterface(nativeInterface, "native");
 
     // get reference to the progress bar widget
     progressBar = findViewById(R.id.progressBar);
@@ -82,7 +82,7 @@ public class MainActivity extends Activity implements SerialProxy.SerialProxyEve
         progressBar.setVisibility(View.GONE);
 
         // test javascript interface
-        robotJavascriptInterface.send("Hello from Android!");
+        nativeInterface.send("Hello from Android!");
       }
     });
 
@@ -175,24 +175,24 @@ public class MainActivity extends Activity implements SerialProxy.SerialProxyEve
   }
 
   private void setupSerialProxy() {
-    serialProxy = new SerialProxy(this, this, webSocketServer);
+    hub = new Hub(this, this, webSocketServer);
   }
 
   private void setupSerials() {
     // setup serials
-    UsbSerial usbSerial = new UsbSerial(this, serialProxy);
-    BluetoothSerial bluetoothSerial = new BluetoothSerial(this, serialProxy, BLUETOOTH_DEVICE_NAME_PREFIX);
+    UsbSerial usbSerial = new UsbSerial(this, hub);
+    BluetoothSerial bluetoothSerial = new BluetoothSerial(this, hub, BLUETOOTH_DEVICE_NAME_PREFIX);
 
     // register the serials to use
-    serialProxy.addSerial(usbSerial);
-    serialProxy.addSerial(bluetoothSerial);
+    hub.addSerial(usbSerial);
+    hub.addSerial(bluetoothSerial);
   }
 
   private void startServices() {
     Log.i(TAG, "starting bluetooth web-socket proxy");
 
     // attempt to open the serial connections
-    serialProxy.open();
+    hub.open();
   }
 
   private void handleShowToast(String[] parameters) {

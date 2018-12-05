@@ -12,15 +12,15 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SerialProxy implements WebSocketServer.WebSocketEventListener, AbstractSerial.SerialEventListener {
+public class Hub implements WebSocketServer.WebSocketEventListener, AbstractSerial.SerialEventListener {
 
-  private static final String TAG = "SerialProxy";
+  private static final String TAG = "Hub";
   private Context context;
   private WebSocketServer webSocketServer;
   private SerialProxyEventListener listener;
   private List<AbstractSerial> serials = new ArrayList<>();
 
-  SerialProxy(Context context, SerialProxyEventListener listener, WebSocketServer webSocketServer) {
+  Hub(Context context, SerialProxyEventListener listener, WebSocketServer webSocketServer) {
     this.context = context;
     this.listener = listener;
     this.webSocketServer = webSocketServer;

@@ -5,12 +5,11 @@ import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import android.widget.Toast;
 
-// TODO: use json payloads
-class RobotJavascriptInterface {
+class NativeInterface {
   private final Context context;
   private final WebView webView;
 
-  RobotJavascriptInterface(Context context, WebView webView) {
+  NativeInterface(Context context, WebView webView) {
     this.context = context;
     this.webView = webView;
   }

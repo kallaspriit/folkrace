@@ -2,7 +2,7 @@ import update from "immutability-helper";
 import { Container } from "unstated";
 
 import { config } from "../config";
-import { WebSocketState } from "../lib/web-socket-client/index";
+import { TransportState } from "../lib/transport/Transport";
 
 export enum SerialType {
   USB = "usb",
@@ -34,7 +34,7 @@ export enum BatteryState {
 }
 
 export interface State {
-  readonly webSocketState: WebSocketState;
+  readonly transportState: TransportState;
   readonly serials: SerialsMap;
   readonly batteryVoltage?: number;
   readonly remoteIp?: string;
@@ -58,7 +58,7 @@ export class StatusContainer extends Container<State> {
         deviceName: undefined
       }
     },
-    webSocketState: WebSocketState.DISCONNECTED
+    transportState: TransportState.DISCONNECTED
   };
 
   setSerialState(type: SerialType, state: SerialState, deviceName?: string) {
@@ -76,9 +76,9 @@ export class StatusContainer extends Container<State> {
     );
   }
 
-  setWebSocketState(newState: WebSocketState) {
+  setTransportState(newState: TransportState) {
     return this.setState({
-      webSocketState: newState
+      transportState: newState
     });
   }
 

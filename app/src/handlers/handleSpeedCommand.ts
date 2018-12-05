@@ -1,4 +1,4 @@
-import { ContainerMap } from "../components/Router";
+import { ContainerMap } from "./";
 
 export function handleSpeedCommand(args: string[], { robot }: ContainerMap) {
   const left = parseInt(args[0], 10);

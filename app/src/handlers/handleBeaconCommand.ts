@@ -1,4 +1,4 @@
-import { ContainerMap } from "../components/Router";
+import { ContainerMap } from "./";
 
 export function handleBeaconCommand(args: string[], { status }: ContainerMap) {
   const durationMs = parseInt(args[0], 10);

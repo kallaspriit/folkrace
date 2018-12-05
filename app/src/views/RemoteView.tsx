@@ -7,7 +7,6 @@ import { View } from "../components/View";
 import { config } from "../config";
 import { RemoteController } from "../lib/remote-controller";
 import { robot } from "../services/robot";
-import { webSocketClient } from "../services/webSocketClient";
 import { styled } from "../styled";
 
 const JoystickGrid = styled(Grid)`
@@ -17,7 +16,6 @@ const JoystickGrid = styled(Grid)`
 // TODO: show track speeds on edges (target and real)
 export class RemoteView extends React.Component {
   private readonly remoteController = new RemoteController({
-    webSocketClient,
     log: console,
     vehicle: config.vehicle,
     robot
