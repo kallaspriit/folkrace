@@ -75,13 +75,16 @@ export class NativeTransport implements Transport {
       receive: message => this.onMessageReceived(message)
     };
 
-    // connection successful
-    this.setState(TransportState.CONNECTED);
+    // perform handshake to test connection
+    this.send("!handshake");
+
+    // set connecting state until handshake response is received
+    this.setState(TransportState.CONNECTING);
   }
 
   send(message: string) {
-    // fail to send if no bridge available or not connected
-    if (!this.native || this.state !== TransportState.CONNECTED) {
+    // fail to send if no bridge available
+    if (!this.native) {
       this.log.warn(
         `sending message "${message}" requested but the native bridge is not available`
       );
@@ -138,5 +141,11 @@ export class NativeTransport implements Transport {
     this.listeners.forEach(listener =>
       listener.onMessageReceived(this, message)
     );
+
+    // handle handshake response
+    if (message === "!handshake") {
+      // consider connection successful
+      this.setState(TransportState.CONNECTED);
+    }
   }
 }

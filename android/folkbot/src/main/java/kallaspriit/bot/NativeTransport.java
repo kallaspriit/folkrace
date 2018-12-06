@@ -14,7 +14,7 @@ class NativeTransport implements Transport {
   NativeTransport(WebView webView) {
     this.webView = webView;
 
-    setState(State.CONNECTED);
+    setState(State.CONNECTING);
 
     listeners.forEach(listener -> listener.onClientConnected(this));
   }
@@ -37,6 +37,15 @@ class NativeTransport implements Transport {
 
   @JavascriptInterface
   public void receive(String message) {
+    // handle handshake message
+    if (message.equals("!handshake")) {
+      // consider successfully connected
+      setState(State.CONNECTED);
+
+      // respond with handshake
+      send("!handshake");
+    }
+
     listeners.forEach(listener -> listener.onMessageReceived(this, message));
   }
 
