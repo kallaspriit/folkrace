@@ -41,9 +41,9 @@ const uint8_t MOTOR_SERIAL_ADDRESS = 128;
 // voltage measurement correction configuration
 const double MAIN_VOLTAGE_CORRECTION_MULTIPLIER = 1.02;
 
-// usb serial configuration (simulate ARM mbed board)
-const uint16_t USB_VENDOR_ID = 0x0d28;  // ARM
-const uint16_t USB_PRODUCT_ID = 0x0204; // mbed
+// usb serial configuration (same as USBSerial defaults)
+const uint16_t USB_VENDOR_ID = 0x1f00;
+const uint16_t USB_PRODUCT_ID = 0x2012;
 const uint16_t USB_PRODUCT_RELEASE = 0x0001;
 
 // rear led configuration

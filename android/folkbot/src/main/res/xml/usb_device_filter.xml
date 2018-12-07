@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- ARM mbed 1768 -->
+    <!-- MBED USBSerial default -->
+    <usb-device
+        product-id="8210"
+        vendor-id="7936" />
+
+    <!-- ARM MBED LPC1768 -->
     <usb-device
         product-id="516"
         vendor-id="3368" />
