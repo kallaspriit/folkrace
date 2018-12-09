@@ -1,6 +1,6 @@
-import { ContainerMap } from "./";
+import { ContainerMap } from ".";
 
-export function handleMeasurementCommand(
+export function handleLidarMeasurementCommand(
   args: string[],
   { measurements }: ContainerMap
 ) {

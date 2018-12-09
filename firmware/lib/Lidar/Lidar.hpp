@@ -1,11 +1,10 @@
 #ifndef MBED_LIDAR_H
 #define MBED_LIDAR_H
 
-#include "PID.h"
-
 #include <mbed.h>
-
 #include <queue>
+
+#include <PID.h>
 
 class LidarMeasurement
 {

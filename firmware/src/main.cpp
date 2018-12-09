@@ -1,18 +1,20 @@
 #include <mbed.h>
 #include <USBSerial.h>
 
-#include "WS2812.h"
-#include "PixelArray.h"
-#include "Commander.hpp"
-#include "RoboClaw.hpp"
-#include "Lidar.hpp"
-#include "DebouncedInterruptIn.hpp"
+#include <Commander.hpp>
+#include <RoboClaw.hpp>
+#include <Lidar.hpp>
+#include <DebouncedInterruptIn.hpp>
+#include <WS2812.h>
+#include <PixelArray.h>
+#include <LSM9DS1.h>
+#include <MadgwickAHRS.h>
 
 // pin mapping configuration
 const PinName LOG_SERIAL_TX_PIN = USBTX;
 const PinName LOG_SERIAL_RX_PIN = USBRX;
-const PinName APP_SERIAL_TX_PIN = p9;
-const PinName APP_SERIAL_RX_PIN = p10;
+const PinName IMU_SDA_PIN = p9;
+const PinName IMU_SCL_PIN = p10;
 const PinName MOTOR_SERIAL_TX_PIN = p13;
 const PinName MOTOR_SERIAL_RX_PIN = p14;
 const PinName LIDAR_PWM_PIN = p21;
@@ -55,9 +57,22 @@ const int WS2812_ZERO_LOW_LENGTH = 11;
 const int WS2812_ONE_HIGH_LENGTH = 10;
 const int WS2812_ONE_LOW_LENGTH = 11;
 
+// IMU configuration
+const int IMU_ACCELEROMETER_GYRO_ADDRESS = 0xD6;
+const int IMU_MAGNETOMETER_ADDRESS = 0x3C;
+
+// AHRS configuration
+const float AHRS_GYRO_ERROR_DEG_S = 1.0f;
+const int AHRS_INITIAL_SAMPLE_FREQUENCY = 100;
+
+// list of possible error states (error led blinks error position number of times)
+enum Error
+{
+  IMU_NOT_AVAILABLE
+};
+
 // setup serials
 Serial logSerial(LOG_SERIAL_TX_PIN, USBRX, LOG_SERIAL_BAUDRATE);
-// Serial appSerial(APP_SERIAL_TX_PIN, APP_SERIAL_RX_PIN, APP_SERIAL_BAUDRATE);
 USBSerial appSerial(USB_VENDOR_ID, USB_PRODUCT_ID, USB_PRODUCT_RELEASE, false);
 
 // setup commanders (handle serial commands)
@@ -70,6 +85,10 @@ RoboClaw motors(MOTOR_SERIAL_ADDRESS, MOTOR_SERIAL_BAUDRATE, MOTOR_SERIAL_RX_PIN
 // setup lidar
 Lidar lidar(LIDAR_TX_PIN, LIDAR_RX_PIN, LIDAR_PWM_PIN);
 
+// setup IMU and AHRS
+LSM9DS1 imu(IMU_SDA_PIN, IMU_SCL_PIN, IMU_ACCELEROMETER_GYRO_ADDRESS, IMU_MAGNETOMETER_ADDRESS);
+MadgwickAHRS ahrs(AHRS_GYRO_ERROR_DEG_S, AHRS_INITIAL_SAMPLE_FREQUENCY);
+
 // setup timers
 Timer reportEncoderValuesTimer;
 Timer loopTimer;
@@ -81,6 +100,7 @@ Timer debugTimer;
 // setup status leds
 DigitalOut loopStatusLed(LED1);
 DigitalOut usbStatusLed(LED2);
+DigitalOut errorLed(LED3);
 
 // setup usb power sense (usb serial knows when it gets connected but not when disconnected)
 DigitalIn usbPowerSense(USB_POWER_SENSE_PIN);
@@ -119,6 +139,36 @@ int lastLoopTimeUs = 0;
 // keep track of last loop led state and cycle count
 int lastLoopLedState = 0;
 int cycleCountSinceLastLoopBlink = 0;
+
+// enters infinite loop, blinking given error sequence on the error led
+void dieWithError(Error error, const char *message)
+{
+  logSerial.printf("@ %s\n", message);
+
+  // blink error index + 1 number of times
+  int blinkCount = (int)error + 1;
+
+  errorLed = 0;
+
+  // enter infinite loop
+  while (true)
+  {
+    // blink fast according to error
+    for (int i = 0; i < blinkCount; i++)
+    {
+      wait(0.1f);
+
+      errorLed = 1;
+
+      wait(0.1f);
+
+      errorLed = 0;
+    }
+
+    // turn error led off for a while
+    wait(3.0f);
+  }
+}
 
 // returns whether usb serial is connected
 bool isUsbConnected()
@@ -415,6 +465,7 @@ void setupStatusLeds()
   // set initial status led states
   loopStatusLed = 0;
   usbStatusLed = 0;
+  errorLed = 0;
 }
 
 void setupButtons()
@@ -480,6 +531,22 @@ void setupRearLedStrip()
   {
     setLedColor(i, 0, 255, 0, 255);
   }
+}
+
+void setupIMU()
+{
+  // attempt to initialize
+  if (!imu.begin())
+  {
+    // no IMU is available, blink the error led
+    dieWithError(Error::IMU_NOT_AVAILABLE, "communicating with LSM9DS1 IMU failed");
+  }
+
+  logSerial.printf("# calibrating IMU.. ");
+
+  imu.calibrate();
+
+  logSerial.printf("done!\n");
 }
 
 void stepUsbConnectionState()
@@ -563,7 +630,7 @@ void stepEncoderReporter()
   }
 }
 
-void stepLidarMeasurements()
+void stepLidar()
 {
   int queuedMeasurementCount = lidar.getQueuedMeasurementCount();
 
@@ -596,11 +663,50 @@ void stepLidarMeasurements()
     // only send valid and strong measurements
     if (measurement->isValid && measurement->isStrong)
     {
-      sendAsync("m:%d:%d:%d\n", measurement->angle, measurement->distance / 10, measurement->quality);
+      sendAsync("l:%d:%d:%d\n", measurement->angle, measurement->distance / 10, measurement->quality);
     }
 
     // make sure to delete it afterwards
     delete measurement;
+  }
+}
+
+void stepIMU()
+{
+  // read IMU values
+  imu.readMag();
+  imu.readGyro();
+  imu.readAccel();
+
+  // convert raw gyro readings to deg/s
+  float gx = imu.calcGyro(imu.gx);
+  float gy = imu.calcGyro(imu.gy);
+  float gz = imu.calcGyro(imu.gz);
+
+  // convert raw accelerometer readings to g's
+  float ax = imu.calcAccel(imu.ax);
+  float ay = imu.calcAccel(imu.ay);
+  float az = imu.calcAccel(imu.az);
+
+  // convert raw magnetometer readings to G's
+  float mx = imu.calcMag(imu.mx);
+  float my = imu.calcMag(imu.my);
+  float mz = imu.calcMag(imu.mz);
+
+  // update ahrs
+  ahrs.update(gx, gy, gz, ax, ay, az, mx, my, mz);
+
+  // get robot attitude
+  float roll = ahrs.getRoll();
+  float pitch = ahrs.getPitch();
+  float yaw = ahrs.getYaw();
+
+  // report the readings and attitude information
+  if (isUsbConnected())
+  {
+    // TODO: send attitude quaternion instead of roll-pitch-yaw
+    // sendAsync("i:%f:%f:%f:%f:%f:%f:%f:%f:%f:%f:%f:%f\n", gx, gy, gz, ax, ay, az, mx, my, mz, roll, pitch, yaw);
+    sendAsync("a:%f:%f:%f\n", roll, pitch, yaw);
   }
 }
 
@@ -644,8 +750,17 @@ void stepLoopBlinker()
     // send connection alive beacon message on rising edge
     if (currentLoopLedState == 1 && isUsbConnected())
     {
-      send("b:%d:%d\n", timeSinceLastBlink, cycleCountSinceLastLoopBlink);
+      sendAsync("b:%d:%d\n", timeSinceLastBlink, cycleCountSinceLastLoopBlink);
     }
+
+    // calculate main loop execution frequency
+    int loopFrequency = ceil(((float)cycleCountSinceLastLoopBlink / (float)timeSinceLastBlink) * 1000.0f);
+
+    // update ahrs sample frequency (matches loop execution frequency)
+    ahrs.setSampleFrequency(loopFrequency);
+
+    // TODO: remove logging IMU attitude
+    logSerial.printf("# frequency: %d, roll: %f, pitch: %f, yaw: %f\n", loopFrequency, ahrs.getRoll(), ahrs.getPitch(), ahrs.getYaw());
   }
 
   // reset loop led timer if interval + blink duration has passed
@@ -697,8 +812,6 @@ void d(const char *name, int slowThreshold = SLOW_OPERATION_THRESHOLD_US)
 
 int main()
 {
-  logSerial.printf("# initializing.. ");
-
   // setup resources
   setupUsbPowerSensing();
   setupStatusLeds();
@@ -706,9 +819,10 @@ int main()
   setupCommandHandlers();
   setupMotors();
   setupRearLedStrip();
+  setupIMU();
   setupTimers();
 
-  logSerial.printf("done!\n");
+  logSerial.printf("# initialization complete!\n");
 
   // run main loop
   while (true)
@@ -735,11 +849,15 @@ int main()
 
     s();
     stepEncoderReporter();
-    d("stepEncoderReporter");
+    d("stepEncoderReporter", 2000);
 
     s();
-    stepLidarMeasurements();
-    d("stepLidarMeasurements");
+    stepLidar();
+    d("stepLidar");
+
+    s();
+    stepIMU();
+    d("stepIMU", 4000);
 
     s();
     stepRearLedStrip();

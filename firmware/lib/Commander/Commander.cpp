@@ -1,7 +1,9 @@
 #include "Commander.hpp"
-#include "Util.hpp"
 
 #include <Callback.h>
+#include <sstream>
+#include <vector>
+#include <iterator>
 
 Commander::Commander(Serial *serial) : serial(serial), ser(serial)
 {
@@ -168,4 +170,22 @@ int Commander::getIntArgument(unsigned int index)
 
   //   return 0;
   // }
+}
+
+template <typename Out>
+void Commander::split(const std::string &s, char delim, Out result)
+{
+  std::stringstream ss(s);
+  std::string item;
+  while (std::getline(ss, item, delim))
+  {
+    *(result++) = item;
+  }
+}
+
+std::vector<std::string> Commander::split(const std::string &s, char delim)
+{
+  std::vector<std::string> elems;
+  split(s, delim, std::back_inserter(elems));
+  return elems;
 }

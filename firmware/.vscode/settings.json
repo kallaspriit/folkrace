@@ -4,9 +4,12 @@
     "PLATFORMIO_CALLER": "vscode"
   },
   "cSpell.words": [
+    "AHRS",
+    "Accel",
     "DEBOUNCED",
     "Folkrace",
     "MBED",
+    "Madgwick",
     "Robo",
     "USBRX",
     "USBTX",
@@ -42,6 +45,28 @@
     "tuple": "cpp",
     "type_traits": "cpp",
     "typeinfo": "cpp",
-    "utility": "cpp"
+    "utility": "cpp",
+    "algorithm": "cpp",
+    "cmath": "cpp",
+    "deque": "cpp",
+    "ios": "cpp",
+    "iterator": "cpp",
+    "map": "cpp",
+    "memory": "cpp",
+    "queue": "cpp",
+    "string": "cpp",
+    "vector": "cpp",
+    "xfacet": "cpp",
+    "xiosbase": "cpp",
+    "xlocale": "cpp",
+    "xlocinfo": "cpp",
+    "xlocnum": "cpp",
+    "xmemory": "cpp",
+    "xmemory0": "cpp",
+    "xstddef": "cpp",
+    "xstring": "cpp",
+    "xtr1common": "cpp",
+    "xtree": "cpp",
+    "xutility": "cpp"
   }
 }

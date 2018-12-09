@@ -12,8 +12,8 @@ import { handleCurrentCommand } from "./handleCurrentCommand";
 import { handleEncoderCommand } from "./handleEncoderCommand";
 import { handleVoltageCommand } from "./handleGetVoltageCommand";
 import { handleIpCommand } from "./handleIpCommand";
-import { handleLidarCommand } from "./handleLidarCommand";
-import { handleMeasurementCommand } from "./handleMeasurementCommand";
+import { handleLidarMeasurementCommand } from "./handleLidarMeasurementCommand";
+import { handleLidarStateCommand } from "./handleLidarStateCommand";
 import { handlePongCommand } from "./handlePongCommand";
 import { handleResetCommand } from "./handleResetCommand";
 import { handleSerialCommand } from "./handleSerialCommand";
@@ -47,11 +47,11 @@ export const commandHandlers: CommandHandlersMap = {
   button: handleButtonCommand,
   reset: handleResetCommand,
   current: handleCurrentCommand,
-  lidar: handleLidarCommand,
+  lidar: handleLidarStateCommand,
   pong: handlePongCommand,
   e: handleEncoderCommand,
   b: handleBeaconCommand,
-  m: handleMeasurementCommand,
+  l: handleLidarMeasurementCommand,
   s: handleSpeedCommand
 };
 

@@ -36,6 +36,10 @@ private:
   void handleSerialRx();
   bool isReadable();
 
+  template <typename Out>
+  void split(const std::string &s, char delim, Out result);
+  std::vector<std::string> split(const std::string &s, char delim);
+
   static const int MAX_COMMAND_LENGTH = 128;
   static const int COMMAND_BUFFER_SIZE = MAX_COMMAND_LENGTH + 1;
   static const int MAX_COMMAND_QUEUE_LENGTH = 32;

@@ -1,6 +1,9 @@
-import { ContainerMap } from "./";
+import { ContainerMap } from ".";
 
-export function handleLidarCommand(args: string[], { lidar }: ContainerMap) {
+export function handleLidarStateCommand(
+  args: string[],
+  { lidar }: ContainerMap
+) {
   const isStarted = parseInt(args[0], 10) === 1;
   const isValid = parseInt(args[1], 10) === 1;
   const targetRpm = parseFloat(args[2]);
