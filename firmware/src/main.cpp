@@ -31,10 +31,8 @@ const int LOG_SERIAL_BAUDRATE = 921600;   // log serial is the built-in usb of t
 const int MOTOR_SERIAL_BAUDRATE = 460800; // not default, make sure to update in the Ion Studio
 
 // timing configuration
-const int REPORT_ENCODER_VALUES_INTERVAL_MS = 1000; // larger interval for testing
-const int APP_MESSAGE_SENT_BLINK_DURATION_MS = 10;  // for how long to turn off the usb status led while transmitting
-const int LOOP_LED_INTERVAL_MS = 1000;
-const int LOOP_LED_BLINK_DURATION_MS = 10;
+const int LOOP_LED_BLINK_INTERVAL_MS = 1000;
+const int LED_BLINK_DURATION_MS = 10;
 const int BUTTON_DEBOUNCE_US = 100000; // 100ms
 
 // component configuration
@@ -57,6 +55,13 @@ const int WS2812_ZERO_LOW_LENGTH = 11;
 const int WS2812_ONE_HIGH_LENGTH = 10;
 const int WS2812_ONE_LOW_LENGTH = 11;
 
+// lidar configuration
+const float LIDAR_PID_P = 2.0f;
+const float LIDAR_PID_I = 5.0f;
+const float LIDAR_PID_D = 0.001f;
+const float LIDAR_PID_INTERVAL_MS = 10;
+const int LIDAR_REPORT_STATE_INTERVAL_MS = 1000;
+
 // IMU configuration
 const int IMU_ACCELEROMETER_GYRO_ADDRESS = 0xD6;
 const int IMU_MAGNETOMETER_ADDRESS = 0x3C;
@@ -64,6 +69,10 @@ const int IMU_MAGNETOMETER_ADDRESS = 0x3C;
 // AHRS configuration
 const float AHRS_GYRO_ERROR_DEG_S = 1.0f;
 const int AHRS_INITIAL_SAMPLE_FREQUENCY = 100;
+
+// main loop configuration
+const int TARGET_LOOP_FREQUENCY = 100;
+const int TARGET_LOOP_DURATION_US = (1000 / TARGET_LOOP_FREQUENCY) * 1000;
 
 // list of possible error states (error led blinks error position number of times)
 enum Error
@@ -83,19 +92,19 @@ Commander appCommander(&appSerial);
 RoboClaw motors(MOTOR_SERIAL_ADDRESS, MOTOR_SERIAL_BAUDRATE, MOTOR_SERIAL_RX_PIN, MOTOR_SERIAL_TX_PIN);
 
 // setup lidar
-Lidar lidar(LIDAR_TX_PIN, LIDAR_RX_PIN, LIDAR_PWM_PIN);
+Lidar lidar(LIDAR_TX_PIN, LIDAR_RX_PIN, LIDAR_PWM_PIN, LIDAR_PID_P, LIDAR_PID_I, LIDAR_PID_D, LIDAR_PID_INTERVAL_MS);
 
 // setup IMU and AHRS
 LSM9DS1 imu(IMU_SDA_PIN, IMU_SCL_PIN, IMU_ACCELEROMETER_GYRO_ADDRESS, IMU_MAGNETOMETER_ADDRESS);
 MadgwickAHRS ahrs(AHRS_GYRO_ERROR_DEG_S, AHRS_INITIAL_SAMPLE_FREQUENCY);
 
 // setup timers
-Timer reportEncoderValuesTimer;
 Timer loopTimer;
 Timer loopLedTimer;
 Timer rearLedUpdateTimer;
 Timer appMessageSentTimer;
 Timer debugTimer;
+Timer reportLidarStateTimer;
 
 // setup status leds
 DigitalOut loopStatusLed(LED1);
@@ -187,7 +196,7 @@ void sendRaw(const char *message, int length, bool blocking = true)
   // don't attempt to send if not connected as writing is blocking
   if (!isUsbConnected())
   {
-    logSerial.printf("@ no serial connected, failed sending: %s", message);
+    // logSerial.printf("@ no serial connected, failed sending: %s", message);
 
     return;
   }
@@ -209,7 +218,7 @@ void sendRaw(const char *message, int length, bool blocking = true)
   }
 
   // reset the app message sent timer if at least twice the blink duration has passed
-  if (appMessageSentTimer.read_ms() >= APP_MESSAGE_SENT_BLINK_DURATION_MS * 2)
+  if (appMessageSentTimer.read_ms() >= LED_BLINK_DURATION_MS * 2)
   {
     appMessageSentTimer.reset();
   }
@@ -274,7 +283,7 @@ void reportEncoderValues(bool force = false)
   lastEncoderDeltaM2 = encoderDeltaM2;
 
   // send the encoder values
-  send("e:%d:%d\n", encoderDeltaM1, encoderDeltaM2);
+  send("e:%d:%d\n", encoderDeltaM1, -encoderDeltaM2);
 }
 
 // reports given button state
@@ -367,7 +376,7 @@ void handleSpeedCommand(Commander *commander)
 
   // set motor speeds
   motors.setSpeedM1(targetSpeedM1);
-  motors.setSpeedM2(targetSpeedM2);
+  motors.setSpeedM2(-targetSpeedM2);
 
   // report new target speeds
   reportTargetSpeed();
@@ -570,7 +579,7 @@ void stepUsbConnectionState()
     wasUsbConnected = isConnected;
   }
 
-  if (isConnected && appMessageSentTimer.read_ms() < APP_MESSAGE_SENT_BLINK_DURATION_MS)
+  if (isConnected && appMessageSentTimer.read_ms() < LED_BLINK_DURATION_MS)
   {
     // turn the usb status led off for a brief duration when transmitting data
     usbStatusLed = 0;
@@ -621,17 +630,20 @@ void stepCommanders()
 
 void stepEncoderReporter()
 {
-  // report encoder values at certain interval
-  if (reportEncoderValuesTimer.read_ms() >= REPORT_ENCODER_VALUES_INTERVAL_MS)
-  {
-    reportEncoderValues();
-
-    reportEncoderValuesTimer.reset();
-  }
+  reportEncoderValues();
 }
 
 void stepLidar()
 {
+  // report lidar state at an interval
+  if (reportLidarStateTimer.read_ms() >= LIDAR_REPORT_STATE_INTERVAL_MS && isUsbConnected())
+  {
+    reportLidarState();
+
+    reportLidarStateTimer.reset();
+  }
+
+  // get number of queued measurements
   int queuedMeasurementCount = lidar.getQueuedMeasurementCount();
 
   // skip if nothing to send
@@ -640,8 +652,10 @@ void stepLidar()
     return;
   }
 
+  // logSerial.printf("queued: %d\n", queuedMeasurementCount);
+
   // skip and remove queued measurements if app serial is not connected
-  if (!appSerial.connected())
+  if (!isUsbConnected())
   {
     // TODO: add method to lidar to clear all queued measurements
     while (lidar.getQueuedMeasurementCount() > 0)
@@ -655,19 +669,40 @@ void stepLidar()
   }
 
   // output the queued lidar measurements
-  while (lidar.getQueuedMeasurementCount() > 0)
+  // while (lidar.getQueuedMeasurementCount() > 0)
+  // {
+  //   // pop next measurement
+  //   LidarMeasurement *measurement = lidar.popQueuedMeasurement();
+
+  //   // only send valid and strong measurements
+  //   // TODO: build <= 64 byte packets for better performance
+  //   // l:360:9999:999:360:9999:999:360:9999:999:360:9999:999:360:9999:999
+  //   if (measurement->isValid && measurement->isStrong)
+  //   {
+  //     // logSerial.printf("l:%d:%d:%d\n", measurement->angle, measurement->distance, measurement->quality);
+  //     sendAsync("l:%d:%d:%d\n", measurement->angle, measurement->distance, measurement->quality);
+  //   }
+
+  //   // make sure to delete it afterwards
+  //   delete measurement;
+  // }
+
+  // send batch of 4 measurements to optimize for 64 byte USB buffer size
+  while (lidar.getQueuedMeasurementCount() >= 4)
   {
     // pop next measurement
-    LidarMeasurement *measurement = lidar.popQueuedMeasurement();
+    LidarMeasurement *measurement1 = lidar.popQueuedMeasurement();
+    LidarMeasurement *measurement2 = lidar.popQueuedMeasurement();
+    LidarMeasurement *measurement3 = lidar.popQueuedMeasurement();
+    LidarMeasurement *measurement4 = lidar.popQueuedMeasurement();
 
-    // only send valid and strong measurements
-    if (measurement->isValid && measurement->isStrong)
-    {
-      sendAsync("l:%d:%d:%d\n", measurement->angle, measurement->distance / 10, measurement->quality);
-    }
+    send("l:%d:%d:%d:%d:%d:%d:%d:%d:%d:%d:%d:%d\n", measurement1->angle, measurement1->distance, measurement1->quality, measurement2->angle, measurement2->distance, measurement2->quality, measurement3->angle, measurement3->distance, measurement3->quality, measurement4->angle, measurement4->distance, measurement4->quality);
 
-    // make sure to delete it afterwards
-    delete measurement;
+    // delete the measurements
+    delete measurement1;
+    delete measurement2;
+    delete measurement3;
+    delete measurement4;
   }
 }
 
@@ -737,8 +772,8 @@ void stepRearLedStrip()
 void stepLoopBlinker()
 {
   int timeSinceLastBlink = loopLedTimer.read_ms();
-  bool shouldReset = timeSinceLastBlink > LOOP_LED_INTERVAL_MS + LOOP_LED_BLINK_DURATION_MS;
-  int currentLoopLedState = !shouldReset && timeSinceLastBlink > LOOP_LED_INTERVAL_MS ? 1 : 0;
+  bool shouldReset = timeSinceLastBlink > LOOP_LED_BLINK_INTERVAL_MS + LED_BLINK_DURATION_MS;
+  int currentLoopLedState = !shouldReset && timeSinceLastBlink > LOOP_LED_BLINK_INTERVAL_MS ? 1 : 0;
 
   // check whether loop led state has changed
   if (currentLoopLedState != lastLoopLedState)
@@ -756,11 +791,13 @@ void stepLoopBlinker()
     // calculate main loop execution frequency
     int loopFrequency = ceil(((float)cycleCountSinceLastLoopBlink / (float)timeSinceLastBlink) * 1000.0f);
 
+    // logSerial.printf("loopFrequency: %d\n", loopFrequency);
+
     // update ahrs sample frequency (matches loop execution frequency)
     ahrs.setSampleFrequency(loopFrequency);
 
-    // TODO: remove logging IMU attitude
-    logSerial.printf("# frequency: %d, roll: %f, pitch: %f, yaw: %f\n", loopFrequency, ahrs.getRoll(), ahrs.getPitch(), ahrs.getYaw());
+    // log IMU attitude
+    // logSerial.printf("# frequency: %d, roll: %f, pitch: %f, yaw: %f\n", loopFrequency, ahrs.getRoll(), ahrs.getPitch(), ahrs.getYaw());
   }
 
   // reset loop led timer if interval + blink duration has passed
@@ -779,18 +816,27 @@ void stepLoopTimer()
 {
   // read the loop time in microseconds and reset the timer
   lastLoopTimeUs = loopTimer.read_us();
+
+  int sleepTimeUs = TARGET_LOOP_DURATION_US - lastLoopTimeUs;
+
+  // sleep to attempt to match target loop frequency
+  if (sleepTimeUs > 0)
+  {
+    wait_us(sleepTimeUs);
+  }
+
   loopTimer.reset();
 }
 
 void setupTimers()
 {
   // start timers
-  reportEncoderValuesTimer.start();
   loopTimer.start();
   loopLedTimer.start();
   rearLedUpdateTimer.start();
   appMessageSentTimer.start();
   debugTimer.start();
+  reportLidarStateTimer.start();
 }
 
 const int SLOW_OPERATION_THRESHOLD_US = 1000; // 1ms
@@ -845,19 +891,19 @@ int main()
 
     s();
     stepCommanders();
-    d("stepCommanders");
+    d("stepCommanders", 2000);
 
     s();
     stepEncoderReporter();
-    d("stepEncoderReporter", 2000);
+    d("stepEncoderReporter", 3000);
 
     s();
     stepLidar();
-    d("stepLidar");
+    d("stepLidar", 3000);
 
-    s();
-    stepIMU();
-    d("stepIMU", 4000);
+    // s();
+    // stepIMU();
+    // d("stepIMU", 4000);
 
     s();
     stepRearLedStrip();
@@ -867,8 +913,8 @@ int main()
     stepLoopBlinker();
     d("stepLoopBlinker");
 
-    s();
+    // s();
     stepLoopTimer();
-    d("stepLoopTimer");
+    // d("stepLoopTimer");
   }
 }

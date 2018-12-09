@@ -71,10 +71,10 @@ const ClearLogIcon = styled(ClearIcon)`
 
 export const Log: React.SFC = () => (
   <Subscribe to={[LogContainer]}>
-    {(logContainer: LogContainer) => (
+    {(log: LogContainer) => (
       <StatusGridItem>
         <LogWrap>
-          {logContainer.state.entries.map(entry => (
+          {log.state.entries.map(entry => (
             <LogEntry key={entry.id}>
               <LogEntryTime>{formatTime(entry.time)}</LogEntryTime>
               <LogEntryMessage type={entry.type}>
@@ -86,7 +86,7 @@ export const Log: React.SFC = () => (
             </LogEntry>
           ))}
         </LogWrap>
-        <ClearLogButton onClick={() => logContainer.clear()}>
+        <ClearLogButton onClick={() => log.clear()}>
           <ClearLogIcon />
         </ClearLogButton>
       </StatusGridItem>

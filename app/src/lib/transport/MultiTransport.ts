@@ -56,13 +56,16 @@ export class MultiTransport implements Transport {
 
   async connect() {
     // call connect on all disconnected transports
-    this.transports.forEach(transport => {
+    const promises = this.transports.map(transport => {
       if (transport.getState() !== TransportState.DISCONNECTED) {
-        return;
+        return Promise.resolve();
       }
 
-      transport.connect();
+      return transport.connect();
     });
+
+    // wait for all transports to connect
+    await Promise.all(promises);
   }
 
   send(message: string) {

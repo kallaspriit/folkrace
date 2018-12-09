@@ -13,30 +13,28 @@ import { Text } from "./Text";
 
 export const TransportStatus: React.SFC = () => (
   <Subscribe to={[StatusContainer]}>
-    {(statusContainer: StatusContainer) => {
-      const status =
-        statusContainer.state.transportState === TransportState.CONNECTED
+    {(status: StatusContainer) => {
+      const transportStatus =
+        status.state.transportState === TransportState.CONNECTED
           ? GridItemStatus.GOOD
           : GridItemStatus.BAD;
       const description =
-        statusContainer.state.transportState !== TransportState.CONNECTED ||
-        statusContainer.state.remoteIp === undefined
-          ? titleCase(statusContainer.state.transportState)
-          : statusContainer.state.remoteIp;
+        status.state.transportState !== TransportState.CONNECTED ||
+        status.state.remoteIp === undefined
+          ? titleCase(status.state.transportState)
+          : status.state.remoteIp;
 
       return (
         <GridItem
-          status={status}
-          onClick={() =>
-            robot.ping(statusContainer.getConnectedSerial() === undefined)
-          }
+          status={transportStatus}
+          onClick={() => robot.ping(status.getConnectedSerial() === undefined)}
         >
           {multiTransport.getName() === "Native" ? (
             <NativeIcon />
           ) : (
             <WebsocketIcon />
           )}
-          <Text primary={true}>{multiTransport.getName()}</Text>
+          <Text primary>{multiTransport.getName()}</Text>
           <Text>{description}</Text>
         </GridItem>
       );

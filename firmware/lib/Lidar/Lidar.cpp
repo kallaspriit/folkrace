@@ -3,16 +3,17 @@
 #include <mbed.h>
 #include <Callback.h>
 
-Lidar::Lidar(PinName txPin, PinName rxPin, PinName motorPwmPin) : serial(txPin, rxPin, 115200),
-                                                                  motorPwm(motorPwmPin),
-                                                                  motorPid(2.0f, 1.0f, 0.01f, (float)PID_INTERVAL_MS / 1000.0f)
+Lidar::Lidar(PinName txPin, PinName rxPin, PinName motorPwmPin, float pidP, float pidI, float pidD, int pidIntervalMs) : serial(txPin, rxPin, 115200),
+                                                                                                                         motorPwm(motorPwmPin),
+                                                                                                                         motorPid(pidP, pidI, pidD, (float)pidIntervalMs / 1000.0f),
+                                                                                                                         pidIntervalMs(pidIntervalMs)
 {
-  // stop the motor initially
-  setMotorPwm(0);
-
-  // configure PID controller
+  // configure PID controller limits
   motorPid.setInputLimits(0.0f, 400.0f); // motor rpm
   motorPid.setOutputLimits(0.0f, 1.0f);  // motor pwm
+
+  // stop the motor initially
+  setMotorPwm(0);
 }
 
 bool Lidar::isStarted()
@@ -64,10 +65,8 @@ void Lidar::setTargetRpm(float newTargetRpm)
 
   if (targetRpm > 0.0f)
   {
+    // calculate expected rotation duration, used to detect invalid state
     expectedCycleDuration = 1000 / ((int)targetRpm / 60);
-
-    // TODO: implement real speed controller
-    // setMotorPwm((float)newTargetRpm / 300.0f * 0.65f);
 
     // start the lidar if it was not already running
     if (!isRunning)
@@ -77,12 +76,17 @@ void Lidar::setTargetRpm(float newTargetRpm)
 
       // reset and start the timers
       cycleTimer.reset();
-      pidTimer.reset();
       cycleTimer.start();
+
+      pidTimer.reset();
       pidTimer.start();
 
+      runningTimer.reset();
+      runningTimer.start();
+
       // start the motor initially with a set pwm value
-      setMotorPwm(0.65f);
+      // TODO: make configurable?
+      setMotorPwm(0.30f);
 
       // lidar is now running
       isRunning = true;
@@ -92,6 +96,7 @@ void Lidar::setTargetRpm(float newTargetRpm)
   {
     expectedCycleDuration = 0;
 
+    // stop the motor
     setMotorPwm(0);
 
     // check whether the lidar was previously running
@@ -100,6 +105,7 @@ void Lidar::setTargetRpm(float newTargetRpm)
       // stop the timers
       cycleTimer.stop();
       pidTimer.stop();
+      runningTimer.stop();
 
       // stop listening for serial data
       serial.attach(NULL, Serial::RxIrq);
@@ -228,9 +234,15 @@ void Lidar::processPacket()
       bool isValid = !isBadData || !(packetInvalidFlag[ix] & INVALID_DATA_FLAG);
       bool isStrong = !isBadData || !(packetInvalidFlag[ix] & STRENGTH_WARNING_FLAG);
 
-      LidarMeasurement *measurement = new LidarMeasurement(angle, distance, quality, isValid, isStrong);
+      // only add valid strong measurements
+      if (isValid && isStrong)
+      {
+        // TODO: remove valid and strong from measurement as they are always true
+        // TODO: avoid dynamic memory, use predefined list of measurements
+        LidarMeasurement *measurement = new LidarMeasurement(angle, distance, quality, isValid, isStrong);
 
-      measurementsQueue.push(measurement);
+        measurementsQueue.push(measurement);
+      }
     }
 
     // remove measurements from the queue if there are too many to avoid running out of memory
@@ -242,10 +254,12 @@ void Lidar::processPacket()
       delete measurement;
     }
   }
-  // else
-  // {
-  //   printf("@ CRC\n");
-  // }
+  else
+  {
+    // printf("@ CRC\n");
+
+    packetErrorCount++;
+  }
 
   resetPacket();
 }
@@ -329,20 +343,39 @@ void Lidar::processRpm()
   uint8_t motor_rph_high_byte = packet[OFFSET_TO_SPEED_MSB];
 
   // calculate current rpm
-  lastMotorRpm = float((motor_rph_high_byte << 8) | motor_rph_low_byte) / 64.0f;
+  float currentMotorRpm = float((motor_rph_high_byte << 8) | motor_rph_low_byte) / 64.0f;
+
+  // add current possibly noisy reading to the average sum
+  motorRpmSum += currentMotorRpm;
+  motorRpmCount++;
+
+  // don't use the pid loop for the first few seconds, letting it to start up
+  if (runningTimer.read_ms() < 2000)
+  {
+    return;
+  }
 
   // check whether we should update the motor pid controller
-  if (pidTimer.read_ms() >= PID_INTERVAL_MS)
+  if (pidTimer.read_ms() >= pidIntervalMs)
   {
-    // update pid process value
+    // calculate average motor rpm
+    lastMotorRpm = motorRpmSum / (float)motorRpmCount;
+
+    // update pid process value (current rpm)
     motorPid.setProcessValue(lastMotorRpm);
 
     // compute new motor pwm
     float newMotorPwm = motorPid.compute();
 
+    // printf("pwm: %f, rpm: %f, sum: %f, count: %d\n", newMotorPwm, lastMotorRpm, motorRpmSum, motorRpmCount);
+
     setMotorPwm(newMotorPwm);
 
     pidTimer.reset();
+
+    // reset motor rpm average variables
+    motorRpmSum = 0;
+    motorRpmCount = 0;
   }
 }
 

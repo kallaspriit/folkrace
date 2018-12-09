@@ -27,7 +27,7 @@ class Lidar
 {
 
 public:
-  Lidar(PinName txPin, PinName rxPin, PinName motorPwmPin);
+  Lidar(PinName txPin, PinName rxPin, PinName motorPwmPin, float pidP = 1.0f, float pidI = 0.5f, float pidD = 0.01f, int pidIntervalMs = 10);
 
   bool isStarted();
   bool isValid();
@@ -57,12 +57,16 @@ private:
 
   Serial serial;
   PwmOut motorPwm;
-  Timer cycleTimer;
-  Timer pidTimer;
   MeasurementsQueue measurementsQueue;
   PID motorPid;
 
-  static const int PID_INTERVAL_MS = 100;
+  Timer cycleTimer;
+  Timer pidTimer;
+  Timer runningTimer;
+
+  int pidIntervalMs;
+  int packetErrorCount = 0;
+
   static const uint8_t PACKET_START_BYTE = 0xFA;
 
   static const int N_DATA_QUADS = 4;
@@ -98,6 +102,9 @@ private:
   bool isRunning = false;
   bool wasLastPacketValid = false;
 
+  float motorRpmSum = 0;
+  int motorRpmCount = 0;
+
   State state = BUILDING_PACKET;
   int packet[PACKET_LENGTH];
   int packetByteIndex = 0;
@@ -106,7 +113,7 @@ private:
   uint16_t packetDistance[N_DATA_QUADS] = {0, 0, 0, 0};
   uint16_t packetSignalStrength[N_DATA_QUADS] = {0, 0, 0, 0};
   float motorPwmDuty = 0.0f;
-  float targetRpm = 250.0f;
+  float targetRpm = 0.0f;
   float lastMotorRpm = 0.0f;
   int expectedCycleDuration = 0;
 };

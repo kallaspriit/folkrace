@@ -88,7 +88,7 @@ export class WebsocketTransport implements Transport {
 
       // attempt to reconnect
       setTimeout(() => {
-        this.connect();
+        void this.connect();
       }, this.options.reconnectInterval);
     };
 

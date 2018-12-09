@@ -34,7 +34,7 @@ export class App extends React.Component {
                 <Route path="/remote" component={RemoteView} />
                 <Route path="/bot" component={BotView} />
                 <Route path="/settings" component={SettingsView} />
-                <Route exact={true} path="/">
+                <Route exact path="/">
                   <Redirect to="/status" />
                 </Route>
               </Switch>

@@ -10,9 +10,9 @@ import { Text } from "./Text";
 
 export const UsbStatus: React.SFC = () => (
   <Subscribe to={[StatusContainer]}>
-    {(statusContainer: StatusContainer) => {
-      const connectedSerial = statusContainer.getConnectedSerial();
-      const status =
+    {(status: StatusContainer) => {
+      const connectedSerial = status.getConnectedSerial();
+      const usbStatus =
         connectedSerial !== undefined
           ? GridItemStatus.GOOD
           : GridItemStatus.BAD;
@@ -26,9 +26,9 @@ export const UsbStatus: React.SFC = () => (
       );
 
       return (
-        <GridItem status={status}>
+        <GridItem status={usbStatus}>
           <Icon />
-          <Text primary={true}>{title}</Text>
+          <Text primary>{title}</Text>
           <Text>{description}</Text>
         </GridItem>
       );

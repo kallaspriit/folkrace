@@ -11,16 +11,16 @@ import { Text } from "./Text";
 
 export const BatteryStatus: React.SFC = () => (
   <Subscribe to={[StatusContainer]}>
-    {(statusContainer: StatusContainer) => {
-      const status = getBatteryStatus(statusContainer.batteryState);
-      const description = statusContainer.state.batteryVoltage
-        ? `${statusContainer.state.batteryVoltage.toFixed(1)}V`
+    {(status: StatusContainer) => {
+      const batteryStatus = getBatteryStatus(status.batteryState);
+      const description = status.state.batteryVoltage
+        ? `${status.state.batteryVoltage.toFixed(1)}V`
         : "Unknown";
 
       return (
-        <GridItem status={status} onClick={() => robot.requestVoltage()}>
+        <GridItem status={batteryStatus} onClick={() => robot.requestVoltage()}>
           <BatteryIcon />
-          <Text primary={true}>Battery</Text>
+          <Text primary>Battery</Text>
           <Text>{description}</Text>
         </GridItem>
       );

@@ -1,11 +1,22 @@
 import { Transport } from "../transport/Transport";
 
+export interface RobotConfig {
+  targetLidarRpm?: number;
+}
+
 export type SendArgument = string | number;
 
 export class Robot {
   pingSentTime?: number;
 
-  constructor(private readonly transport: Transport) {}
+  private config: Required<RobotConfig>;
+
+  constructor(private readonly transport: Transport, config: RobotConfig = {}) {
+    this.config = {
+      targetLidarRpm: 300,
+      ...config
+    };
+  }
 
   requestVoltage() {
     this.send("voltage");
@@ -29,6 +40,14 @@ export class Robot {
       // send full ping, responded by the MCU
       this.send("ping");
     }
+  }
+
+  startLidar(): void {
+    this.send(`rpm:${this.config.targetLidarRpm}`);
+  }
+
+  stopLidar(): void {
+    this.send("rpm:0");
   }
 
   // don't use directly, add new robot method

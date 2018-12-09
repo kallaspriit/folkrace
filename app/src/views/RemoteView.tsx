@@ -23,11 +23,11 @@ export class RemoteView extends React.Component {
 
   render() {
     return (
-      <View grid={true}>
+      <View grid>
         <JoystickGrid>
           <GridItem>
             <Joystick
-              x={true}
+              x
               name="speed"
               onEvent={(name, event, info) =>
                 this.onJoystickEvent(name, event, info)
@@ -36,7 +36,7 @@ export class RemoteView extends React.Component {
           </GridItem>
           <GridItem>
             <Joystick
-              y={true}
+              y
               name="omega"
               onEvent={(name, event, info) =>
                 this.onJoystickEvent(name, event, info)

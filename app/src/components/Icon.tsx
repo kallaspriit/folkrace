@@ -62,3 +62,7 @@ export const BatteryIcon: React.SFC = props => (
 export const ClearIcon: React.SFC = props => (
   <Icon {...props} url="icons/clear.svg" width={32} height={32} />
 );
+
+export const LidarIcon: React.SFC = props => (
+  <Icon {...props} url="icons/lidar.svg" width={32} height={32} />
+);

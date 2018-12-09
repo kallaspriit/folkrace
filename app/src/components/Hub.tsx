@@ -9,6 +9,7 @@ import { OdometryContainer } from "../containers/OdometryContainer";
 import { RobotContainer } from "../containers/RobotContainer";
 import { StatusContainer } from "../containers/StatusContainer";
 
+import { AhrsContainer } from "../containers/AhrsContainer";
 import { ContainerMap, handleCommand } from "../handlers";
 import { addLogListener } from "../services/log";
 import { multiTransport } from "../services/multiTransport";
@@ -27,7 +28,8 @@ export class Hub extends React.Component {
           LidarContainer,
           ButtonContainer,
           RobotContainer,
-          MeasurementsContainer
+          MeasurementsContainer,
+          AhrsContainer
         ]}
       >
         {(
@@ -37,7 +39,8 @@ export class Hub extends React.Component {
           lidar: LidarContainer,
           button: ButtonContainer,
           robot: RobotContainer,
-          measurements: MeasurementsContainer
+          measurements: MeasurementsContainer,
+          ahrs: AhrsContainer
         ) => {
           // only initialize the connection logic once
           if (this.isInitialized) {
@@ -92,7 +95,8 @@ export class Hub extends React.Component {
                 lidar,
                 button,
                 robot,
-                measurements
+                measurements,
+                ahrs
               };
 
               this.handleTransportMessage(message, containers);
@@ -100,7 +104,7 @@ export class Hub extends React.Component {
           });
 
           // attempt to establish connection
-          multiTransport.connect();
+          void multiTransport.connect();
 
           // don't run this logic again
           this.isInitialized = true;
@@ -121,7 +125,7 @@ export class Hub extends React.Component {
 
     // parse message
     const [command, ...args] = message.split(":");
-    const noLogCommands = ["pong"];
+    const noLogCommands = ["pong", "lidar"];
 
     // dont log single-character commands (fast lidar measurements, encoders etc)
     if (command.length > 1 && noLogCommands.indexOf(command) === -1) {

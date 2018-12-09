@@ -54,7 +54,8 @@
       "allow-leading-underscore",
       "allow-pascal-case"
     ],
-    "jsx-no-lambda": false
+    "jsx-no-lambda": false,
+    "jsx-boolean-value": [true, "never"]
   },
   "linterOptions": {
     "exclude": [

@@ -1,3 +1,4 @@
+import { AhrsContainer } from "../containers/AhrsContainer";
 import { ButtonContainer } from "../containers/ButtonContainer";
 import { LidarContainer } from "../containers/LidarContainer";
 import { LogContainer } from "../containers/LogContainer";
@@ -6,6 +7,7 @@ import { OdometryContainer } from "../containers/OdometryContainer";
 import { RobotContainer } from "../containers/RobotContainer";
 import { StatusContainer } from "../containers/StatusContainer";
 
+import { handleAhrsCommand } from "./handleAhrsCommand";
 import { handleBeaconCommand } from "./handleBeaconCommand";
 import { handleButtonCommand } from "./handleButtonCommand";
 import { handleCurrentCommand } from "./handleCurrentCommand";
@@ -28,6 +30,7 @@ export interface ContainerMap {
   button: ButtonContainer;
   robot: RobotContainer;
   measurements: MeasurementsContainer;
+  ahrs: AhrsContainer;
 }
 
 export type CommandHandlerFn = (
@@ -52,7 +55,8 @@ export const commandHandlers: CommandHandlersMap = {
   e: handleEncoderCommand,
   b: handleBeaconCommand,
   l: handleLidarMeasurementCommand,
-  s: handleSpeedCommand
+  s: handleSpeedCommand,
+  a: handleAhrsCommand
 };
 
 // handles parsed web-socket commands
