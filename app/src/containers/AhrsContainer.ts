@@ -1,12 +1,5 @@
 import { Container } from "unstated";
 
-export interface LidarMeasurement {
-  readonly angle: number;
-  readonly distance: number;
-  readonly quality: number;
-  readonly date: Date;
-}
-
 export interface Attitude {
   readonly roll: number;
   readonly pitch: number;

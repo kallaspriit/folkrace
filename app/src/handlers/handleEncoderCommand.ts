@@ -1,4 +1,4 @@
-import { ContainerMap } from "./";
+import { ContainerMap } from "../services/containers";
 
 export function handleEncoderCommand(
   args: string[],

@@ -1,4 +1,4 @@
-import { ContainerMap } from ".";
+import { ContainerMap } from "../services/containers";
 
 export function handleAhrsCommand(args: string[], { ahrs }: ContainerMap) {
   // console.log("measurement", { args });

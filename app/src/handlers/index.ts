@@ -1,11 +1,4 @@
-import { AhrsContainer } from "../containers/AhrsContainer";
-import { ButtonContainer } from "../containers/ButtonContainer";
-import { LidarContainer } from "../containers/LidarContainer";
-import { LogContainer } from "../containers/LogContainer";
-import { MeasurementsContainer } from "../containers/MeasurementsContainer";
-import { OdometryContainer } from "../containers/OdometryContainer";
-import { RobotContainer } from "../containers/RobotContainer";
-import { StatusContainer } from "../containers/StatusContainer";
+import { ContainerMap } from "../services/containers";
 
 import { handleAhrsCommand } from "./handleAhrsCommand";
 import { handleBeaconCommand } from "./handleBeaconCommand";
@@ -21,17 +14,6 @@ import { handleResetCommand } from "./handleResetCommand";
 import { handleSerialCommand } from "./handleSerialCommand";
 import { handleSpeedCommand } from "./handleSpeedCommand";
 import { handleUsbCommand } from "./handleUsbCommand";
-
-export interface ContainerMap {
-  log: LogContainer;
-  status: StatusContainer;
-  odometry: OdometryContainer;
-  lidar: LidarContainer;
-  button: ButtonContainer;
-  robot: RobotContainer;
-  measurements: MeasurementsContainer;
-  ahrs: AhrsContainer;
-}
 
 export type CommandHandlerFn = (
   args: string[],

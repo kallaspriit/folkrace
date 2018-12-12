@@ -1,4 +1,4 @@
-import { ContainerMap } from "./";
+import { ContainerMap } from "../services/containers";
 
 export function handleBeaconCommand(args: string[], { status }: ContainerMap) {
   const durationMs = parseInt(args[0], 10);

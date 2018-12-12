@@ -1,5 +1,10 @@
 import * as React from "react";
 
+import { LidarMap } from "../components/LidarMap";
 import { View } from "../components/View";
 
-export const MapView: React.SFC = () => <View text>Map</View>;
+export const MapView: React.SFC = () => (
+  <View text>
+    <LidarMap />
+  </View>
+);

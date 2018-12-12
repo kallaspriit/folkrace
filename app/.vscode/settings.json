@@ -3,6 +3,7 @@
     "Ahrs",
     "Debounced",
     "Odometry",
+    "Unmount",
     "folkbot",
     "nipplejs",
     "typestrict"

@@ -10,7 +10,8 @@ import { RobotContainer } from "../containers/RobotContainer";
 import { StatusContainer } from "../containers/StatusContainer";
 
 import { AhrsContainer } from "../containers/AhrsContainer";
-import { ContainerMap, handleCommand } from "../handlers";
+import { handleCommand } from "../handlers";
+import { ContainerMap, setContainers } from "../services/containers";
 import { addLogListener } from "../services/log";
 import { multiTransport } from "../services/multiTransport";
 
@@ -46,6 +47,21 @@ export class Hub extends React.Component {
           if (this.isInitialized) {
             return null;
           }
+
+          // setup container map
+          const containers: ContainerMap = {
+            log,
+            status,
+            odometry,
+            lidar,
+            button,
+            robot,
+            measurements,
+            ahrs
+          };
+
+          // make the containers globally available
+          setContainers(containers);
 
           // register as log listener and proxy to log container
           addLogListener(message => log.addEntry(message));
@@ -87,18 +103,6 @@ export class Hub extends React.Component {
               );
             },
             onMessageReceived: (_transport, message) => {
-              // TODO: make globally available?
-              const containers = {
-                log,
-                status,
-                odometry,
-                lidar,
-                button,
-                robot,
-                measurements,
-                ahrs
-              };
-
               this.handleTransportMessage(message, containers);
             }
           });

@@ -1,4 +1,4 @@
-import { ContainerMap } from "./";
+import { ContainerMap } from "../services/containers";
 
 export function handleCurrentCommand(args: string[], { robot }: ContainerMap) {
   const left = parseInt(args[0], 10);

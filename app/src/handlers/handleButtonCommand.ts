@@ -1,6 +1,6 @@
 import { Button, ButtonState } from "../containers/ButtonContainer";
 
-import { ContainerMap } from "./";
+import { ContainerMap } from "../services/containers";
 
 export function handleButtonCommand(args: string[], { button }: ContainerMap) {
   const name = args[0];

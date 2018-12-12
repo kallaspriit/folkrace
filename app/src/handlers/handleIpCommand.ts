@@ -1,4 +1,4 @@
-import { ContainerMap } from "./";
+import { ContainerMap } from "../services/containers";
 
 export function handleIpCommand(args: string[], { status }: ContainerMap) {
   const remoteIp = args[0];
