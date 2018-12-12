@@ -196,7 +196,7 @@ void sendRaw(const char *message, int length, bool blocking = true)
   // don't attempt to send if not connected as writing is blocking
   if (!isUsbConnected())
   {
-    // logSerial.printf("@ no serial connected, failed sending: %s", message);
+    logSerial.printf("@ %s", message);
 
     return;
   }
