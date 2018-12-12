@@ -6,73 +6,80 @@
 
 #include <PID.h>
 
-class LidarMeasurement
-{
-public:
-  int angle;
-  int distance;
-  int quality;
-  bool isValid;
-  bool isStrong;
-
-  LidarMeasurement(int angle, int distance, int quality, bool isValid, bool isStrong) : angle(angle),
-                                                                                        distance(distance),
-                                                                                        quality(quality), isValid(isValid),
-                                                                                        isStrong(isStrong) {}
-};
-
-typedef std::queue<LidarMeasurement *> MeasurementsQueue;
-
 class Lidar
 {
 
 public:
-  Lidar(PinName txPin, PinName rxPin, PinName motorPwmPin, float pidP = 1.0f, float pidI = 0.5f, float pidD = 0.01f, int pidIntervalMs = 10);
+  // represents a lidar measurement
+  struct Measurement
+  {
+    int angle = -1;
+    int distance = -1;
+    int quality = -1;
+    bool isInvalid = true;
+    bool isWeak = true;
+  };
 
-  bool isStarted();
+  Lidar(PinName txPin, PinName rxPin, PinName motorPwmPin, float pidP = 1.0f, float pidI = 0.5f, float pidD = 0.01f, int pidIntervalMs = 10, float startupPwm = 0.3f);
+
+  bool isRunning();
   bool isValid();
 
+  void start(float targetRpm = 300.0f);
+  void stop();
   void setTargetRpm(float targetRpm);
   float getTargetRpm() { return targetRpm; }
   float getCurrentRpm();
 
   float getMotorPwm();
 
-  unsigned int getQueuedMeasurementCount();
-  LidarMeasurement *popQueuedMeasurement();
+  int getRunningDurationMs() { return runningTimer.read_ms(); }
+
+  int getTotalMeasurementCount() { return receivedMeasurementCount; }
+  int getInvalidMeasurementCount() { return invalidMeasurementCount; }
+  int getWeakMeasurementCount() { return weakMeasurementCount; }
+  int getOutOfOrderMeasurementCount() { return outOfOrderMeasurementCount; }
+  Measurement *getMeasurement(int number);
+
+  int getRotationCount() { return rotationCount; }
+
+  // 360 measurements per rotation, running at 300 RPM (5Hz) that's 1800 measurements per second
+  static const int MEASUREMENT_BUFFER_SIZE = 180; // enough for 100ms (10 FPS)
 
 private:
+  // motor speed is controlled internally by the PID controller
   void setMotorPwm(float duty);
-  void handleSerialRx();
-  void processWaitingForStartByte(uint8_t inByte);
-  void processBuildPacket(uint8_t inByte);
-  void processPacket();
-  uint16_t processIndex();
-  void processRpm();
-  uint8_t processDistance(int iQuad);
-  void processSignalStrength(int iQuad);
 
+  // packet parsing utilities
+  void handleSerialRx();
+  void handleWaitForStartByte(uint8_t inByte);
+  void handleBuildPacket(uint8_t inByte);
+  void handleRotationComplete();
+  void processPacket();
+  void processDistance(int iQuad);
+  void processSignalStrength(int iQuad);
+  int getPacketStartAngle();
   void resetPacket();
   bool isPacketValid();
 
+  // dependencies
   Serial serial;
   PwmOut motorPwm;
-  MeasurementsQueue measurementsQueue;
+  Measurement measurements[MEASUREMENT_BUFFER_SIZE]; // circular measurements buffer
   PID motorPid;
 
-  Timer cycleTimer;
-  Timer pidTimer;
+  // timers
+  Timer rotationTimer;
   Timer runningTimer;
 
+  // configuration set by the constructor
   int pidIntervalMs;
-  int packetErrorCount = 0;
+  float startupPwm;
 
-  static const uint8_t PACKET_START_BYTE = 0xFA;
-
+  // packet parsing configuration
   static const int N_DATA_QUADS = 4;
   static const int N_ELEMENTS_PER_QUAD = 4;
   static const int MAX_LIDAR_MEASUREMENTS_QUEUE_LENGTH = 360;
-
   static const int OFFSET_TO_START = 0;
   static const int OFFSET_TO_INDEX = OFFSET_TO_START + 1;
   static const int OFFSET_TO_SPEED_LSB = OFFSET_TO_INDEX + 1;
@@ -85,37 +92,40 @@ private:
   static const int OFFSET_DATA_SIGNAL_LSB = OFFSET_DATA_DISTANCE_MSB + 1;
   static const int OFFSET_DATA_SIGNAL_MSB = OFFSET_DATA_SIGNAL_LSB + 1;
   static const int PACKET_LENGTH = OFFSET_TO_CRC_M + 1;
-
   static const int INDEX_LO = 0xA0;
   static const int INDEX_HI = 0xF9;
-
+  static const uint8_t PACKET_START_BYTE = 0xFA;
   static const uint8_t INVALID_DATA_FLAG = (1 << 7);
   static const uint8_t STRENGTH_WARNING_FLAG = (1 << 6);
   static const uint8_t BAD_DATA_MASK = (INVALID_DATA_FLAG | STRENGTH_WARNING_FLAG);
 
+  // packet parser state machine states
   enum State
   {
-    WAITING_FOR_START_BYTE,
-    BUILDING_PACKET
+    WAIT_FOR_START_BYTE,
+    BUILD_PACKET
   };
 
-  bool isRunning = false;
-  bool wasLastPacketValid = false;
-
-  float motorRpmSum = 0;
-  int motorRpmCount = 0;
-
-  State state = BUILDING_PACKET;
-  int packet[PACKET_LENGTH];
+  // runtime state
+  bool running = false;
+  int packetErrorCount = 0;
+  volatile int receivedMeasurementCount = 0;
+  int invalidMeasurementCount = 0;
+  int weakMeasurementCount = 0;
+  int outOfOrderMeasurementCount = 0;
+  int rotationCount = 0;
+  float motorPwmDuty = 0.0f;
+  float targetRpm = 0.0f;
+  float currentMotorRpm = 0.0f;
+  int expectedRotationDurationMs = 0;
+  int lastRotationDurationMs = 0;
+  int lastMeasurementAngle = -1;
+  State state = WAIT_FOR_START_BYTE;
   int packetByteIndex = 0;
-  uint16_t packetStartAngle = 0;
+  int packet[PACKET_LENGTH];
   uint8_t packetInvalidFlag[N_DATA_QUADS] = {0, 0, 0, 0};
   uint16_t packetDistance[N_DATA_QUADS] = {0, 0, 0, 0};
   uint16_t packetSignalStrength[N_DATA_QUADS] = {0, 0, 0, 0};
-  float motorPwmDuty = 0.0f;
-  float targetRpm = 0.0f;
-  float lastMotorRpm = 0.0f;
-  int expectedCycleDuration = 0;
 };
 
 #endif

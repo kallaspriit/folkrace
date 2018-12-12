@@ -56,11 +56,13 @@ const int WS2812_ONE_HIGH_LENGTH = 10;
 const int WS2812_ONE_LOW_LENGTH = 11;
 
 // lidar configuration
-const float LIDAR_PID_P = 2.0f;
-const float LIDAR_PID_I = 5.0f;
-const float LIDAR_PID_D = 0.001f;
-const float LIDAR_PID_INTERVAL_MS = 10;
-const int LIDAR_REPORT_STATE_INTERVAL_MS = 1000;
+const float LIDAR_PID_P = 3.0f;
+const float LIDAR_PID_I = 1.5f;
+const float LIDAR_PID_D = 0.0f;
+const float LIDAR_STARTUP_PWM = 0.35f;                                    // startup pwm, should be close to real at target rpm
+const float LIDAR_TARGET_RPM = 300.0f;                                    // 5Hz
+const float LIDAR_PID_INTERVAL_MS = 1000.0f / (LIDAR_TARGET_RPM / 60.0f); // 200ms at 300rpm (5Hz)
+const int LIDAR_REPORT_STATE_INTERVAL_MS = 1000;                          // how often to report the lidar state
 
 // IMU configuration
 const int IMU_ACCELEROMETER_GYRO_ADDRESS = 0xD6;
@@ -92,7 +94,7 @@ Commander appCommander(&appSerial);
 RoboClaw motors(MOTOR_SERIAL_ADDRESS, MOTOR_SERIAL_BAUDRATE, MOTOR_SERIAL_RX_PIN, MOTOR_SERIAL_TX_PIN);
 
 // setup lidar
-Lidar lidar(LIDAR_TX_PIN, LIDAR_RX_PIN, LIDAR_PWM_PIN, LIDAR_PID_P, LIDAR_PID_I, LIDAR_PID_D, LIDAR_PID_INTERVAL_MS);
+Lidar lidar(LIDAR_TX_PIN, LIDAR_RX_PIN, LIDAR_PWM_PIN, LIDAR_PID_P, LIDAR_PID_I, LIDAR_PID_D, LIDAR_PID_INTERVAL_MS, LIDAR_STARTUP_PWM);
 
 // setup IMU and AHRS
 LSM9DS1 imu(IMU_SDA_PIN, IMU_SCL_PIN, IMU_ACCELEROMETER_GYRO_ADDRESS, IMU_MAGNETOMETER_ADDRESS);
@@ -148,6 +150,9 @@ int lastLoopTimeUs = 0;
 // keep track of last loop led state and cycle count
 int lastLoopLedState = 0;
 int cycleCountSinceLastLoopBlink = 0;
+
+// keep track of the number of read and sent lidar measurements
+int readLidarMeasurementCount = 0;
 
 // enters infinite loop, blinking given error sequence on the error led
 void dieWithError(Error error, const char *message)
@@ -306,7 +311,8 @@ void reportTargetSpeed()
 
 void reportLidarState()
 {
-  send("lidar:%d:%d:%.1f:%.1f:%.2f\n", lidar.isStarted() ? 1 : 0, lidar.isValid() ? 1 : 0, lidar.getTargetRpm(), lidar.getCurrentRpm(), lidar.getMotorPwm());
+  // TODO: add invalid, weak, out of order, rotation count
+  send("lidar:%d:%d:%.1f:%.1f:%.2f\n", lidar.isRunning() ? 1 : 0, lidar.isValid() ? 1 : 0, lidar.getTargetRpm(), lidar.getCurrentRpm(), lidar.getMotorPwm());
 }
 
 void reportVoltage()
@@ -393,7 +399,7 @@ void handleRpmCommand(Commander *commander)
     send("@ rpm:RPM expects exactly one parameter (where RPM is the new target lidar rpm)\n");
 
     // stop the lidar when receiving invalid command
-    lidar.setTargetRpm(0);
+    lidar.stop();
 
     return;
   }
@@ -635,75 +641,45 @@ void stepEncoderReporter()
 
 void stepLidar()
 {
+  bool isConnected = isUsbConnected();
+
   // report lidar state at an interval
-  if (reportLidarStateTimer.read_ms() >= LIDAR_REPORT_STATE_INTERVAL_MS && isUsbConnected())
+  if (isConnected && reportLidarStateTimer.read_ms() >= LIDAR_REPORT_STATE_INTERVAL_MS)
   {
     reportLidarState();
 
     reportLidarStateTimer.reset();
   }
 
-  // get number of queued measurements
-  int queuedMeasurementCount = lidar.getQueuedMeasurementCount();
-
-  // skip if nothing to send
-  if (queuedMeasurementCount == 0)
+  // skip measurements if lidar is not running or usb is not connected
+  if (!isConnected || !lidar.isRunning())
   {
+    readLidarMeasurementCount = lidar.getTotalMeasurementCount();
+
     return;
   }
 
-  // logSerial.printf("queued: %d\n", queuedMeasurementCount);
-
-  // skip and remove queued measurements if app serial is not connected
-  if (!isUsbConnected())
+  // loop through unseen lidar measurements
+  do
   {
-    // TODO: add method to lidar to clear all queued measurements
-    while (lidar.getQueuedMeasurementCount() > 0)
-    {
-      LidarMeasurement *measurement = lidar.popQueuedMeasurement();
+    // get number of queued measurements
+    int queuedMeasurementCount = lidar.getTotalMeasurementCount() - readLidarMeasurementCount;
 
-      delete measurement;
+    // break if we have no new set of 4 new measurements available
+    if (queuedMeasurementCount < 4)
+    {
+      break;
     }
 
-    return;
-  }
+    // get the measurements
+    Lidar::Measurement *measurement1 = lidar.getMeasurement(readLidarMeasurementCount++);
+    Lidar::Measurement *measurement2 = lidar.getMeasurement(readLidarMeasurementCount++);
+    Lidar::Measurement *measurement3 = lidar.getMeasurement(readLidarMeasurementCount++);
+    Lidar::Measurement *measurement4 = lidar.getMeasurement(readLidarMeasurementCount++);
 
-  // output the queued lidar measurements
-  // while (lidar.getQueuedMeasurementCount() > 0)
-  // {
-  //   // pop next measurement
-  //   LidarMeasurement *measurement = lidar.popQueuedMeasurement();
-
-  //   // only send valid and strong measurements
-  //   // TODO: build <= 64 byte packets for better performance
-  //   // l:360:9999:999:360:9999:999:360:9999:999:360:9999:999:360:9999:999
-  //   if (measurement->isValid && measurement->isStrong)
-  //   {
-  //     // logSerial.printf("l:%d:%d:%d\n", measurement->angle, measurement->distance, measurement->quality);
-  //     sendAsync("l:%d:%d:%d\n", measurement->angle, measurement->distance, measurement->quality);
-  //   }
-
-  //   // make sure to delete it afterwards
-  //   delete measurement;
-  // }
-
-  // send batch of 4 measurements to optimize for 64 byte USB buffer size
-  while (lidar.getQueuedMeasurementCount() >= 4)
-  {
-    // pop next measurement
-    LidarMeasurement *measurement1 = lidar.popQueuedMeasurement();
-    LidarMeasurement *measurement2 = lidar.popQueuedMeasurement();
-    LidarMeasurement *measurement3 = lidar.popQueuedMeasurement();
-    LidarMeasurement *measurement4 = lidar.popQueuedMeasurement();
-
+    // send the measurements
     send("l:%d:%d:%d:%d:%d:%d:%d:%d:%d:%d:%d:%d\n", measurement1->angle, measurement1->distance, measurement1->quality, measurement2->angle, measurement2->distance, measurement2->quality, measurement3->angle, measurement3->distance, measurement3->quality, measurement4->angle, measurement4->distance, measurement4->quality);
-
-    // delete the measurements
-    delete measurement1;
-    delete measurement2;
-    delete measurement3;
-    delete measurement4;
-  }
+  } while (true);
 }
 
 void stepIMU()

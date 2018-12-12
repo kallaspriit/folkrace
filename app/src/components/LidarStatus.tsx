@@ -14,7 +14,12 @@ export const LidarStatus: React.SFC = () => (
       const { status, description } = getLidarStatus(lidar);
 
       return (
-        <GridItem status={status} onClick={() => robot.startLidar()}>
+        <GridItem
+          status={status}
+          onClick={() =>
+            lidar.state.isStarted ? robot.stopLidar() : robot.startLidar()
+          }
+        >
           <LidarIcon />
           <Text primary>Lidar</Text>
           <Text>{description}</Text>

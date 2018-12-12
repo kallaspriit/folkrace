@@ -14,11 +14,11 @@ const PinName LIDAR_RX_PIN = p27;
 const int LOG_SERIAL_BAUDRATE = 921600; // log serial is the built-in usb of the mbed board
 
 // lidar configuration
-const float LIDAR_TARGET_RPM = 300.0f; // 5Hz
 const float LIDAR_PID_P = 3.0f;
 const float LIDAR_PID_I = 1.5f;
 const float LIDAR_PID_D = 0.0f;
 const float LIDAR_STARTUP_PWM = 0.35f;                                  // should be close to ideal pwm
+const float LIDAR_TARGET_RPM = 300.0f;                                  // 5Hz
 const int LIDAR_PID_INTERVAL_MS = 1000.0f / (LIDAR_TARGET_RPM / 60.0f); // 200ms at 300rpm (5Hz)
 
 // setup serials

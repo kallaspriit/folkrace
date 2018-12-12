@@ -3,10 +3,11 @@
 #include <mbed.h>
 #include <Callback.h>
 
-Lidar::Lidar(PinName txPin, PinName rxPin, PinName motorPwmPin, float pidP, float pidI, float pidD, int pidIntervalMs) : serial(txPin, rxPin, 115200),
-                                                                                                                         motorPwm(motorPwmPin),
-                                                                                                                         motorPid(pidP, pidI, pidD, (float)pidIntervalMs / 1000.0f),
-                                                                                                                         pidIntervalMs(pidIntervalMs)
+Lidar::Lidar(PinName txPin, PinName rxPin, PinName motorPwmPin, float pidP, float pidI, float pidD, int pidIntervalMs, float startupPwm) : serial(txPin, rxPin, 115200),
+                                                                                                                                           motorPwm(motorPwmPin),
+                                                                                                                                           motorPid(pidP, pidI, pidD, (float)pidIntervalMs / 1000.0f),
+                                                                                                                                           pidIntervalMs(pidIntervalMs),
+                                                                                                                                           startupPwm(startupPwm)
 {
   // configure PID controller limits
   motorPid.setInputLimits(0.0f, 400.0f); // motor rpm
@@ -16,23 +17,25 @@ Lidar::Lidar(PinName txPin, PinName rxPin, PinName motorPwmPin, float pidP, floa
   setMotorPwm(0);
 }
 
-bool Lidar::isStarted()
+bool Lidar::isRunning()
 {
-  return isRunning;
+  return running;
 }
 
 bool Lidar::isValid()
 {
-  if (!isRunning)
+  if (!running)
   {
     return false;
   }
 
-  // get time since last cycle and calculate expected
-  int timeSinceLastCycle = cycleTimer.read_ms();
+  // threshold for valid duration
+  float rotationDurationValidThreshold = 0.2f;
+  int minRotationDurationMs = (float)expectedRotationDurationMs * (1.0f - rotationDurationValidThreshold / 2.0f);
+  int maxRotationDurationMs = (float)expectedRotationDurationMs * (1.0f + rotationDurationValidThreshold / 2.0f);
 
-  // consider invalid if the last cycle has taken too long
-  if (timeSinceLastCycle > expectedCycleDuration * 1.2)
+  // consider invalid if the last cycle has taken too long or short time
+  if (lastRotationDurationMs < minRotationDurationMs || lastRotationDurationMs > maxRotationDurationMs)
   {
     return false;
   }
@@ -52,97 +55,102 @@ float Lidar::getMotorPwm()
   return motorPwmDuty;
 }
 
+void Lidar::start(float targetRpm)
+{
+  setTargetRpm(targetRpm);
+}
+
+void Lidar::stop()
+{
+  setTargetRpm(0);
+}
+
 void Lidar::setTargetRpm(float newTargetRpm)
 {
+  // accept only positive rpm
   if (newTargetRpm < 0)
   {
     newTargetRpm = 0;
   }
 
-  // update target rpm and pid controller setpoint
+  // update target rpm
   targetRpm = newTargetRpm;
+
+  // set new pid controller set-point
   motorPid.setSetPoint(newTargetRpm);
 
   if (targetRpm > 0.0f)
   {
     // calculate expected rotation duration, used to detect invalid state
-    expectedCycleDuration = 1000 / ((int)targetRpm / 60);
+    expectedRotationDurationMs = 1000 / ((int)targetRpm / 60);
 
     // start the lidar if it was not already running
-    if (!isRunning)
+    if (!running)
     {
       // listen for serial data
       serial.attach(callback(this, &Lidar::handleSerialRx), Serial::RxIrq);
 
-      // reset and start the timers
-      cycleTimer.reset();
-      cycleTimer.start();
-
-      pidTimer.reset();
-      pidTimer.start();
-
-      runningTimer.reset();
+      // start the timers
       runningTimer.start();
 
       // start the motor initially with a set pwm value
-      // TODO: make configurable?
-      setMotorPwm(0.30f);
+      setMotorPwm(startupPwm);
 
       // lidar is now running
-      isRunning = true;
+      running = true;
     }
   }
   else
   {
-    expectedCycleDuration = 0;
-
-    // stop the motor
-    setMotorPwm(0);
-
     // check whether the lidar was previously running
-    if (isRunning)
+    if (running)
     {
-      // stop the timers
-      cycleTimer.stop();
-      pidTimer.stop();
-      runningTimer.stop();
+      // stop the motor
+      setMotorPwm(0);
 
       // stop listening for serial data
       serial.attach(NULL, Serial::RxIrq);
 
-      // lidar is now stopped
-      isRunning = false;
+      // stop timers
+      rotationTimer.stop();
+      runningTimer.stop();
+
+      // reset timers
+      rotationTimer.reset();
+      runningTimer.reset();
+
+      // reset state
+      running = false;
+      packetErrorCount = 0;
+      receivedMeasurementCount = 0;
+      invalidMeasurementCount = 0;
+      weakMeasurementCount = 0;
+      outOfOrderMeasurementCount = 0;
+      rotationCount = 0;
+      expectedRotationDurationMs = 0;
+      lastRotationDurationMs = 0;
+      lastMeasurementAngle = -1;
+      state = WAIT_FOR_START_BYTE;
+      packetByteIndex = 0;
     }
   }
 }
 
 float Lidar::getCurrentRpm()
 {
-  // return zero if last reading was received long time ago
-  if (!isValid())
-  {
-    return 0.0f;
-  }
+  // return zero if lidar is currently not valid
+  // if (!isValid())
+  // {
+  //   return 0.0f;
+  // }
 
-  return lastMotorRpm;
+  return currentMotorRpm;
 }
 
-unsigned int Lidar::getQueuedMeasurementCount()
+Lidar::Measurement *Lidar::getMeasurement(int number)
 {
-  return measurementsQueue.size();
-}
-
-LidarMeasurement *Lidar::popQueuedMeasurement()
-{
-  // return null if there are no more measurements in the queue
-  if (measurementsQueue.size() == 0)
-  {
-    return NULL;
-  }
-
-  // get the queued measurement and remove it from the queue, make sure to delete it!
-  LidarMeasurement *measurement = measurementsQueue.front();
-  measurementsQueue.pop();
+  int index = number % MEASUREMENT_BUFFER_SIZE;
+  Measurement *measurement = &measurements[index];
 
   return measurement;
 }
@@ -155,17 +163,17 @@ void Lidar::handleSerialRx()
   // execute the state machine
   switch (state)
   {
-  case WAITING_FOR_START_BYTE:
-    processWaitingForStartByte(inByte);
+  case WAIT_FOR_START_BYTE:
+    handleWaitForStartByte(inByte);
     break;
 
-  case BUILDING_PACKET:
-    processBuildPacket(inByte);
+  case BUILD_PACKET:
+    handleBuildPacket(inByte);
     break;
   }
 }
 
-void Lidar::processWaitingForStartByte(uint8_t inByte)
+void Lidar::handleWaitForStartByte(uint8_t inByte)
 {
   // ignore characters not matching the start byte
   if (inByte != PACKET_START_BYTE)
@@ -174,11 +182,11 @@ void Lidar::processWaitingForStartByte(uint8_t inByte)
   }
 
   // move to building packet state and store the byte
-  state = BUILDING_PACKET;
+  state = BUILD_PACKET;
   packet[packetByteIndex++] = inByte;
 }
 
-void Lidar::processBuildPacket(uint8_t inByte)
+void Lidar::handleBuildPacket(uint8_t inByte)
 {
   // keep storing bytes into the packet
   packet[packetByteIndex++] = inByte;
@@ -195,70 +203,73 @@ void Lidar::processBuildPacket(uint8_t inByte)
 
 void Lidar::processPacket()
 {
-  wasLastPacketValid = isPacketValid();
-
-  // we've got all the input bytes, so we're done building this packet
-  if (wasLastPacketValid)
-  {
-    // get the starting angle of this group (of 4), e.g., 0, 4, 8, 12, ...
-    packetStartAngle = processIndex();
-
-    // process motor rpm info
-    processRpm();
-
-    // process distances
-    for (int ix = 0; ix < N_DATA_QUADS; ix++)
-    {
-      packetInvalidFlag[ix] = processDistance(ix);
-    }
-
-    // process the signal strength (quality)
-    for (int ix = 0; ix < N_DATA_QUADS; ix++)
-    {
-      packetSignalStrength[ix] = 0;
-
-      // process signal strength if not invalid
-      if (packetInvalidFlag[ix] == 0)
-      {
-        processSignalStrength(ix);
-      }
-    }
-
-    // queue the lidar measurements
-    for (int ix = 0; ix < N_DATA_QUADS; ix++)
-    {
-      int angle = packetStartAngle + ix;
-      int distance = int(packetDistance[ix]);
-      int quality = packetSignalStrength[ix];
-      bool isBadData = packetInvalidFlag[ix] & BAD_DATA_MASK;
-      bool isValid = !isBadData || !(packetInvalidFlag[ix] & INVALID_DATA_FLAG);
-      bool isStrong = !isBadData || !(packetInvalidFlag[ix] & STRENGTH_WARNING_FLAG);
-
-      // only add valid strong measurements
-      if (isValid && isStrong)
-      {
-        // TODO: remove valid and strong from measurement as they are always true
-        // TODO: avoid dynamic memory, use predefined list of measurements
-        LidarMeasurement *measurement = new LidarMeasurement(angle, distance, quality, isValid, isStrong);
-
-        measurementsQueue.push(measurement);
-      }
-    }
-
-    // remove measurements from the queue if there are too many to avoid running out of memory
-    while (measurementsQueue.size() > MAX_LIDAR_MEASUREMENTS_QUEUE_LENGTH)
-    {
-      LidarMeasurement *measurement = measurementsQueue.front();
-      measurementsQueue.pop();
-
-      delete measurement;
-    }
-  }
-  else
+  // handle invalid packet
+  if (!isPacketValid())
   {
     // printf("@ CRC\n");
 
     packetErrorCount++;
+
+    resetPacket();
+
+    return;
+  }
+
+  // process motor rpm info
+  // processRpm();
+
+  // get the starting angle of this group (of 4), e.g., 0, 4, 8, 12, ...
+  int packetStartAngle = getPacketStartAngle();
+
+  // handle full rotation
+  if (packetStartAngle == 0 && lastMeasurementAngle == 359)
+  {
+    handleRotationComplete();
+  }
+
+  // loop through the set of 4 measurements
+  for (int quadIndex = 0; quadIndex < N_DATA_QUADS; quadIndex++)
+  {
+    // process distance and signal strength (quality)
+    processDistance(quadIndex);
+    processSignalStrength(quadIndex);
+
+    // calculate circular buffer measurement index
+    int measurementIndex = (receivedMeasurementCount++) % MEASUREMENT_BUFFER_SIZE;
+
+    // update measurement info
+    measurements[measurementIndex].angle = packetStartAngle + quadIndex;
+    measurements[measurementIndex].distance = packetDistance[quadIndex];
+    measurements[measurementIndex].quality = packetSignalStrength[quadIndex];
+    measurements[measurementIndex].isInvalid = packetInvalidFlag[quadIndex] & INVALID_DATA_FLAG;
+    measurements[measurementIndex].isWeak = packetInvalidFlag[quadIndex] & STRENGTH_WARNING_FLAG;
+
+    // printf("@ %d (%d)\n", packetStartAngle + quadIndex, measurementIndex);
+
+    // update invalid measurement counter
+    if (measurements[measurementIndex].isInvalid)
+    {
+      invalidMeasurementCount++;
+    }
+
+    // update weak measurement counter
+    if (measurements[measurementIndex].isWeak)
+    {
+      weakMeasurementCount++;
+    }
+
+    // check whether given measurement arrived out of order (expect angle difference to be one for ordered measurement)
+    int angleDifference = (measurements[measurementIndex].angle - lastMeasurementAngle) % 360 + (lastMeasurementAngle == 359 ? 360 : 0);
+    bool isOutOfOrder = angleDifference != 1;
+
+    // update out of order measurement counter
+    if (isOutOfOrder)
+    {
+      outOfOrderMeasurementCount++;
+    }
+
+    // store last measurement angle
+    lastMeasurementAngle = measurements[measurementIndex].angle;
   }
 
   resetPacket();
@@ -267,11 +278,11 @@ void Lidar::processPacket()
 void Lidar::resetPacket()
 {
   // reset data and metrics
-  for (int ix = 0; ix < N_DATA_QUADS; ix++)
+  for (int quadIndex = 0; quadIndex < N_DATA_QUADS; quadIndex++)
   {
-    packetDistance[ix] = 0;
-    packetSignalStrength[ix] = 0;
-    packetInvalidFlag[ix] = 0;
+    packetDistance[quadIndex] = 0;
+    packetSignalStrength[quadIndex] = 0;
+    packetInvalidFlag[quadIndex] = 0;
   }
 
   // clear out packet contents
@@ -284,122 +295,182 @@ void Lidar::resetPacket()
   packetByteIndex = 0;
 
   // go back to waiting for start byte packet
-  state = WAITING_FOR_START_BYTE;
+  state = WAIT_FOR_START_BYTE;
 }
 
 bool Lidar::isPacketValid()
 {
-  unsigned long chk32;
-  unsigned long checksum;
+  // setup crc array
   const int bytesToCheck = PACKET_LENGTH - 2;
-  const int CalcCRC_Len = bytesToCheck / 2;
-  unsigned int CalcCRC[CalcCRC_Len];
+  const int crcLength = bytesToCheck / 2;
+  unsigned int crc[crcLength];
 
-  uint8_t b1a, b1b, b2a, b2b;
-  int ix;
+  // initialize crc array
+  for (int i = 0; i < crcLength; i++)
+  {
+    crc[i] = 0;
+  }
 
-  for (int ix = 0; ix < CalcCRC_Len; ix++) // initialize 'CalcCRC' array
-    CalcCRC[ix] = 0;
+  // build crc array
+  for (int i = 0; i < bytesToCheck; i += 2)
+  {
+    crc[i / 2] = packet[i] + ((packet[i + 1]) << 8);
+  }
 
-  // Perform checksum validity test
-  for (ix = 0; ix < bytesToCheck; ix += 2) // build 'CalcCRC' array
-    CalcCRC[ix / 2] = packet[ix] + ((packet[ix + 1]) << 8);
+  unsigned long chk32 = 0;
 
-  chk32 = 0;
-  for (ix = 0; ix < CalcCRC_Len; ix++)
-    chk32 = (chk32 << 1) + CalcCRC[ix];
-  checksum = (chk32 & 0x7FFF) + (chk32 >> 15);
+  for (int i = 0; i < crcLength; i++)
+  {
+    chk32 = (chk32 << 1) + crc[i];
+  }
+
+  // calculate checksum
+  unsigned long checksum = (chk32 & 0x7FFF) + (chk32 >> 15);
   checksum &= 0x7FFF;
-  b1a = checksum & 0xFF;
-  b1b = packet[OFFSET_TO_CRC_L];
-  b2a = checksum >> 8;
-  b2b = packet[OFFSET_TO_CRC_M];
+
+  uint8_t b1a = checksum & 0xFF;
+  uint8_t b1b = packet[OFFSET_TO_CRC_L];
+  uint8_t b2a = checksum >> 8;
+  uint8_t b2b = packet[OFFSET_TO_CRC_M];
+
   if ((b1a == b1b) && (b2a == b2b))
-    return true; // okay
-  else
-    return false; // non-zero = bad CRC
+  {
+    return true;
+  }
+
+  return false;
 }
 
-uint16_t Lidar::processIndex()
+int Lidar::getPacketStartAngle()
 {
-  uint16_t angle = 0;
-  uint16_t data_4deg_index = packet[OFFSET_TO_INDEX] - INDEX_LO;
-
-  angle = data_4deg_index * N_DATA_QUADS; // 1st angle in the set of 4
-
-  if (angle == 0)
-  {
-    // rotation was made, reset the cycle timer
-    cycleTimer.reset();
-  }
+  int dataFourDegreesIndex = packet[OFFSET_TO_INDEX] - INDEX_LO;
+  int angle = dataFourDegreesIndex * N_DATA_QUADS;
 
   return angle;
 }
 
-void Lidar::processRpm()
+// void Lidar::processRpm()
+// {
+//   // extract the bytes
+//   uint8_t motorRphLowByte = packet[OFFSET_TO_SPEED_LSB];
+//   uint8_t motorRphHighByte = packet[OFFSET_TO_SPEED_MSB];
+//   // uint8_t motorRph = (motorRphHighByte << 8) | motorRphLowByte;
+
+//   // calculate current rpm
+//   currentMotorRpm = float((motorRphHighByte << 8) | motorRphLowByte) / 64.0f;
+
+//   // don't use the pid loop for the first few seconds letting the lidar to start up
+//   if (runningTimer.read_ms() < 2000)
+//   {
+//     return;
+//   }
+
+//   // update the pid controller at a certain interval
+//   if (pidTimer.read_ms() < pidIntervalMs)
+//   {
+//     return;
+//   }
+
+//   // update pid process value (current rpm)
+//   motorPid.setProcessValue(currentMotorRpm);
+
+//   // let the pid controller compute new motor pwm
+//   float newMotorPwm = motorPid.compute();
+
+//   // printf("pwm: %f, rpm: %f, sum: %f, count: %d\n", newMotorPwm, currentMotorRpm, motorRpmSum, motorRpmCount);
+
+//   setMotorPwm(newMotorPwm);
+
+//   // reset motor rpm average variables
+//   motorRpmSum = 0;
+//   motorRpmCount = 0;
+
+//   // reset pid interval timer
+//   pidTimer.reset();
+// }
+
+void Lidar::handleRotationComplete()
 {
-  // extract the bytes
-  uint8_t motor_rph_low_byte = packet[OFFSET_TO_SPEED_LSB];
-  uint8_t motor_rph_high_byte = packet[OFFSET_TO_SPEED_MSB];
-
-  // calculate current rpm
-  float currentMotorRpm = float((motor_rph_high_byte << 8) | motor_rph_low_byte) / 64.0f;
-
-  // add current possibly noisy reading to the average sum
-  motorRpmSum += currentMotorRpm;
-  motorRpmCount++;
-
-  // don't use the pid loop for the first few seconds, letting it to start up
-  if (runningTimer.read_ms() < 2000)
+  // let it stabilize for a while at the startup pwm
+  if (runningTimer.read_ms() < 3000)
   {
     return;
   }
 
-  // check whether we should update the motor pid controller
-  if (pidTimer.read_ms() >= pidIntervalMs)
+  // start the rotation timer when the first rotation is completed
+  if (rotationTimer.read_ms() == 0)
   {
-    // calculate average motor rpm
-    lastMotorRpm = motorRpmSum / (float)motorRpmCount;
+    rotationTimer.start();
 
-    // update pid process value (current rpm)
-    motorPid.setProcessValue(lastMotorRpm);
-
-    // compute new motor pwm
-    float newMotorPwm = motorPid.compute();
-
-    // printf("pwm: %f, rpm: %f, sum: %f, count: %d\n", newMotorPwm, lastMotorRpm, motorRpmSum, motorRpmCount);
-
-    setMotorPwm(newMotorPwm);
-
-    pidTimer.reset();
-
-    // reset motor rpm average variables
-    motorRpmSum = 0;
-    motorRpmCount = 0;
+    return;
   }
+
+  // get time taken to complete one full rotation
+  lastRotationDurationMs = rotationTimer.read_ms();
+
+  // ignore unrealistically short rotation durations
+  // if (lastRotationDurationMs < expectedRotationDurationMs / 2)
+  // {
+  //   printf("@ invalid rotation duration: %d\n", lastRotationDurationMs);
+
+  //   return;
+  // }
+
+  // calculate motor rpm from rotation time
+  currentMotorRpm = (1000.0f / (float)lastRotationDurationMs) * 60.0f;
+
+  // update pid process value (current rpm)
+  motorPid.setProcessValue(currentMotorRpm);
+
+  // let the pid controller compute new motor pwm
+  float newMotorPwm = motorPid.compute();
+
+  // update motor pwm
+  setMotorPwm(newMotorPwm);
+
+  // rotation complete, reset the timer
+  rotationTimer.reset();
+
+  // increment total number of rotations
+  rotationCount++;
 }
 
-uint8_t Lidar::processDistance(int iQuad)
+void Lidar::processDistance(int quadIndex)
 {
-  uint8_t dataL, dataM;
-  packetDistance[iQuad] = 0; // initialize
-  int iOffset = OFFSET_TO_4_DATA_READINGS + (iQuad * N_DATA_QUADS) + OFFSET_DATA_DISTANCE_LSB;
-  // byte 0 : <distance 7:0> (LSB)
+  int offset = OFFSET_TO_4_DATA_READINGS + (quadIndex * N_DATA_QUADS) + OFFSET_DATA_DISTANCE_LSB;
+
   // byte 1 : <"invalid data" flag> <"strength warning" flag> <distance 13:8> (MSB)
-  dataM = packet[iOffset + 1];    // get MSB of distance data + flags
-  if (dataM & BAD_DATA_MASK)      // if either INVALID_DATA_FLAG or STRENGTH_WARNING_FLAG is set...
-    return dataM & BAD_DATA_MASK; // ...then return non-zero
-  dataL = packet[iOffset];        // LSB of distance data
-  packetDistance[iQuad] = dataL | ((dataM & 0x3F) << 8);
-  return 0; // okay
+  uint8_t dataLSB = packet[offset];
+  uint8_t dataMSB = packet[offset + 1];
+
+  bool isBadData = dataMSB & BAD_DATA_MASK;
+
+  // check for bad distance measurement
+  if (isBadData)
+  {
+    packetDistance[quadIndex] = 0;
+    packetInvalidFlag[quadIndex] = dataMSB & BAD_DATA_MASK;
+  }
+
+  // distance measurement is good
+  packetDistance[quadIndex] = dataLSB | ((dataMSB & 0x3F) << 8);
+  packetInvalidFlag[quadIndex] = 0;
 }
 
-void Lidar::processSignalStrength(int iQuad)
+void Lidar::processSignalStrength(int quadIndex)
 {
-  uint8_t dataL, dataM;
-  packetSignalStrength[iQuad] = 0; // initialize
-  int iOffset = OFFSET_TO_4_DATA_READINGS + (iQuad * N_DATA_QUADS) + OFFSET_DATA_SIGNAL_LSB;
-  dataL = packet[iOffset]; // signal strength LSB
-  dataM = packet[iOffset + 1];
-  packetSignalStrength[iQuad] = dataL | (dataM << 8);
+  // consider strength to be 0 for invalid measurements
+  if (packetInvalidFlag[quadIndex] != 0)
+  {
+    packetSignalStrength[quadIndex] = 0;
+
+    return;
+  }
+
+  int offset = OFFSET_TO_4_DATA_READINGS + (quadIndex * N_DATA_QUADS) + OFFSET_DATA_SIGNAL_LSB;
+
+  uint8_t dataLSB = packet[offset];
+  uint8_t dataMSB = packet[offset + 1];
+
+  packetSignalStrength[quadIndex] = dataLSB | (dataMSB << 8);
 }

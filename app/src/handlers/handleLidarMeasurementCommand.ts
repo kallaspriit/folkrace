@@ -9,6 +9,6 @@ export function handleLidarMeasurementCommand(
     angle: parseInt(args[0], 10),
     distance: parseInt(args[1], 10),
     quality: parseInt(args[2], 10),
-    date: new Date()
+    timestamp: Date.now()
   });
 }
