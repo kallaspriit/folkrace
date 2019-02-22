@@ -4,7 +4,7 @@ import { Subscribe } from "unstated";
 
 import { SerialType, StatusContainer } from "../containers/StatusContainer";
 
-import { GridItem, GridItemStatus } from "./Grid";
+import { Cell, CellStatus } from "./Grid";
 import { BluetoothIcon, SerialIcon } from "./Icon";
 import { Text } from "./Text";
 
@@ -13,9 +13,7 @@ export const UsbStatus: React.SFC = () => (
     {(status: StatusContainer) => {
       const connectedSerial = status.getConnectedSerial();
       const usbStatus =
-        connectedSerial !== undefined
-          ? GridItemStatus.GOOD
-          : GridItemStatus.BAD;
+        connectedSerial !== undefined ? CellStatus.GOOD : CellStatus.BAD;
       const Icon =
         connectedSerial && connectedSerial.type === SerialType.BLUETOOTH
           ? BluetoothIcon
@@ -26,11 +24,11 @@ export const UsbStatus: React.SFC = () => (
       );
 
       return (
-        <GridItem status={usbStatus}>
+        <Cell status={usbStatus}>
           <Icon />
           <Text primary>{title}</Text>
           <Text>{description}</Text>
-        </GridItem>
+        </Cell>
       );
     }}
   </Subscribe>

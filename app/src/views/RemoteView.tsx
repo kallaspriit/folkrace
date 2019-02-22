@@ -5,18 +5,13 @@ import {
   ManagerOnlyEventTypes
 } from "nipplejs";
 import React from "react";
-import styled from "styled-components";
 
-import { Grid, GridItem } from "../components/Grid";
+import { Cell, Grid } from "../components/Grid";
 import { Joystick } from "../components/Joystick";
 import { View } from "../components/View";
 import { config } from "../config";
 import { RemoteController } from "../lib/remote-controller";
 import { robot } from "../services/robot";
-
-const JoystickGrid = styled(Grid)`
-  grid-template-columns: 1fr;
-`;
 
 // TODO: show track speeds on edges (target and real)
 export class RemoteView extends React.Component {
@@ -29,8 +24,8 @@ export class RemoteView extends React.Component {
   render() {
     return (
       <View>
-        <JoystickGrid>
-          <GridItem>
+        <Grid>
+          <Cell>
             <Joystick
               x
               name="speed"
@@ -38,8 +33,8 @@ export class RemoteView extends React.Component {
                 this.onJoystickEvent(name, event, info)
               }
             />
-          </GridItem>
-          <GridItem>
+          </Cell>
+          <Cell>
             <Joystick
               y
               name="omega"
@@ -47,8 +42,8 @@ export class RemoteView extends React.Component {
                 this.onJoystickEvent(name, event, info)
               }
             />
-          </GridItem>
-        </JoystickGrid>
+          </Cell>
+        </Grid>
       </View>
     );
   }

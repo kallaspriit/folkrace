@@ -7,7 +7,7 @@ import { TransportState } from "../lib/transport/Transport";
 import { multiTransport } from "../services/multiTransport";
 import { robot } from "../services/robot";
 
-import { GridItem, GridItemStatus } from "./Grid";
+import { Cell, CellStatus } from "./Grid";
 import { NativeIcon, WebsocketIcon } from "./Icon";
 import { Text } from "./Text";
 
@@ -16,8 +16,8 @@ export const TransportStatus: React.SFC = () => (
     {(status: StatusContainer) => {
       const transportStatus =
         status.state.transportState === TransportState.CONNECTED
-          ? GridItemStatus.GOOD
-          : GridItemStatus.BAD;
+          ? CellStatus.GOOD
+          : CellStatus.BAD;
       const description =
         status.state.transportState !== TransportState.CONNECTED ||
         status.state.remoteIp === undefined
@@ -25,7 +25,7 @@ export const TransportStatus: React.SFC = () => (
           : status.state.remoteIp;
 
       return (
-        <GridItem
+        <Cell
           status={transportStatus}
           onClick={() => robot.ping(status.getConnectedSerial() === undefined)}
         >
@@ -36,7 +36,7 @@ export const TransportStatus: React.SFC = () => (
           )}
           <Text primary>{multiTransport.getName()}</Text>
           <Text>{description}</Text>
-        </GridItem>
+        </Cell>
       );
     }}
   </Subscribe>

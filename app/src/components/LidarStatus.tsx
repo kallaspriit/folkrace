@@ -4,7 +4,7 @@ import { Subscribe } from "unstated";
 import { LidarContainer } from "../containers/LidarContainer";
 import { robot } from "../services/robot";
 
-import { GridItem, GridItemStatus } from "./Grid";
+import { Cell, CellStatus } from "./Grid";
 import { LidarIcon } from "./Icon";
 import { Text } from "./Text";
 
@@ -14,7 +14,7 @@ export const LidarStatus: React.SFC = () => (
       const { status, description } = getLidarStatus(lidar);
 
       return (
-        <GridItem
+        <Cell
           status={status}
           onClick={() =>
             lidar.state.isStarted ? robot.stopLidar() : robot.startLidar()
@@ -23,23 +23,23 @@ export const LidarStatus: React.SFC = () => (
           <LidarIcon />
           <Text primary>Lidar</Text>
           <Text>{description}</Text>
-        </GridItem>
+        </Cell>
       );
     }}
   </Subscribe>
 );
 
 function getLidarStatus(lidar: LidarContainer) {
-  let status = GridItemStatus.BAD;
+  let status = CellStatus.BAD;
   let description = "Stopped";
 
   if (lidar.state.isValid) {
-    status = GridItemStatus.GOOD;
+    status = CellStatus.GOOD;
     description = `${Math.round(lidar.state.currentRpm)}/${
       lidar.state.targetRpm
     } RPM`;
   } else if (lidar.state.isStarted) {
-    status = GridItemStatus.WARN;
+    status = CellStatus.WARN;
     description = "Unstable";
   }
 

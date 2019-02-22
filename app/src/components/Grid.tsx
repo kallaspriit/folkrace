@@ -2,19 +2,25 @@ import styled, { css } from "styled-components";
 
 import { DivProps, Theme } from "../theme";
 
-export enum GridItemStatus {
+export interface GridProps {
+  columns?: string;
+  rows?: string;
+  wide?: boolean;
+}
+
+export interface CellProps {
+  primary?: boolean;
+  text?: boolean;
+  status?: CellStatus;
+}
+
+export enum CellStatus {
   GOOD = "GOOD",
   WARN = "WARN",
   BAD = "BAD"
 }
 
-export interface GridItemProps {
-  primary?: boolean;
-  text?: boolean;
-  status?: GridItemStatus;
-}
-
-export const Grid = styled.div`
+export const Grid = styled.div<GridProps>`
   display: grid;
   grid-gap: ${props => props.theme.size.gridGap};
   margin: ${props => props.theme.size.gridGap};
@@ -25,15 +31,29 @@ export const Grid = styled.div`
           (${props => props.theme.size.gridGap} * 2)
       )
   );
+
+  ${props =>
+    props.columns
+      ? css`
+          grid-template-columns: ${props.columns};
+        `
+      : ""}
+
+  ${props =>
+    props.rows
+      ? css`
+          grid-template-rows: ${props.rows};
+        `
+      : ""}
 `;
 
 const getGridItemStatusColorMap = (theme: Theme) => ({
-  [GridItemStatus.GOOD]: theme.bg.good,
-  [GridItemStatus.WARN]: theme.bg.warn,
-  [GridItemStatus.BAD]: theme.bg.bad
+  [CellStatus.GOOD]: theme.bg.good,
+  [CellStatus.WARN]: theme.bg.warn,
+  [CellStatus.BAD]: theme.bg.bad
 });
 
-export const GridItem = styled.div<GridItemProps & DivProps>`
+export const Cell = styled.div<CellProps & DivProps>`
   position: relative;
   background-color: ${props => props.theme.bg.tertiary};
   font-variant: ${props => (props.primary ? "all-small-caps" : "normal")};
@@ -63,7 +83,7 @@ export const GridItem = styled.div<GridItemProps & DivProps>`
       : ""}
 
   ${props =>
-    props.status === GridItemStatus.BAD
+    props.status === CellStatus.BAD
       ? css`
           animation: ${props.theme.animation.pulse(
               getGridItemStatusColorMap(props.theme)[props.status]

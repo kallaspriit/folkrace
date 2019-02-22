@@ -7,10 +7,10 @@ import { formatTime } from "../services/formatTime";
 import { DivProps } from "../theme";
 
 import { AutoScroll } from "./AutoScroll";
-import { GridItem } from "./Grid";
+import { Cell } from "./Grid";
 import { ClearIcon } from "./Icon";
 
-const StatusGridItem = styled(GridItem)`
+const StatusGridItem = styled(Cell)`
   grid-column: 1 / 4;
   font-family: Consolas, "Courier New", Courier, monospace;
   display: flex;
