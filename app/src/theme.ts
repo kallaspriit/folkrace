@@ -1,7 +1,9 @@
 import { lighten } from "polished";
 import baseStyled, {
   createGlobalStyle,
+  css as baseCss,
   keyframes,
+  ThemedCssFunction,
   ThemedStyledInterface
 } from "styled-components";
 
@@ -48,9 +50,14 @@ export const theme = {
   }
 };
 
-// use "styled" from this file not the package directly
+// resolve theme type
 export type Theme = typeof theme;
+
+// use the themed "styled" from this file not the package directly
 export const styled = baseStyled as ThemedStyledInterface<Theme>;
+
+// use the themed "css" from this file not the package directly
+export const css = baseCss as ThemedCssFunction<Theme>;
 
 // common html element props such as onClick etc
 export type ElProps = React.DetailedHTMLProps<
@@ -81,7 +88,7 @@ export const GlobalStyle = createGlobalStyle`
   // set body styles
   body,
   html {
-    height: 100;
+    height: 100%;
     padding: 0;
     margin: 0;
     font-family: "heebo-regular";

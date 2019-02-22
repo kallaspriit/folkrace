@@ -1,6 +1,6 @@
 import { css } from "styled-components";
 
-import { ElProps, styled, theme } from "../styled";
+import { ElProps, styled, theme } from "../theme";
 
 export enum GridItemStatus {
   GOOD = "GOOD",
@@ -17,6 +17,7 @@ export interface GridItemProps {
 export const Grid = styled.div`
   display: grid;
   grid-gap: ${props => props.theme.size.gridGap};
+  margin: ${props => props.theme.size.gridGap};
   height: calc(
     100vh -
       (

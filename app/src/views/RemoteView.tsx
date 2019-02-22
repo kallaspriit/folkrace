@@ -7,7 +7,7 @@ import { View } from "../components/View";
 import { config } from "../config";
 import { RemoteController } from "../lib/remote-controller";
 import { robot } from "../services/robot";
-import { styled } from "../styled";
+import { styled } from "../theme";
 
 const JoystickGrid = styled(Grid)`
   grid-template-columns: 1fr;
@@ -23,7 +23,7 @@ export class RemoteView extends React.Component {
 
   render() {
     return (
-      <View grid>
+      <View>
         <JoystickGrid>
           <GridItem>
             <Joystick

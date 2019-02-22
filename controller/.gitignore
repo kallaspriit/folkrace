@@ -1,7 +1,0 @@
-node_modules
-coverage
-build
-.idea
-.env
-coveralls.yml
-yarn-error.log

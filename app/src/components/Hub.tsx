@@ -78,7 +78,7 @@ export class Hub extends React.Component {
 
               void status.setTransportState(newState);
             },
-            onError: (transport, error) => {
+            onError: (_transport, error) => {
               log.addEntry(
                 `# transport error occurred${
                   error ? ` (${error.message})` : ""

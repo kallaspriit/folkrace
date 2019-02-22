@@ -1,4 +1,4 @@
-import { styled } from "../styled";
+import { styled } from "../theme";
 
 export interface TextProps {
   primary?: boolean;

@@ -7,7 +7,7 @@ import { Log } from "../components/Log";
 import { TransportStatus } from "../components/TransportStatus";
 import { UsbStatus } from "../components/UsbStatus";
 import { View } from "../components/View";
-import { styled } from "../styled";
+import { styled } from "../theme";
 
 const StatusGrid = styled(Grid)`
   grid-template-columns: 1fr 1fr 1fr;
@@ -19,7 +19,7 @@ const StatusGrid = styled(Grid)`
 // TODO: add lidar (tiny map?)
 // TODO: add buttons (state for each?)
 export const StatusView: React.SFC = () => (
-  <View grid>
+  <View>
     <StatusGrid>
       <UsbStatus />
       <TransportStatus />

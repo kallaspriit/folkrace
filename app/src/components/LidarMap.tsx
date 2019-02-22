@@ -3,7 +3,7 @@ import * as React from "react";
 import { containers } from "../services/containers";
 
 import { LidarMeasurement } from "../containers/MeasurementsContainer";
-import { styled } from "../styled";
+import { styled } from "../theme";
 
 const CanvasWrap = styled.div`
   position: relative;

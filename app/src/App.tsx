@@ -5,7 +5,7 @@ import { Provider } from "unstated";
 
 import { Hub } from "./components/Hub";
 import { MainMenu } from "./components/MainMenu";
-import { GlobalStyle, styled, theme } from "./styled";
+import { GlobalStyle, styled, theme } from "./theme";
 import { BotView } from "./views/BotView";
 import { MapView } from "./views/MapView";
 import { RemoteView } from "./views/RemoteView";

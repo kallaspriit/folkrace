@@ -3,7 +3,7 @@ import { Subscribe } from "unstated";
 
 import { LogContainer, MessageType } from "../containers/LogContainer";
 import { formatTime } from "../services/formatTime";
-import { ElProps, styled } from "../styled";
+import { ElProps, styled } from "../theme";
 
 import { AutoScroll } from "./AutoScroll";
 import { GridItem } from "./Grid";

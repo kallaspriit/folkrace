@@ -1,7 +1,0 @@
-{
-  "extends": ["tslint-config-strict", "tslint-config-prettier"],
-  "rules": {
-    "ordered-imports": false,
-    "no-magic-numbers": false
-  }
-}

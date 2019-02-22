@@ -2,7 +2,7 @@ import { darken } from "polished";
 import * as React from "react";
 import { NavLink } from "react-router-dom";
 
-import { styled } from "../styled";
+import { styled } from "../theme";
 
 import { BotIcon, MapIcon, RemoteIcon, SettingsIcon, StatusIcon } from "./Icon";
 import { Text } from "./Text";
@@ -41,14 +41,14 @@ const Link = styled(NavLink)`
   height: 100%;
   text-decoration: none;
   color: ${props =>
-    darken(props.theme.size.darkerLighterPercentage, props.theme.text.primary)}
+    darken(props.theme.size.darkerLighterPercentage, props.theme.text.primary)};
   background-color: rgba(0, 0, 0, 0);
   transition: background-color 300ms;
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 
   &.active-main-menu-item {
     background-color: ${props => props.theme.bg.secondary};
-    color: ${props => props.theme.text.primary}
+    color: ${props => props.theme.text.primary};
   }
 `;
 
