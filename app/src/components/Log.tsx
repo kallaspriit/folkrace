@@ -1,9 +1,10 @@
 import React from "react";
+import styled from "styled-components";
 import { Subscribe } from "unstated";
 
 import { LogContainer, MessageType } from "../containers/LogContainer";
 import { formatTime } from "../services/formatTime";
-import { ElProps, styled } from "../theme";
+import { DivProps } from "../theme";
 
 import { AutoScroll } from "./AutoScroll";
 import { GridItem } from "./Grid";
@@ -54,7 +55,7 @@ const LogEntryCount = styled.span`
   color: ${props => props.theme.bg.tertiary};
 `;
 
-const ClearLogButton = styled.div<ElProps>`
+const ClearLogButton = styled.div<DivProps>`
   box-sizing: content-box;
   position: absolute;
   bottom: ${props => props.theme.size.gridGap};

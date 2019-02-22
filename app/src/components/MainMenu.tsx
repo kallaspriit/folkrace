@@ -1,8 +1,7 @@
 import { darken } from "polished";
 import React from "react";
 import { NavLink } from "react-router-dom";
-
-import { styled } from "../theme";
+import styled from "styled-components";
 
 import { BotIcon, MapIcon, RemoteIcon, SettingsIcon, StatusIcon } from "./Icon";
 import { Text } from "./Text";

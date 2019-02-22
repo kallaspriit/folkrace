@@ -1,11 +1,11 @@
 import React from "react";
 import { BrowserRouter, Redirect, Route, Switch } from "react-router-dom";
-import { ThemeProvider } from "styled-components";
+import styled, { ThemeProvider } from "styled-components";
 import { Provider } from "unstated";
 
 import { Hub } from "./components/Hub";
 import { MainMenu } from "./components/MainMenu";
-import { GlobalStyle, styled, theme } from "./theme";
+import { GlobalStyle, theme } from "./theme";
 import { BotView } from "./views/BotView";
 import { MapView } from "./views/MapView";
 import { RemoteView } from "./views/RemoteView";

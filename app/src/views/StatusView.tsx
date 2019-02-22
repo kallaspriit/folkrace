@@ -1,4 +1,5 @@
 import React from "react";
+import styled from "styled-components";
 
 import { BatteryStatus } from "../components/BatteryStatus";
 import { Grid } from "../components/Grid";
@@ -7,8 +8,8 @@ import { Log } from "../components/Log";
 import { TransportStatus } from "../components/TransportStatus";
 import { UsbStatus } from "../components/UsbStatus";
 import { View } from "../components/View";
-import { styled } from "../theme";
 
+// TODO: make grid options View parameters
 const StatusGrid = styled(Grid)`
   grid-template-columns: 1fr 1fr 1fr;
   grid-template-rows: 100px 100px;

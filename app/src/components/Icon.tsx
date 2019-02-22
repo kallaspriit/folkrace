@@ -1,6 +1,5 @@
 import React from "react";
-
-import { styled } from "../theme";
+import styled from "styled-components";
 
 export interface IconProps {
   url: string;

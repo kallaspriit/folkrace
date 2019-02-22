@@ -1,11 +1,5 @@
 import { lighten } from "polished";
-import baseStyled, {
-  createGlobalStyle,
-  css as baseCss,
-  keyframes,
-  ThemedCssFunction,
-  ThemedStyledInterface
-} from "styled-components";
+import { createGlobalStyle, keyframes } from "styled-components";
 
 // common visual configuration used by various components
 export const theme = {
@@ -53,14 +47,10 @@ export const theme = {
 // resolve theme type
 export type Theme = typeof theme;
 
-// use the themed "styled" from this file not the package directly
-export const styled = baseStyled as ThemedStyledInterface<Theme>;
-
-// use the themed "css" from this file not the package directly
-export const css = baseCss as ThemedCssFunction<Theme>;
-
 // common html element props such as onClick etc
-export type ElProps = React.DetailedHTMLProps<
+// TODO: refactor as more specific Clickable etc
+// onClick?: MouseEventHandler<T>;
+export type DivProps = React.DetailedHTMLProps<
   React.HTMLAttributes<HTMLDivElement>,
   HTMLDivElement
 >;

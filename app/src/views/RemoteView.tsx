@@ -5,6 +5,7 @@ import {
   ManagerOnlyEventTypes
 } from "nipplejs";
 import React from "react";
+import styled from "styled-components";
 
 import { Grid, GridItem } from "../components/Grid";
 import { Joystick } from "../components/Joystick";
@@ -12,7 +13,6 @@ import { View } from "../components/View";
 import { config } from "../config";
 import { RemoteController } from "../lib/remote-controller";
 import { robot } from "../services/robot";
-import { styled } from "../theme";
 
 const JoystickGrid = styled(Grid)`
   grid-template-columns: 1fr;

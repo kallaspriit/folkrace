@@ -1,6 +1,6 @@
-import { css } from "styled-components";
+import styled, { css } from "styled-components";
 
-import { ElProps, styled, theme } from "../theme";
+import { DivProps, Theme } from "../theme";
 
 export enum GridItemStatus {
   GOOD = "GOOD",
@@ -22,18 +22,18 @@ export const Grid = styled.div`
     100vh -
       (
         ${props => props.theme.size.menuHeight} +
-          ${props => props.theme.size.gridGap} * 2
+          (${props => props.theme.size.gridGap} * 2)
       )
   );
 `;
 
-const gridItemStatusColorMap = {
+const getGridItemStatusColorMap = (theme: Theme) => ({
   [GridItemStatus.GOOD]: theme.bg.good,
   [GridItemStatus.WARN]: theme.bg.warn,
   [GridItemStatus.BAD]: theme.bg.bad
-};
+});
 
-export const GridItem = styled.div<GridItemProps & ElProps>`
+export const GridItem = styled.div<GridItemProps & DivProps>`
   position: relative;
   background-color: ${props => props.theme.bg.tertiary};
   font-variant: ${props => (props.primary ? "all-small-caps" : "normal")};
@@ -56,7 +56,9 @@ export const GridItem = styled.div<GridItemProps & ElProps>`
           justify-content: center;
           padding: 16px;
           overflow: hidden;
-          background-color: ${gridItemStatusColorMap[props.status]};
+          background-color: ${getGridItemStatusColorMap(props.theme)[
+            props.status
+          ]};
         `
       : ""}
 
@@ -64,7 +66,7 @@ export const GridItem = styled.div<GridItemProps & ElProps>`
     props.status === GridItemStatus.BAD
       ? css`
           animation: ${props.theme.animation.pulse(
-              gridItemStatusColorMap[props.status]
+              getGridItemStatusColorMap(props.theme)[props.status]
             )}
             3s ease;
           animation-iteration-count: infinite;

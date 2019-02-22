@@ -1,9 +1,8 @@
 import React from "react";
-
-import { containers } from "../services/containers";
+import styled from "styled-components";
 
 import { LidarMeasurement } from "../containers/MeasurementsContainer";
-import { styled } from "../theme";
+import { containers } from "../services/containers";
 
 const CanvasWrap = styled.div`
   position: relative;
