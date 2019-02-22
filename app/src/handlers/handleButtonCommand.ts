@@ -1,5 +1,4 @@
 import { Button, ButtonState } from "../containers/ButtonContainer";
-
 import { ContainerMap } from "../services/containers";
 
 export function handleButtonCommand(args: string[], { button }: ContainerMap) {

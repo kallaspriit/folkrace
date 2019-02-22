@@ -9,7 +9,7 @@ export type SendArgument = string | number;
 export class Robot {
   pingSentTime?: number;
 
-  private config: Required<RobotConfig>;
+  private readonly config: Required<RobotConfig>;
 
   constructor(private readonly transport: Transport, config: RobotConfig = {}) {
     this.config = {

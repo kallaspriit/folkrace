@@ -46,14 +46,14 @@ interface PolarCoordinates {
 }
 
 class LidarMapRenderer {
-  private options: Required<LidarMapOptions>;
-  private bg: CanvasRenderingContext2D;
-  private map: CanvasRenderingContext2D;
-  private width: number;
-  private height: number;
-  private size: number;
+  private readonly options: Required<LidarMapOptions>;
+  private readonly bg: CanvasRenderingContext2D;
+  private readonly map: CanvasRenderingContext2D;
+  private readonly width: number;
+  private readonly height: number;
+  private readonly size: number;
   private isRunning = false;
-  private angle = 0;
+  private readonly angle = 0;
 
   constructor(options: LidarMapOptions) {
     this.options = {

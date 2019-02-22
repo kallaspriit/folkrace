@@ -1,6 +1,7 @@
 import React from "react";
 import { Subscribe } from "unstated";
 
+import { AhrsContainer } from "../containers/AhrsContainer";
 import { ButtonContainer } from "../containers/ButtonContainer";
 import { LidarContainer } from "../containers/LidarContainer";
 import { LogContainer } from "../containers/LogContainer";
@@ -8,8 +9,6 @@ import { MeasurementsContainer } from "../containers/MeasurementsContainer";
 import { OdometryContainer } from "../containers/OdometryContainer";
 import { RobotContainer } from "../containers/RobotContainer";
 import { StatusContainer } from "../containers/StatusContainer";
-
-import { AhrsContainer } from "../containers/AhrsContainer";
 import { handleCommand } from "../handlers";
 import { ContainerMap, setContainers } from "../services/containers";
 import { addLogListener } from "../services/log";

@@ -1,7 +1,6 @@
 import { SerialState, SerialType } from "../containers/StatusContainer";
-import { robot } from "../services/robot";
-
 import { ContainerMap } from "../services/containers";
+import { robot } from "../services/robot";
 
 export async function handleSerialCommand(
   args: string[],
