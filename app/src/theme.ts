@@ -1,4 +1,5 @@
 import { lighten } from "polished";
+import { MouseEventHandler } from "react";
 import { createGlobalStyle, keyframes } from "styled-components";
 
 // common visual configuration used by various components
@@ -47,13 +48,10 @@ export const theme = {
 // resolve theme type
 export type Theme = typeof theme;
 
-// common html element props such as onClick etc
-// TODO: refactor as more specific Clickable etc
-// onClick?: MouseEventHandler<T>;
-export type DivProps = React.DetailedHTMLProps<
-  React.HTMLAttributes<HTMLDivElement>,
-  HTMLDivElement
->;
+// clickable element
+export interface Clickable<T = Element> {
+  onClick?: MouseEventHandler<T>;
+}
 
 // these global styles get injected in the document above all else
 export const GlobalStyle = createGlobalStyle`

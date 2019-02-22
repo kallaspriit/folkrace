@@ -1,6 +1,6 @@
 import styled, { css } from "styled-components";
 
-import { DivProps, Theme } from "../theme";
+import { Clickable, Theme } from "../theme";
 
 export interface GridProps {
   columns?: string;
@@ -53,7 +53,7 @@ const getGridItemStatusColorMap = (theme: Theme) => ({
   [CellStatus.BAD]: theme.bg.bad
 });
 
-export const Cell = styled.div<CellProps & DivProps>`
+export const Cell = styled.div<CellProps & Clickable>`
   position: relative;
   background-color: ${props => props.theme.bg.tertiary};
   font-variant: ${props => (props.primary ? "all-small-caps" : "normal")};

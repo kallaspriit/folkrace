@@ -4,7 +4,7 @@ import { Subscribe } from "unstated";
 
 import { LogContainer, MessageType } from "../containers/LogContainer";
 import { formatTime } from "../services/formatTime";
-import { DivProps } from "../theme";
+import { Clickable } from "../theme";
 
 import { AutoScroll } from "./AutoScroll";
 import { Cell } from "./Grid";
@@ -55,7 +55,7 @@ const LogEntryCount = styled.span`
   color: ${props => props.theme.bg.tertiary};
 `;
 
-const ClearLogButton = styled.div<DivProps>`
+const ClearLogButton = styled.div<Clickable>`
   box-sizing: content-box;
   position: absolute;
   bottom: ${props => props.theme.size.gridGap};

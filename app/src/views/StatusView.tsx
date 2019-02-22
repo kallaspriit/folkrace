@@ -1,5 +1,4 @@
 import React from "react";
-import styled from "styled-components";
 
 import { BatteryStatus } from "../components/BatteryStatus";
 import { Grid } from "../components/Grid";
