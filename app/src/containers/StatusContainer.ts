@@ -6,7 +6,7 @@ import { TransportState } from "../lib/transport/Transport";
 
 export enum SerialType {
   USB = "usb",
-  BLUETOOTH = "bluetooth"
+  BLUETOOTH = "bluetooth",
 }
 
 export enum SerialState {
@@ -15,7 +15,7 @@ export enum SerialState {
   DISCONNECTED = "DISCONNECTED",
   NOT_SUPPORTED = "NOT_SUPPORTED",
   DEVICE_NOT_FOUND = "DEVICE_NOT_FOUND",
-  DISABLED = "DISABLED"
+  DISABLED = "DISABLED",
 }
 
 export interface Serial {
@@ -30,7 +30,7 @@ export enum BatteryState {
   UNKNOWN = "UNKNOWN",
   FULL = "FULL",
   LOW = "LOW",
-  CRITICAL = "CRITICAL"
+  CRITICAL = "CRITICAL",
 }
 
 export interface State {
@@ -50,53 +50,53 @@ export class StatusContainer extends Container<State> {
       BLUETOOTH: {
         type: SerialType.BLUETOOTH,
         state: SerialState.DISCONNECTED,
-        deviceName: undefined
+        deviceName: undefined,
       },
       USB: {
         type: SerialType.USB,
         state: SerialState.DISCONNECTED,
-        deviceName: undefined
-      }
+        deviceName: undefined,
+      },
     },
-    transportState: TransportState.DISCONNECTED
+    transportState: TransportState.DISCONNECTED,
   };
 
   setSerialState(type: SerialType, state: SerialState, deviceName?: string) {
     const typeKey = Object.keys(SerialType).find(
-      typeName => SerialType[typeName as keyof typeof SerialType] === type
+      typeName => SerialType[typeName as keyof typeof SerialType] === type,
     ) as keyof typeof SerialType;
 
     // update serial state
     return this.setState(
       update(this.state, {
         serials: {
-          [typeKey]: { $merge: { state, deviceName } }
-        }
-      })
+          [typeKey]: { $merge: { state, deviceName } },
+        },
+      }),
     );
   }
 
   setTransportState(newState: TransportState) {
     return this.setState({
-      transportState: newState
+      transportState: newState,
     });
   }
 
   setBatteryVoltage(batteryVoltage: number | undefined) {
     return this.setState({
-      batteryVoltage
+      batteryVoltage,
     });
   }
 
   setRemoteIp(remoteIp: string) {
     return this.setState({
-      remoteIp
+      remoteIp,
     });
   }
 
   setOffline() {
     return this.setState({
-      remoteIp: undefined
+      remoteIp: undefined,
     });
   }
 
@@ -104,20 +104,18 @@ export class StatusContainer extends Container<State> {
     return this.setState({
       lastBeaconTime: new Date(),
       loopFrequency,
-      loopTimeUs
+      loopTimeUs,
     });
   }
 
   setResetReceived() {
     return this.setState({
-      lastResetTime: new Date()
+      lastResetTime: new Date(),
     });
   }
 
   getConnectedSerial(): Serial | undefined {
-    const serialNames = Object.keys(
-      this.state.serials
-    ) as (keyof typeof SerialType)[];
+    const serialNames = Object.keys(this.state.serials) as (keyof typeof SerialType)[];
     const connectedSerial = serialNames
       .map(serialName => this.state.serials[serialName])
       .find(serial => serial.state === SerialState.CONNECTED);

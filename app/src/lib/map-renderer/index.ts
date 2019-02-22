@@ -1,10 +1,17 @@
 export interface LidarMapOptions {
   wrap: HTMLDivElement;
   range: number;
+  step?: number;
   rotation?: number;
-  dotSize?: number;
-  measurements: () => PolarMeasurement[]; // TODO: support cartesian measurements
+  // measurements: () => PolarMeasurement[]; // TODO: support cartesian measurements
   // TODO: support controlling when to update
+  render(self: MapRenderer, info: FrameInfo): void;
+}
+
+export interface FrameInfo {
+  time: number;
+  dt: number;
+  frame: number;
 }
 
 export interface PolarMeasurement extends PolarCoordinates {
@@ -24,20 +31,21 @@ export interface PolarCoordinates {
 }
 
 export class MapRenderer {
-  private readonly options: Required<LidarMapOptions>;
-  private readonly bg: CanvasRenderingContext2D;
-  private readonly map: CanvasRenderingContext2D;
-  private readonly width: number;
-  private readonly height: number;
-  private readonly size: number;
+  readonly options: Required<LidarMapOptions>;
+  readonly bg: CanvasRenderingContext2D;
+  readonly map: CanvasRenderingContext2D;
+  readonly width: number;
+  readonly height: number;
+  readonly size: number;
   private isRunning = false;
-  private readonly angle = 0;
+  private frameNumber = 0;
+  private lastRenderTime?: number;
 
   constructor(options: LidarMapOptions) {
     this.options = {
       rotation: 0,
-      dotSize: 5,
-      ...options
+      step: options.range / 4,
+      ...options,
     };
 
     // create the canvas elements for background and the map
@@ -83,97 +91,96 @@ export class MapRenderer {
     this.setupMapStyles();
   }
 
-  render() {
+  start() {
     this.isRunning = true;
 
     this.renderBackground();
-
-    window.requestAnimationFrame(time => this.renderMap(time));
+    this.scheduleNextFrame();
   }
 
   destroy() {
     this.isRunning = false;
   }
 
-  private renderBackground() {
-    // draw outer circle
-    this.bg.beginPath();
-    this.bg.arc(0, 0, this.size / 2, 0, Math.PI * 2);
-    this.bg.stroke();
+  drawCircle(center: CartesianCoordinates, distance: number, ctx = this.map) {
+    const screen = this.cartesianToScreen(center);
 
-    // draw middle circle
-    this.bg.beginPath();
-    this.bg.arc(0, 0, this.size / 3, 0, Math.PI * 2);
-    this.bg.stroke();
-
-    // draw inner circle
-    this.bg.beginPath();
-    this.bg.arc(0, 0, this.size / 6, 0, Math.PI * 2);
-    this.bg.stroke();
+    ctx.beginPath();
+    ctx.arc(screen.x, screen.y, distance * this.getScale(), 0, Math.PI * 2);
+    ctx.stroke();
   }
 
-  private renderMap(time: number) {
+  drawPolarDot(polarCoordinates: PolarCoordinates, ctx = this.map) {
+    const cartesianCoordinates = this.polarToCartesian(polarCoordinates, true);
+    const screenCoordinates = this.cartesianToScreen(cartesianCoordinates);
+
+    const size = 5;
+
+    ctx.fillRect(screenCoordinates.x - size / 2, screenCoordinates.y - size / 2, size, size);
+  }
+
+  polarToCartesian({ angle, distance }: PolarCoordinates, convertsDegrees: boolean): CartesianCoordinates {
+    const convertedAngle = convertsDegrees ? this.toRadians(angle) : angle;
+
+    return {
+      x: distance * Math.cos(convertedAngle + this.options.rotation),
+      y: distance * Math.sin(convertedAngle + this.options.rotation),
+    };
+  }
+
+  cartesianToScreen({ x, y }: CartesianCoordinates): CartesianCoordinates {
+    const scale = this.getScale();
+
+    return {
+      x: x * scale,
+      y: y * scale,
+    };
+  }
+
+  getScale() {
+    return this.size / 2 / this.options.range;
+  }
+
+  toRadians(angleDegrees: number) {
+    return angleDegrees * (Math.PI / 180);
+  }
+
+  clear(ctx = this.map) {
+    ctx.clearRect(-this.width / 2, -this.height / 2, this.width, this.height);
+  }
+
+  private renderBackground() {
+    for (let distance = this.options.step; distance <= this.options.range; distance += this.options.step) {
+      this.drawCircle({ x: 0, y: 0 }, distance, this.bg);
+    }
+  }
+
+  private renderFrame(time: number) {
     if (!this.isRunning) {
       return;
     }
 
-    // clear the whole map canvas
-    this.clear(this.map);
+    const currentTime = Date.now();
+    const dt = (this.lastRenderTime ? currentTime - this.lastRenderTime : 16) / 1000;
 
-    // get measurements
-    const measurements = this.options.measurements();
+    this.options.render(this, {
+      dt,
+      time,
+      frame: this.frameNumber++,
+    });
 
-    if (measurements.length > 0) {
-      // render measurements
-      measurements.forEach(measurement => {
-        this.renderPolarDot(measurement);
-      });
-
-      // render last measurement scan angle
-      // const lastMeasurement = measurements[measurements.length - 1];
-
-      // this.renderScanLine(lastMeasurement.angle);
-    }
-
-    window.requestAnimationFrame(newTime => this.renderMap(newTime));
+    this.lastRenderTime = currentTime;
   }
 
-  private renderPolarDot(polarCoordinates: PolarCoordinates) {
-    const cartesianCoordinates = this.polarToCartesian(polarCoordinates, true);
-    const screenCoordinates = this.cartesianToScreen(cartesianCoordinates);
+  private scheduleNextFrame() {
+    window.requestAnimationFrame(newTime => {
+      if (!this.isRunning) {
+        return;
+      }
 
-    // console.log({
-    //   ...polarCoordinates,
-    //   ...screenCoordinates
-    // });
-
-    this.map.fillRect(
-      screenCoordinates.x - this.options.dotSize / 2,
-      screenCoordinates.y - this.options.dotSize / 2,
-      this.options.dotSize,
-      this.options.dotSize
-    );
-  }
-
-  // private renderScanLine(angle: number) {
-  //   // calculate end point screen coordinates
-  //   const endCartesianCoordinates = this.polarToCartesian(
-  //     { angle, distance: this.options.range },
-  //     true
-  //   );
-  //   const endScreenCoordinates = this.cartesianToScreen(
-  //     endCartesianCoordinates
-  //   );
-
-  //   // draw the line
-  //   this.map.beginPath();
-  //   this.map.moveTo(0, 0);
-  //   this.map.lineTo(endScreenCoordinates.x, endScreenCoordinates.y);
-  //   this.map.stroke();
-  // }
-
-  private clear(ctx: CanvasRenderingContext2D) {
-    ctx.clearRect(-this.width / 2, -this.height / 2, this.width, this.height);
+      this.renderFrame(newTime);
+      this.scheduleNextFrame();
+    });
   }
 
   private createCanvasElement() {
@@ -204,37 +211,5 @@ export class MapRenderer {
     this.map.fillStyle = "#FFF";
     this.map.strokeStyle = "#FFF";
     this.map.lineWidth = 1;
-  }
-
-  private polarToCartesian(
-    { angle, distance }: PolarCoordinates,
-    convertsDegrees: boolean
-  ): CartesianCoordinates {
-    const convertedAngle = convertsDegrees ? this.toRadians(angle) : angle;
-
-    return {
-      x: distance * Math.cos(convertedAngle + this.options.rotation),
-      y: distance * Math.sin(convertedAngle + this.options.rotation)
-    };
-  }
-
-  private cartesianToScreen({
-    x,
-    y
-  }: CartesianCoordinates): CartesianCoordinates {
-    const scale = this.getScale();
-
-    return {
-      x: x * scale,
-      y: y * scale
-    };
-  }
-
-  private getScale() {
-    return this.size / 2 / this.options.range;
-  }
-
-  private toRadians(angleDegrees: number) {
-    return angleDegrees * (Math.PI / 180);
   }
 }

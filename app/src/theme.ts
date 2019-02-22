@@ -6,7 +6,7 @@ import { createGlobalStyle, keyframes } from "styled-components";
 export const theme = {
   text: {
     primary: "#f0f0f0",
-    secondary: "#969696"
+    secondary: "#969696",
   },
   bg: {
     primary: "#cc3333",
@@ -15,12 +15,12 @@ export const theme = {
     quaternary: "#087099",
     good: "#009900",
     warn: "#999900",
-    bad: "#990000"
+    bad: "#990000",
   },
   size: {
     darkerLighterPercentage: 0.25,
     gridGap: "2px",
-    menuHeight: "64px"
+    menuHeight: "64px",
   },
   animation: {
     fadeIn: keyframes`
@@ -41,8 +41,8 @@ export const theme = {
       100% {
         background: ${color};
       }
-    `
-  }
+    `,
+  },
 };
 
 // resolve theme type

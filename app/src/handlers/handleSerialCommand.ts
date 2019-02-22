@@ -2,10 +2,7 @@ import { SerialState, SerialType } from "../containers/StatusContainer";
 import { ContainerMap } from "../services/containers";
 import { robot } from "../services/robot";
 
-export async function handleSerialCommand(
-  args: string[],
-  { status }: ContainerMap
-) {
+export async function handleSerialCommand(args: string[], { status }: ContainerMap) {
   // extract serial info
   const serialType = args[0] as SerialType;
   const serialState = args[1] as SerialState;

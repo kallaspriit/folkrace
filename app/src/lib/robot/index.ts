@@ -14,7 +14,7 @@ export class Robot {
   constructor(private readonly transport: Transport, config: RobotConfig = {}) {
     this.config = {
       targetLidarRpm: 300,
-      ...config
+      ...config,
     };
   }
 

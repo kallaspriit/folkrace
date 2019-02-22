@@ -4,7 +4,7 @@ export enum MessageType {
   INFO = "INFO",
   ERROR = "ERROR",
   RX = "RX",
-  TX = "TX"
+  TX = "TX",
 }
 
 export interface LogEntry {
@@ -23,7 +23,7 @@ export const MAX_LOG_ENTRY_COUNT = 200;
 
 export class LogContainer extends Container<LogState> {
   readonly state: LogState = {
-    entries: []
+    entries: [],
   };
 
   private lastId = 0;
@@ -31,10 +31,7 @@ export class LogContainer extends Container<LogState> {
   addEntry(message: string, avoidDuplicate = true) {
     // update state (use the callback syntax not to miss any updates if called in series)
     this.setState(previousState => {
-      const lastEntry =
-        this.state.entries.length > 0
-          ? this.state.entries[this.state.entries.length - 1]
-          : null;
+      const lastEntry = this.state.entries.length > 0 ? this.state.entries[this.state.entries.length - 1] : null;
       const type = this.resolveMessageType(message);
 
       // skip the message if requested not to add the same message twice in a row
@@ -50,12 +47,12 @@ export class LogContainer extends Container<LogState> {
               time: new Date(),
               message,
               type,
-              count: lastEntry.count + 1
-            }
+              count: lastEntry.count + 1,
+            },
           ];
 
           return {
-            entries: updatedEntries
+            entries: updatedEntries,
           };
         }
       }
@@ -68,8 +65,8 @@ export class LogContainer extends Container<LogState> {
           time: new Date(),
           message,
           type,
-          count: 1
-        }
+          count: 1,
+        },
       ];
 
       // limit the number of entries
@@ -78,14 +75,14 @@ export class LogContainer extends Container<LogState> {
       }
 
       return {
-        entries
+        entries,
       };
     }).catch(error => console.error(error));
   }
 
   clear() {
     this.setState({
-      entries: []
+      entries: [],
     }).catch(error => console.error(error));
   }
 

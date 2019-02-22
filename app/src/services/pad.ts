@@ -1,8 +1,4 @@
-export function pad(
-  data: string | number,
-  length: number,
-  padCharacter = " "
-): string {
+export function pad(data: string | number, length: number, padCharacter = " "): string {
   const str = typeof data === "string" ? data : data.toString();
 
   // return as is if already long enough

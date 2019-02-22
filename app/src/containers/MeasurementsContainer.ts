@@ -13,7 +13,7 @@ export interface State {
 
 export class MeasurementsContainer extends Container<State> {
   readonly state: State = {
-    measurements: []
+    measurements: [],
   };
 
   add(measurement: LidarMeasurement) {
@@ -25,7 +25,7 @@ export class MeasurementsContainer extends Container<State> {
     }
 
     return this.setState({
-      measurements
+      measurements,
     });
   }
 }

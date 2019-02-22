@@ -14,12 +14,12 @@ export class LidarContainer extends Container<State> {
     isValid: false,
     targetRpm: 0,
     currentRpm: 0,
-    motorPwm: 0
+    motorPwm: 0,
   };
 
   update(state: State) {
     return this.setState({
-      ...state
+      ...state,
     });
   }
 }

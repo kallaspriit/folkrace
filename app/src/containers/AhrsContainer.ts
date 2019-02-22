@@ -15,13 +15,13 @@ export class AhrsContainer extends Container<State> {
     roll: 0,
     pitch: 0,
     yaw: 0,
-    lastUpdated: new Date()
+    lastUpdated: new Date(),
   };
 
   setAttitude(attitude: Attitude) {
     return this.setState({
       ...attitude,
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     });
   }
 }

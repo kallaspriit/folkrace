@@ -15,20 +15,20 @@ export class RobotContainer extends Container<State> {
   readonly state: State = {
     targetSpeed: {
       left: 0,
-      right: 0
+      right: 0,
     },
     current: {
       left: 0,
-      right: 0
-    }
+      right: 0,
+    },
   };
 
   setTargetSpeed(left: number, right: number) {
     return this.setState({
       targetSpeed: {
         left,
-        right
-      }
+        right,
+      },
     });
   }
 
@@ -36,8 +36,8 @@ export class RobotContainer extends Container<State> {
     return this.setState({
       current: {
         left,
-        right
-      }
+        right,
+      },
     });
   }
 }

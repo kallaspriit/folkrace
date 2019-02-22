@@ -19,21 +19,16 @@ export const config = {
     // allow overriding web-socket options via local storage
     host:
       // process.env.NODE_ENV === "development" &&
-      localStorage.webSocketHost !== undefined
-        ? localStorage.webSocketHost
-        : "127.0.0.1",
-    port:
-      localStorage.webSocketPort !== undefined
-        ? parseInt(localStorage.webSocketPort, 10)
-        : 8000,
+      localStorage.webSocketHost !== undefined ? localStorage.webSocketHost : "127.0.0.1",
+    port: localStorage.webSocketPort !== undefined ? parseInt(localStorage.webSocketPort, 10) : 8000,
     useSSL: false,
-    reconnectInterval: 3000
+    reconnectInterval: 3000,
   },
   rules: {
     battery: {
       low: 15.0,
-      critical: 13.5
-    }
+      critical: 13.5,
+    },
   },
   vehicle: {
     trackWidth: 0.15, // meters
@@ -41,6 +36,6 @@ export const config = {
     wheelDiameter: 0.039, // meters
     encoderCountsPerRotation: 20, // encoder pulse count per revolution
     gearboxRatio: 25, // 25/1 gearbox ratio
-    speedUpdateInterval: 50 // 20Hz
-  }
+    speedUpdateInterval: 50, // 20Hz
+  },
 };

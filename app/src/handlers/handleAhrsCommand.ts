@@ -5,6 +5,6 @@ export function handleAhrsCommand(args: string[], { ahrs }: ContainerMap) {
   void ahrs.setAttitude({
     roll: parseFloat(args[0]),
     pitch: parseFloat(args[1]),
-    yaw: parseFloat(args[2])
+    yaw: parseFloat(args[2]),
   });
 }

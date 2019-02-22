@@ -6,7 +6,7 @@ import { containers } from "../services/containers";
 
 export class LidarMap extends React.Component {
   private readonly wrapRef = React.createRef<HTMLDivElement>();
-  private map: MapRenderer | null = null;
+  private mapRenderer: MapRenderer | null = null;
 
   componentDidMount() {
     const wrap = this.wrapRef.current;
@@ -16,45 +16,39 @@ export class LidarMap extends React.Component {
     }
 
     // get measurements
-    this.map = new MapRenderer({
+    this.mapRenderer = new MapRenderer({
       wrap,
       range: 2000, // centimeters
       rotation: Math.PI / 2,
-      measurements: () => containers.measurements.state.measurements
+      render: map => {
+        // get measurements
+        const measurements = containers.measurements.state.measurements;
+
+        if (measurements.length > 0) {
+          // render measurements
+          measurements.forEach(measurement => {
+            map.drawPolarDot(measurement);
+          });
+        }
+      },
     });
 
-    this.map.render();
+    this.mapRenderer.start();
   }
 
   componentWillUnmount() {
-    if (this.map !== null) {
-      this.map.destroy();
+    if (this.mapRenderer !== null) {
+      this.mapRenderer.destroy();
     }
   }
 
   render() {
-    return <CanvasWrap ref={this.wrapRef} />;
+    return <Map ref={this.wrapRef} />;
   }
 }
 
-const CanvasWrap = styled.div`
+const Map = styled.div`
   position: relative;
   width: 100%;
   height: 100%;
-`;
-
-const BackgroundCanvas = styled.canvas`
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  left: 0;
-  top: 0;
-`;
-
-const MapCanvas = styled.canvas`
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  left: 0;
-  top: 0;
 `;

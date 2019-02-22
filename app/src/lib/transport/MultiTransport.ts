@@ -17,7 +17,7 @@ export class MultiTransport implements Transport {
   constructor(options: MultiTransportOptions = {}) {
     this.options = {
       log: dummyLogger,
-      ...options
+      ...options,
     };
     this.log = this.options.log;
   }
@@ -72,14 +72,10 @@ export class MultiTransport implements Transport {
     const connectedTransport = this.getConnectedTransport();
 
     if (!connectedTransport) {
-      this.log.warn(
-        `sending message "${message}" requested but there is no connected transport available`
-      );
+      this.log.warn(`sending message "${message}" requested but there is no connected transport available`);
 
       // notify of failed message sending attempt
-      this.listeners.forEach(listener =>
-        listener.onMessageSent(this, message, false)
-      );
+      this.listeners.forEach(listener => listener.onMessageSent(this, message, false));
 
       return false;
     }
@@ -97,9 +93,7 @@ export class MultiTransport implements Transport {
           return;
         }
 
-        this.listeners.forEach(listener =>
-          listener.onStateChanged(eventTransport, newState, previousState)
-        );
+        this.listeners.forEach(listener => listener.onStateChanged(eventTransport, newState, previousState));
       },
       onError: (eventTransport, error) => {
         const activeTransport = this.getActiveTransport();
@@ -108,24 +102,16 @@ export class MultiTransport implements Transport {
           return;
         }
 
-        this.listeners.forEach(listener =>
-          listener.onError(eventTransport, error)
-        );
+        this.listeners.forEach(listener => listener.onError(eventTransport, error));
       },
-      onMessageSent: (
-        eventTransport,
-        message,
-        wasSentSuccessfully: boolean
-      ) => {
+      onMessageSent: (eventTransport, message, wasSentSuccessfully: boolean) => {
         const activeTransport = this.getActiveTransport();
 
         if (eventTransport !== activeTransport) {
           return;
         }
 
-        this.listeners.forEach(listener =>
-          listener.onMessageSent(eventTransport, message, wasSentSuccessfully)
-        );
+        this.listeners.forEach(listener => listener.onMessageSent(eventTransport, message, wasSentSuccessfully));
       },
       onMessageReceived: (eventTransport, message) => {
         const activeTransport = this.getActiveTransport();
@@ -134,10 +120,8 @@ export class MultiTransport implements Transport {
           return;
         }
 
-        this.listeners.forEach(listener =>
-          listener.onMessageReceived(eventTransport, message)
-        );
-      }
+        this.listeners.forEach(listener => listener.onMessageReceived(eventTransport, message));
+      },
     });
 
     this.transports.push(transport);
@@ -150,9 +134,7 @@ export class MultiTransport implements Transport {
 
   getConnectedTransport() {
     // return first connected transport if any
-    return this.transports.find(
-      transport => transport.getState() === TransportState.CONNECTED
-    );
+    return this.transports.find(transport => transport.getState() === TransportState.CONNECTED);
   }
 
   getActiveTransport() {

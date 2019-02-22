@@ -27,31 +27,24 @@ export class TrackedVehicleKinematics {
     return this.limit(
       {
         left: speed + omega,
-        right: speed - omega
+        right: speed - omega,
       },
-      this.options.maxSpeed
+      this.options.maxSpeed,
     );
   }
 
   getSpeedEncoderCount(speed: number) {
     const circumference = this.options.wheelDiameter * Math.PI;
     const rps = speed / circumference;
-    const actualEncoderCountPerRevolution =
-      this.options.encoderCountsPerRotation * this.options.gearboxRatio;
+    const actualEncoderCountPerRevolution = this.options.encoderCountsPerRotation * this.options.gearboxRatio;
     const targetEncoderCountPerSecond = rps * actualEncoderCountPerRevolution;
 
     return Math.floor(targetEncoderCountPerSecond);
   }
 
   limit(speeds: MotorSpeeds, maxSpeed: number): MotorSpeeds {
-    const maxRequestedSpeedMagnitude = Math.max(
-      Math.abs(speeds.left),
-      Math.abs(speeds.right)
-    );
-    const normalizationFactor = Math.min(
-      maxSpeed / maxRequestedSpeedMagnitude,
-      1.0
-    );
+    const maxRequestedSpeedMagnitude = Math.max(Math.abs(speeds.left), Math.abs(speeds.right));
+    const normalizationFactor = Math.min(maxSpeed / maxRequestedSpeedMagnitude, 1.0);
 
     // console.log("normalize", {
     //   maxRequestedSpeedMagnitude,
@@ -62,14 +55,14 @@ export class TrackedVehicleKinematics {
 
     return {
       left: speeds.left * normalizationFactor,
-      right: speeds.right * normalizationFactor
+      right: speeds.right * normalizationFactor,
     };
   }
 
   getEncoderSpeeds(speeds: MotorSpeeds): MotorSpeeds {
     return {
       left: this.getSpeedEncoderCount(speeds.left),
-      right: this.getSpeedEncoderCount(speeds.right)
+      right: this.getSpeedEncoderCount(speeds.right),
     };
   }
 }
