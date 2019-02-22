@@ -1,4 +1,9 @@
-import { JoystickEvent, JoystickEventName, JoystickInstance } from "nipplejs";
+import {
+  EventData,
+  JoystickEventTypes,
+  JoystickOutputData,
+  ManagerOnlyEventTypes
+} from "nipplejs";
 import * as React from "react";
 
 import { Grid, GridItem } from "../components/Grid";
@@ -50,10 +55,13 @@ export class RemoteView extends React.Component {
 
   private onJoystickEvent(
     name: string,
-    event: JoystickEvent,
-    info: JoystickInstance
+    event: EventData,
+    info: JoystickOutputData
   ) {
-    const interestingEvents: JoystickEventName[] = ["move", "end"];
+    const interestingEvents: (JoystickEventTypes | ManagerOnlyEventTypes)[] = [
+      "move",
+      "end"
+    ];
 
     if (interestingEvents.indexOf(event.type) === -1) {
       return;

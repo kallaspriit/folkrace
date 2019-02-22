@@ -3,14 +3,13 @@ import * as React from "react";
 
 export interface JoystickProps {
   name: string;
-  config?: nipplejs.JoystickOptions;
-  bind?: string;
+  bind?: nipplejs.JoystickEventTypes | nipplejs.JoystickEventTypes[];
   x?: boolean;
   y?: boolean;
   onEvent?(
     name: string,
-    event: nipplejs.JoystickEvent,
-    info: nipplejs.JoystickInstance
+    event: nipplejs.EventData,
+    info: nipplejs.JoystickOutputData
   ): void;
 }
 
@@ -45,17 +44,23 @@ export class Joystick extends React.Component<JoystickProps> {
 
     // only listen for events if even listener has been added
     if (typeof onEvent === "function") {
-      const bind = this.props.bind
+      const bind:
+        | nipplejs.JoystickEventTypes
+        | nipplejs.JoystickEventTypes[] = this.props.bind
         ? this.props.bind
-        : "start move end dir plain";
+        : ["start", "move", "end", "dir", "plain"];
 
-      manager
-        .on(bind, (event, nipple) => {
-          onEvent(this.props.name, event, nipple);
-        })
-        .on("removed", (_event, nipple) => {
-          nipple.off(bind);
-        });
+      manager.on(bind, (event, nipple) => {
+        onEvent(this.props.name, event, nipple);
+      });
+      manager.on("removed", (event, _nipple) => {
+        event.target.nipples.forEach((nipple: nipplejs.Joystick) =>
+          nipple.off(bind, () => {
+            /* nothing */
+          })
+        );
+        // nipple.off(bind);
+      });
     }
   }
 

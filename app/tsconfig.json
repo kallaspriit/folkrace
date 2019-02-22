@@ -13,7 +13,8 @@
     "noEmit": true,
     "jsx": "preserve",
     "isolatedModules": true,
-    "lib": ["es6", "es7", "dom"]
+    "lib": ["es6", "es7", "dom"],
+    "skipLibCheck": true
   },
   "include": ["src"]
 }
