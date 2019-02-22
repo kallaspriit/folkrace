@@ -1,8 +1,6 @@
 import {
   create,
   EventData,
-  Joystick as Nipple,
-  JoystickEventTypes,
   JoystickManagerEventTypes,
   JoystickOutputData
 } from "nipplejs";

@@ -12,13 +12,6 @@ import { RemoteView } from "./views/RemoteView";
 import { SettingsView } from "./views/SettingsView";
 import { StatusView } from "./views/StatusView";
 
-const AppWrap = styled.div`
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  animation: ${props => props.theme.animation.fadeIn} 1000ms;
-`;
-
 export class App extends React.Component {
   render() {
     return (
@@ -46,3 +39,10 @@ export class App extends React.Component {
     );
   }
 }
+
+const AppWrap = styled.div`
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  animation: ${props => props.theme.animation.fadeIn} 1000ms;
+`;
