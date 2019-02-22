@@ -14,23 +14,35 @@ export class BotView extends React.Component {
       throw new Error("Wrap element was not found, this should not happen");
     }
 
-    const speed = 360; // deg/s
+    const speed = Math.PI; // rad/s
     let angle = 0;
 
     // get measurements
     this.mapRenderer = new MapRenderer({
       wrap,
-      range: 2000,
-      // step: 500,
-      rotation: -Math.PI / 2,
-      // measurements: () => [{ angle: 0, distance: 1000 }, { angle: 180, distance: 500 }],
-      render: (map, { dt }) => {
-        // console.log("render", { info });
+      range: 1000,
+      render: (map, { dt, frame }) => {
+        // draw background once
+        if (frame === 0) {
+          const step = 500;
+
+          for (let distance = step; distance <= map.options.range; distance += step) {
+            map.drawCircle({ x: 0, y: 0 }, distance, map.bg);
+          }
+        }
+
+        // clear map
+        map.clear();
+        map.resetMapStyles();
 
         angle += speed * dt;
 
-        map.clear();
-        map.drawPolarDot({ angle, distance: 1000 });
+        // animated dot moving 180deg/s
+        map.drawDot({ angle, distance: 500 });
+
+        // fixed dot using cartesian coordinates
+        map.drawDot({ angle: 0, distance: 500 }, { size: 100, color: "#00F" });
+        map.drawDot({ x: 1000, y: 0 }, { size: 100, color: "#F00" });
       },
     });
 

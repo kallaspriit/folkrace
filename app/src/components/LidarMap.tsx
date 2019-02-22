@@ -18,16 +18,27 @@ export class LidarMap extends React.Component {
     // get measurements
     this.mapRenderer = new MapRenderer({
       wrap,
-      range: 2000, // centimeters
-      rotation: Math.PI / 2,
-      render: map => {
+      range: 2000, // millimeters
+      render: (map, { frame }) => {
+        // draw background once
+        if (frame === 0) {
+          const step = 500;
+
+          for (let distance = step; distance <= map.options.range; distance += step) {
+            map.drawCircle({ x: 0, y: 0 }, distance, map.bg);
+          }
+        }
+
         // get measurements
         const measurements = containers.measurements.state.measurements;
 
         if (measurements.length > 0) {
           // render measurements
           measurements.forEach(measurement => {
-            map.drawPolarDot(measurement);
+            map.drawDot({
+              angle: map.toRadians(measurement.angle),
+              distance: measurement.distance * 10,
+            });
           });
         }
       },

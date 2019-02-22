@@ -1,10 +1,6 @@
 export interface LidarMapOptions {
   wrap: HTMLDivElement;
   range: number;
-  step?: number;
-  rotation?: number;
-  // measurements: () => PolarMeasurement[]; // TODO: support cartesian measurements
-  // TODO: support controlling when to update
   render(self: MapRenderer, info: FrameInfo): void;
 }
 
@@ -26,9 +22,16 @@ export interface CartesianCoordinates {
 }
 
 export interface PolarCoordinates {
-  angle: number;
+  angle: number; // radians
   distance: number;
 }
+
+export interface DotOptions {
+  size?: number;
+  color?: string;
+}
+
+export type Coordinates = CartesianCoordinates | PolarCoordinates;
 
 export class MapRenderer {
   readonly options: Required<LidarMapOptions>;
@@ -43,8 +46,6 @@ export class MapRenderer {
 
   constructor(options: LidarMapOptions) {
     this.options = {
-      rotation: 0,
-      step: options.range / 4,
       ...options,
     };
 
@@ -86,15 +87,14 @@ export class MapRenderer {
     this.map = mapContext;
 
     // perform initial setup
-    this.setupTranslation();
-    this.setupBackgroundStyles();
-    this.setupMapStyles();
+    this.setupTransforms();
+    this.resetBackgroundStyles();
+    this.resetMapStyles();
   }
 
   start() {
     this.isRunning = true;
 
-    this.renderBackground();
     this.scheduleNextFrame();
   }
 
@@ -102,33 +102,55 @@ export class MapRenderer {
     this.isRunning = false;
   }
 
-  drawCircle(center: CartesianCoordinates, distance: number, ctx = this.map) {
-    const screen = this.cartesianToScreen(center);
+  drawCircle(center: Coordinates, distance: number, ctx = this.map) {
+    const pos = this.toScreen(center);
 
     ctx.beginPath();
-    ctx.arc(screen.x, screen.y, distance * this.getScale(), 0, Math.PI * 2);
+    ctx.arc(pos.x, pos.y, distance * this.getScale(), 0, Math.PI * 2);
     ctx.stroke();
   }
 
-  drawPolarDot(polarCoordinates: PolarCoordinates, ctx = this.map) {
-    const cartesianCoordinates = this.polarToCartesian(polarCoordinates, true);
-    const screenCoordinates = this.cartesianToScreen(cartesianCoordinates);
+  drawDot(center: Coordinates, options: DotOptions = {}, ctx = this.map) {
+    const pos = this.toScreen(center);
+    const opt: Required<DotOptions> = {
+      size: this.options.range / 100,
+      color: "#FFF",
+      ...options,
+    };
 
-    const size = 5;
+    const screenSize = opt.size * this.getScale();
 
-    ctx.fillRect(screenCoordinates.x - size / 2, screenCoordinates.y - size / 2, size, size);
+    ctx.save();
+    ctx.fillStyle = opt.color;
+    ctx.fillRect(pos.x - screenSize / 2, pos.y - screenSize / 2, screenSize, screenSize);
+    ctx.restore();
   }
 
-  polarToCartesian({ angle, distance }: PolarCoordinates, convertsDegrees: boolean): CartesianCoordinates {
-    const convertedAngle = convertsDegrees ? this.toRadians(angle) : angle;
-
+  polarToCartesian({ angle, distance }: PolarCoordinates): CartesianCoordinates {
     return {
-      x: distance * Math.cos(convertedAngle + this.options.rotation),
-      y: distance * Math.sin(convertedAngle + this.options.rotation),
+      x: distance * Math.cos(angle),
+      y: distance * Math.sin(angle),
     };
   }
 
-  cartesianToScreen({ x, y }: CartesianCoordinates): CartesianCoordinates {
+  toCartesian(coordinates: Coordinates): CartesianCoordinates {
+    if (this.isPolar(coordinates)) {
+      return {
+        x: coordinates.distance * Math.cos(coordinates.angle),
+        y: coordinates.distance * Math.sin(coordinates.angle),
+      };
+    }
+
+    // already cartesian
+    return coordinates;
+  }
+
+  isPolar(coordinates: any): coordinates is PolarCoordinates {
+    return typeof coordinates.angle === "number" && typeof coordinates.distance === "number";
+  }
+
+  toScreen(coordinates: Coordinates): CartesianCoordinates {
+    const { x, y } = this.toCartesian(coordinates);
     const scale = this.getScale();
 
     return {
@@ -149,10 +171,16 @@ export class MapRenderer {
     ctx.clearRect(-this.width / 2, -this.height / 2, this.width, this.height);
   }
 
-  private renderBackground() {
-    for (let distance = this.options.step; distance <= this.options.range; distance += this.options.step) {
-      this.drawCircle({ x: 0, y: 0 }, distance, this.bg);
-    }
+  resetBackgroundStyles() {
+    this.bg.fillStyle = "#CCC";
+    this.bg.strokeStyle = "#CCC";
+    this.bg.lineWidth = 1;
+  }
+
+  resetMapStyles() {
+    this.map.fillStyle = "#FFF";
+    this.map.strokeStyle = "#FFF";
+    this.map.lineWidth = 1;
   }
 
   private renderFrame(time: number) {
@@ -195,21 +223,13 @@ export class MapRenderer {
     return canvas;
   }
 
-  private setupTranslation() {
+  private setupTransforms() {
     // translate origins to the center of the canvas
     this.bg.translate(this.width / 2 + 0.5, this.height / 2 + 0.5);
     this.map.translate(this.width / 2 + 0.5, this.height / 2 + 0.5);
-  }
 
-  private setupBackgroundStyles() {
-    this.bg.fillStyle = "#CCC";
-    this.bg.strokeStyle = "#CCC";
-    this.bg.lineWidth = 1;
-  }
-
-  private setupMapStyles() {
-    this.map.fillStyle = "#FFF";
-    this.map.strokeStyle = "#FFF";
-    this.map.lineWidth = 1;
+    // also rotate so that positive x is up
+    this.bg.rotate(-Math.PI / 2);
+    this.map.rotate(-Math.PI / 2);
   }
 }
