@@ -1,16 +1,18 @@
-import * as nipplejs from "nipplejs";
-import * as React from "react";
+import {
+  create,
+  EventData,
+  Joystick as Nipple,
+  JoystickEventTypes,
+  JoystickOutputData
+} from "nipplejs";
+import React from "react";
 
 export interface JoystickProps {
   name: string;
-  bind?: nipplejs.JoystickEventTypes | nipplejs.JoystickEventTypes[];
+  bind?: JoystickEventTypes | JoystickEventTypes[];
   x?: boolean;
   y?: boolean;
-  onEvent?(
-    name: string,
-    event: nipplejs.EventData,
-    info: nipplejs.JoystickOutputData
-  ): void;
+  onEvent?(name: string, event: EventData, info: JoystickOutputData): void;
 }
 
 export class Joystick extends React.Component<JoystickProps> {
@@ -27,7 +29,7 @@ export class Joystick extends React.Component<JoystickProps> {
     }
 
     // create the nipple manager
-    const manager = nipplejs.create({
+    const manager = create({
       zone: el,
       color: "#FFF",
       size: 200,
@@ -44,9 +46,7 @@ export class Joystick extends React.Component<JoystickProps> {
 
     // only listen for events if even listener has been added
     if (typeof onEvent === "function") {
-      const bind:
-        | nipplejs.JoystickEventTypes
-        | nipplejs.JoystickEventTypes[] = this.props.bind
+      const bind: JoystickEventTypes | JoystickEventTypes[] = this.props.bind
         ? this.props.bind
         : ["start", "move", "end", "dir", "plain"];
 
@@ -54,7 +54,7 @@ export class Joystick extends React.Component<JoystickProps> {
         onEvent(this.props.name, event, nipple);
       });
       manager.on("removed", (event, _nipple) => {
-        event.target.nipples.forEach((nipple: nipplejs.Joystick) =>
+        event.target.nipples.forEach((nipple: Nipple) =>
           nipple.off(bind, () => {
             /* nothing */
           })

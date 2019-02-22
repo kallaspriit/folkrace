@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import { BrowserRouter, Redirect, Route, Switch } from "react-router-dom";
 import { ThemeProvider } from "styled-components";
 import { Provider } from "unstated";

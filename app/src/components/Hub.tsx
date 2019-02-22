@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import { Subscribe } from "unstated";
 
 import { ButtonContainer } from "../containers/ButtonContainer";

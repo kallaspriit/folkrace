@@ -1,8 +1,8 @@
 import chalk from "chalk";
-import * as chokidar from "chokidar";
-import * as fs from "fs-extra";
+import chokidar from "chokidar";
+import fs from "fs-extra";
 import debounce = require("lodash.debounce");
-import * as path from "path";
+import path from "path";
 
 // configure paths
 const sourcePath = path.join(__dirname, "..", "build");

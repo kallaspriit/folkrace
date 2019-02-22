@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import titleCase from "title-case";
 import { Subscribe } from "unstated";
 

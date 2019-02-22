@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 
 export type Props = React.DetailedHTMLProps<
   React.HTMLAttributes<HTMLElement>,

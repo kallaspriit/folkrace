@@ -4,7 +4,7 @@ import {
   JoystickOutputData,
   ManagerOnlyEventTypes
 } from "nipplejs";
-import * as React from "react";
+import React from "react";
 
 import { Grid, GridItem } from "../components/Grid";
 import { Joystick } from "../components/Joystick";

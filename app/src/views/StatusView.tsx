@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 
 import { BatteryStatus } from "../components/BatteryStatus";
 import { Grid } from "../components/Grid";
