@@ -99,18 +99,19 @@ export interface DrawDirectionOptions {
 }
 
 export interface DrawGridOptions {
-  center?: Coordinates;
   cellWidth: number;
   cellHeight: number;
   rows: number;
   columns: number;
+  center?: Coordinates;
 }
 
 export interface DrawOccupancyGridOptions {
-  center?: Coordinates;
-  grid: OccupancyGrid;
   cellWidth: number;
   cellHeight: number;
+  grid: OccupancyGrid;
+  path?: Path;
+  center?: Coordinates;
 }
 
 export interface DrawCoordinateSystemOptions {
@@ -119,6 +120,10 @@ export interface DrawCoordinateSystemOptions {
 }
 
 export type OccupancyGrid = number[][];
+
+export type Cell = [number, number];
+
+export type Path = Cell[];
 
 export type MapMouseEventType = "down" | "up" | "move";
 
@@ -379,6 +384,7 @@ export class MapRenderer {
   drawOccupancyGrid(options: DrawOccupancyGridOptions, style: DrawStyle = {}, ctx = this.map) {
     const opt: Required<DrawOccupancyGridOptions> = {
       center: { x: 0, y: 0 },
+      path: [],
       ...options,
     };
 
@@ -392,6 +398,7 @@ export class MapRenderer {
     const gridHeight = opt.cellHeight * rows;
     const gridWidth = opt.cellWidth * columns;
 
+    // draw grid
     for (let row = 0; row < rows; row++) {
       for (let column = 0; column < columns; column++) {
         if (!Array.isArray(opt.grid[row])) {
@@ -420,6 +427,20 @@ export class MapRenderer {
           ctx,
         );
       }
+    }
+
+    // draw path
+    for (const [column, row] of opt.path) {
+      const origin = {
+        x: column * opt.cellWidth - gridWidth / 2,
+        y: row * opt.cellHeight - gridHeight / 2,
+      };
+
+      this.drawBox(
+        { origin, width: opt.cellWidth, height: opt.cellHeight, padding: 1 },
+        { fillStyle: "rgba(0, 255, 0, 0.2)" },
+        ctx,
+      );
     }
   }
 

@@ -34,38 +34,24 @@ export class BotView extends React.Component {
       throw new Error("Wrap element was not found, this should not happen");
     }
 
-    const speed = Math.PI; // rad/s
-    let angle = 0;
-    let mouseDownCoordinates: TimedCartesianCoordinates[] = [];
-    // const grid = [
-    //   [1.0, 0.8, 0.0, 0.5, 0.8, 1.0], //
-    //   [1.0, 0.0, 0.0, 0.0, 1.0, 1.0],
-    //   [1.0, 0.0, 0.1, 0.0, 1.0, 1.0],
-    //   [1.0, 0.0, 0.0, 0.0, 1.0, 1.0],
-    //   [1.0, 0.0, 0.6, 0.0, 0.6, 0.8],
-    //   [1.0, 0.0, 0.8, 0.0, 0.4, 0.6],
-    // ];
+    // const speed = Math.PI; // rad/s
+    // let angle = 0;
 
+    let mouseDownCoordinates: TimedCartesianCoordinates[] = [];
+    let gridModificationMode = 0;
+
+    const radius = 2;
+    const cellSize = 0.1;
+    const gridSize = (radius * 2) / cellSize;
     const occupancyGrid = OccupancyGrid.generate(
-      { rows: 20, columns: 20, defaultValue: 0.1 },
-      { cellWidth: 0.1, cellHeight: 0.1 },
+      { rows: gridSize, columns: gridSize, defaultValue: 0 },
+      { cellWidth: cellSize, cellHeight: cellSize },
     );
-    // const occupancyGrid = new OccupancyGrid(
-    //   [
-    //     [1.0, 0.8, 0.0, 0.5, 0.8, 1.0], //
-    //     [1.0, 0.0, 0.0, 0.0, 1.0, 1.0],
-    //     [1.0, 0.0, 0.1, 0.0, 1.0, 1.0],
-    //     [1.0, 0.0, 0.0, 0.0, 1.0, 1.0],
-    //     [1.0, 0.0, 0.6, 0.0, 0.6, 0.8],
-    //     [1.0, 0.0, 0.8, 0.0, 0.4, 0.6],
-    //   ],
-    //   { cellWidth: 0.1, cellHeight: 0.1 },
-    // );
 
     // get measurements
     this.mapRenderer = new MapRenderer({
       wrap,
-      radius: 1, // metres
+      radius, // metres
       scale: {
         horizontal: -1,
         vertical: 1,
@@ -74,13 +60,14 @@ export class BotView extends React.Component {
       render: (map, { dt, frame }) => {
         // draw background once
         if (frame === 0) {
-          const step = 0.25;
+          const step = 0.5;
+          const rows = Math.ceil(map.height / map.getScale() / cellSize);
+          const columns = Math.ceil(map.width / map.getScale() / cellSize);
 
           map.drawGrid(
             {
-              // TODO: calculate from size
-              rows: 60,
-              columns: 60,
+              rows: rows % 2 === 0 ? rows : rows + 1,
+              columns: columns % 2 === 0 ? columns : columns + 1,
               cellWidth: occupancyGrid.options.cellWidth,
               cellHeight: occupancyGrid.options.cellHeight,
             },
@@ -88,10 +75,10 @@ export class BotView extends React.Component {
             map.bg,
           );
 
-          for (let radius = step; radius <= map.options.radius; radius += step) {
-            map.drawCircle({ radius }, { strokeStyle: "#444" }, map.bg);
+          for (let circleRadius = step; circleRadius <= map.options.radius; circleRadius += step) {
+            map.drawCircle({ radius: circleRadius }, { strokeStyle: "#444" }, map.bg);
             map.drawText(
-              { origin: { x: 0, y: radius }, text: `${radius.toFixed(2)}m`, offset: { x: 10, y: 0 } },
+              { origin: { x: 0, y: circleRadius }, text: `${circleRadius.toFixed(2)}m`, offset: { x: 10, y: 0 } },
               { fillStyle: "#444", textBaseline: "middle" },
               map.bg,
             );
@@ -103,10 +90,10 @@ export class BotView extends React.Component {
         // clear map
         map.clear();
 
-        angle += speed * dt;
+        // angle += speed * dt;
 
         // animated dot moving 180deg/s
-        map.drawMarker({ center: { angle, distance: 0.5 } }, { fillStyle: "#FFF" });
+        // map.drawMarker({ center: { angle, distance: 0.5 } }, { fillStyle: "#FFF" });
 
         // fixed dot using cartesian coordinates
         // map.drawMarker({ center: { angle: 0, distance: 0.5 }, size: 0.1 }, { fillStyle: "#00F" });
@@ -124,10 +111,20 @@ export class BotView extends React.Component {
         //   to: { x: -0.5, y: 0 },
         // });
 
+        // const s = Date.now();
+        const path = occupancyGrid.findShortestPath({
+          from: [0, 0],
+          to: [occupancyGrid.data.length - 1, occupancyGrid.data[0].length - 1],
+        });
+        // console.log(`search took ${Date.now() - s}ms`);
+
+        // console.log(path);
+
         map.drawOccupancyGrid({
           grid: occupancyGrid.data,
-          cellWidth: 0.1,
-          cellHeight: 0.1,
+          path,
+          cellWidth: cellSize,
+          cellHeight: cellSize,
         });
 
         // draw mouse events
@@ -144,23 +141,38 @@ export class BotView extends React.Component {
       },
       onMouseEvent: ({ type, world, isMouseDown, event }) => {
         switch (type) {
-          case "down":
+          case "down": {
             mouseDownCoordinates.push({ ...world, time: Date.now() });
 
-            occupancyGrid.setOccupancyAt({ center: world, occupancy: 1 });
+            const currentOccupancy = occupancyGrid.getOccupancyAt(world);
+
+            if (gridModificationMode === 0) {
+              gridModificationMode = currentOccupancy === 0 ? 1 : -1;
+            }
+
+            occupancyGrid.setOccupancyAt({ center: world, occupancy: currentOccupancy === 1 ? 0 : 1 });
 
             break;
+          }
 
-          // case "up":
-          //   mouseUpCoordinates.push({ ...world, time: Date.now() });
-          //   break;
+          case "up": {
+            gridModificationMode = 0;
+            break;
+          }
 
-          case "move":
+          case "move": {
             if (isMouseDown && event.button === 0) {
-              occupancyGrid.setOccupancyAt({ center: world, occupancy: 1 });
+              if (gridModificationMode === 0) {
+                const currentOccupancy = occupancyGrid.getOccupancyAt(world);
+
+                gridModificationMode = currentOccupancy === 0 ? 1 : -1;
+              }
+
+              occupancyGrid.setOccupancyAt({ center: world, occupancy: gridModificationMode === 1 ? 1 : 0 });
             }
 
             break;
+          }
         }
       },
     });

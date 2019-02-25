@@ -1,3 +1,5 @@
+import { BestFirstFinder as PathFinder, Grid } from "pathfinding";
+
 export interface OccupancyGridOptions {
   cellWidth: number;
   cellHeight: number;
@@ -9,6 +11,11 @@ export interface GenerateOccupancyGridOptions {
   defaultValue: number;
 }
 
+export interface Coordinates {
+  x: number;
+  y: number;
+}
+
 export interface SetOccupancyOptions {
   row: number;
   column: number;
@@ -16,8 +23,13 @@ export interface SetOccupancyOptions {
 }
 
 export interface SetOccupancyAtOptions {
-  center: { x: number; y: number };
+  center: Coordinates;
   occupancy: number;
+}
+
+export interface FindShortestPathOptions {
+  from: Cell;
+  to: Cell;
 }
 
 export interface OccupancyGridSize {
@@ -28,6 +40,10 @@ export interface OccupancyGridSize {
 }
 
 export type OccupancyGridData = number[][];
+
+export type Cell = [number, number];
+
+export type Path = Cell[];
 
 export class OccupancyGrid {
   options: Required<OccupancyGridOptions>;
@@ -54,35 +70,45 @@ export class OccupancyGrid {
   }
 
   setOccupancyAt({ center, occupancy }: SetOccupancyAtOptions) {
-    const { rows, columns, width, height } = this.getSize();
-    const position = { x: center.x + width / 2, y: center.y + height / 2 };
-    const row = Math.floor(position.y / this.options.cellHeight);
-    const column = Math.floor(position.x / this.options.cellWidth);
+    const { row, column, exists } = this.getCellAtCoordinates(center);
 
-    console.log("setOccupancyAt", {
-      center,
-      position,
-      row,
-      column,
-    });
-
-    if (row < 0 || row > rows - 1 || column < 0 || column > columns - 1) {
-      // throw new Error(
-      //   `Attempted to set occupancy at ${center.x}x${
-      //     center.y
-      //   } mapped to ${row}x${column} but this is outside the grid size of ${rows}x${columns}`,
-      // );
-
-      console.warn(
-        `Attempted to set occupancy at ${center.x}x${
-          center.y
-        } mapped to ${row}x${column} but this is outside the grid size of ${rows}x${columns}`,
-      );
-
+    if (!exists) {
       return;
     }
 
     this.setOccupancy({ row, column, occupancy });
+  }
+
+  getOccupancyAt(center: Coordinates) {
+    const { row, column, exists } = this.getCellAtCoordinates(center);
+
+    if (!exists) {
+      return undefined;
+    }
+
+    return this.getOccupancy(row, column);
+  }
+
+  getOccupancy(row: number, column: number) {
+    if (this.data[row] === undefined || this.data[row][column] === undefined) {
+      return undefined;
+    }
+
+    return this.data[row][column];
+  }
+
+  getCellAtCoordinates(center: Coordinates) {
+    const { rows, columns, width, height } = this.getSize();
+    const position = { x: center.x + width / 2, y: center.y + height / 2 };
+    const row = Math.floor(position.y / this.options.cellHeight);
+    const column = Math.floor(position.x / this.options.cellWidth);
+    const exists = row >= 0 && row < rows && column >= 0 && column < columns;
+
+    return {
+      row,
+      column,
+      exists,
+    };
   }
 
   getSize(): OccupancyGridSize {
@@ -95,5 +121,13 @@ export class OccupancyGrid {
       width: rows * this.options.cellWidth,
       height: columns * this.options.cellHeight,
     };
+  }
+
+  findShortestPath({ from, to }: FindShortestPathOptions): Path {
+    const grid = new Grid(this.data);
+    const finder = new PathFinder();
+    const path = finder.findPath(from[0], from[1], to[0], to[1], grid);
+
+    return path as Cell[];
   }
 }
