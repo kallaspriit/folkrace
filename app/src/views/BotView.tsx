@@ -36,36 +36,53 @@ export class BotView extends React.Component {
     // get measurements
     this.mapRenderer = new MapRenderer({
       wrap,
-      range: 1000,
+      range: 1, // metres
       render: (map, { dt, frame }) => {
         // draw background once
         if (frame === 0) {
-          const step = 500;
+          const step = 0.5;
 
-          for (let distance = step; distance <= map.options.range; distance += step) {
-            map.drawCircle({ distance }, map.bg);
+          for (let radius = step; radius <= map.options.range; radius += step) {
+            map.drawCircle({ radius }, undefined, map.bg);
           }
+
+          map.drawCoordinateSystem(undefined, map.bg);
+
+          // map.drawGrid(
+          //   {
+          //     rows: 4,
+          //     columns: 4,
+          //     cellWidth: 100,
+          //     cellHeight: 100,
+          //   },
+          //   map.bg,
+          // );
         }
 
         // clear map
         map.clear();
-        map.resetMapStyles();
 
         angle += speed * dt;
 
         // animated dot moving 180deg/s
-        map.drawDot({ center: { angle, distance: 500 } });
+        map.drawDot({ center: { angle, distance: 0.5 } }, { fillStyle: "#FFF" });
 
         // fixed dot using cartesian coordinates
-        map.drawDot({ center: { angle: 0, distance: 500 }, size: 100, color: "#00F" });
-        map.drawDot({ center: { x: 1000, y: 0 }, size: 100, color: "#F00" });
-        map.drawDot({ center: { x: 0, y: 0 }, size: 100, color: "rgba(0, 255, 0, 0.5)" });
+        map.drawDot({ center: { angle: 0, distance: 0.5 }, size: 0.1 }, { fillStyle: "#00F" });
+        map.drawDot(
+          {
+            center: { angle: map.toRadians(45), distance: 0.5 },
+            size: 0.1,
+          },
+          { fillStyle: "#0F0" },
+        );
+        map.drawDot({ center: { x: 1, y: 0 }, size: 0.1 }, { fillStyle: "#F00" });
 
         // draw test line
-        map.drawLine({
-          from: { x: 0, y: 0 },
-          to: { x: -500, y: 0 },
-        });
+        // map.drawLine({
+        //   from: { x: 0, y: 0 },
+        //   to: { x: -0.5, y: 0 },
+        // });
 
         // draw mouse down events
         mouseDownCoordinates.forEach(coordinates => map.drawDot({ center: coordinates }));
