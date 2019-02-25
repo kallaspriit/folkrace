@@ -31,8 +31,19 @@ export interface DrawOptions {
   color?: string | CanvasGradient | CanvasPattern;
 }
 
+export interface DrawCircleOptions extends DrawOptions {
+  center?: Coordinates;
+  distance: number;
+}
+
 export interface DrawDotOptions extends DrawOptions {
+  center: Coordinates;
   size?: number;
+}
+
+export interface DrawLineOptions extends DrawOptions {
+  from: Coordinates;
+  to: Coordinates;
 }
 
 export type MapMouseEventType = "down" | "up";
@@ -145,21 +156,27 @@ export class MapRenderer {
     this.isRunning = false;
   }
 
-  drawCircle(center: Coordinates, distance: number, ctx = this.map) {
-    const pos = this.toScreen(center);
+  drawCircle(options: DrawCircleOptions, ctx = this.map) {
+    const opt: Required<DrawCircleOptions> = {
+      center: { x: 0, y: 0 },
+      color: "#FFF",
+      ...options,
+    };
+    const screenCenter = this.toScreen(opt.center);
 
     ctx.beginPath();
-    ctx.arc(pos.x, pos.y, distance * this.getScale(), 0, Math.PI * 2);
+    ctx.strokeStyle = opt.color;
+    ctx.arc(screenCenter.x, screenCenter.y, opt.distance * this.getScale(), 0, Math.PI * 2);
     ctx.stroke();
   }
 
-  drawDot(center: Coordinates, options: DrawDotOptions = {}, ctx = this.map) {
+  drawDot(options: DrawDotOptions, ctx = this.map) {
     const opt: Required<DrawDotOptions> = {
       size: this.options.range / 100,
       color: "#FFF",
       ...options,
     };
-    const screenCenter = this.toScreen(center);
+    const screenCenter = this.toScreen(opt.center);
     const screenSize = opt.size * this.getScale();
 
     ctx.save();
@@ -168,21 +185,23 @@ export class MapRenderer {
     ctx.restore();
   }
 
-  drawLine(from: Coordinates, to: Coordinates, options: DrawOptions = {}, ctx = this.map) {
-    const opt: Required<DrawOptions> = {
+  drawLine(options: DrawLineOptions, ctx = this.map) {
+    const opt: Required<DrawLineOptions> = {
       color: "#FFF",
       ...options,
     };
-    const screenFrom = this.toScreen(from);
-    const screenTo = this.toScreen(to);
+    const screenFrom = this.toScreen(opt.from);
+    const screenTo = this.toScreen(opt.to);
 
     ctx.save();
-    ctx.fillStyle = opt.color;
+    ctx.strokeStyle = opt.color;
     ctx.moveTo(screenFrom.x, screenFrom.y);
     ctx.lineTo(screenTo.x, screenTo.y);
     ctx.stroke();
     ctx.restore();
   }
+
+  // drawGrid()
 
   polarToCartesian({ angle, distance }: PolarCoordinates): CartesianCoordinates {
     return {

@@ -9,6 +9,21 @@ export class LidarMap extends React.Component {
   private mapRenderer: MapRenderer | null = null;
 
   componentDidMount() {
+    // map setup is delayed to allow for it to get correct size
+    setImmediate(() => this.setupMap());
+  }
+
+  componentWillUnmount() {
+    if (this.mapRenderer !== null) {
+      this.mapRenderer.destroy();
+    }
+  }
+
+  render() {
+    return <Map ref={this.wrapRef} />;
+  }
+
+  private setupMap() {
     const wrap = this.wrapRef.current;
 
     if (!wrap) {
@@ -25,7 +40,7 @@ export class LidarMap extends React.Component {
           const step = 500;
 
           for (let distance = step; distance <= map.options.range; distance += step) {
-            map.drawCircle({ x: 0, y: 0 }, distance, map.bg);
+            map.drawCircle({ distance }, map.bg);
           }
         }
 
@@ -36,8 +51,10 @@ export class LidarMap extends React.Component {
           // render measurements
           measurements.forEach(measurement => {
             map.drawDot({
-              angle: map.toRadians(measurement.angle),
-              distance: measurement.distance * 10,
+              center: {
+                angle: map.toRadians(measurement.angle),
+                distance: measurement.distance * 10,
+              },
             });
           });
         }
@@ -45,16 +62,6 @@ export class LidarMap extends React.Component {
     });
 
     this.mapRenderer.start();
-  }
-
-  componentWillUnmount() {
-    if (this.mapRenderer !== null) {
-      this.mapRenderer.destroy();
-    }
-  }
-
-  render() {
-    return <Map ref={this.wrapRef} />;
   }
 }
 

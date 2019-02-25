@@ -8,6 +8,21 @@ export class BotView extends React.Component {
   private mapRenderer: MapRenderer | null = null;
 
   componentDidMount() {
+    // map setup is delayed to allow for it to get correct size
+    setImmediate(() => this.setupMap());
+  }
+
+  componentWillUnmount() {
+    if (this.mapRenderer !== null) {
+      this.mapRenderer.destroy();
+    }
+  }
+
+  render() {
+    return <Map ref={this.wrapRef} />;
+  }
+
+  private setupMap() {
     const wrap = this.wrapRef.current;
 
     if (!wrap) {
@@ -28,7 +43,7 @@ export class BotView extends React.Component {
           const step = 500;
 
           for (let distance = step; distance <= map.options.range; distance += step) {
-            map.drawCircle({ x: 0, y: 0 }, distance, map.bg);
+            map.drawCircle({ distance }, map.bg);
           }
         }
 
@@ -39,18 +54,21 @@ export class BotView extends React.Component {
         angle += speed * dt;
 
         // animated dot moving 180deg/s
-        map.drawDot({ angle, distance: 500 });
+        map.drawDot({ center: { angle, distance: 500 } });
 
         // fixed dot using cartesian coordinates
-        map.drawDot({ angle: 0, distance: 500 }, { size: 100, color: "#00F" });
-        map.drawDot({ x: 1000, y: 0 }, { size: 100, color: "#F00" });
-        map.drawDot({ x: 0, y: 0 }, { size: 100, color: "rgba(0, 255, 0, 0.5)" });
+        map.drawDot({ center: { angle: 0, distance: 500 }, size: 100, color: "#00F" });
+        map.drawDot({ center: { x: 1000, y: 0 }, size: 100, color: "#F00" });
+        map.drawDot({ center: { x: 0, y: 0 }, size: 100, color: "rgba(0, 255, 0, 0.5)" });
 
         // draw test line
-        map.drawLine({ x: 0, y: 0 }, { x: -500, y: 0 });
+        map.drawLine({
+          from: { x: 0, y: 0 },
+          to: { x: -500, y: 0 },
+        });
 
         // draw mouse down events
-        mouseDownCoordinates.forEach(coordinates => map.drawDot(coordinates));
+        mouseDownCoordinates.forEach(coordinates => map.drawDot({ center: coordinates }));
       },
       onMouseDown: ({ screen, world }) => {
         console.log("DOWN", screen.x, screen.y);
@@ -60,16 +78,6 @@ export class BotView extends React.Component {
     });
 
     this.mapRenderer.start();
-  }
-
-  componentWillUnmount() {
-    if (this.mapRenderer !== null) {
-      this.mapRenderer.destroy();
-    }
-  }
-
-  render() {
-    return <Map ref={this.wrapRef} />;
   }
 }
 
