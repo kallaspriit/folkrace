@@ -1,6 +1,7 @@
 export interface LidarMapOptions {
   wrap: HTMLDivElement;
   range: number;
+  onMouseDown?(event: MapMouseEvent): void;
   render(self: MapRenderer, info: FrameInfo): void;
 }
 
@@ -26,9 +27,20 @@ export interface PolarCoordinates {
   distance: number;
 }
 
-export interface DotOptions {
+export interface DrawOptions {
+  color?: string | CanvasGradient | CanvasPattern;
+}
+
+export interface DrawDotOptions extends DrawOptions {
   size?: number;
-  color?: string;
+}
+
+export type MapMouseEventType = "down" | "up";
+
+export interface MapMouseEvent {
+  type: MapMouseEventType;
+  screen: CartesianCoordinates;
+  world: CartesianCoordinates;
 }
 
 export type Coordinates = CartesianCoordinates | PolarCoordinates;
@@ -37,41 +49,65 @@ export class MapRenderer {
   readonly options: Required<LidarMapOptions>;
   readonly bg: CanvasRenderingContext2D;
   readonly map: CanvasRenderingContext2D;
-  readonly width: number;
-  readonly height: number;
-  readonly size: number;
+  readonly bgCanvas: HTMLCanvasElement;
+  readonly mapCanvas: HTMLCanvasElement;
+  width: number;
+  height: number;
+  size: number;
   private isRunning = false;
   private frameNumber = 0;
   private lastRenderTime?: number;
 
   constructor(options: LidarMapOptions) {
     this.options = {
+      onMouseDown: () => {
+        /* do nothing */
+      },
       ...options,
     };
 
     // create the canvas elements for background and the map
-    const backgroundCanvas = this.createCanvasElement();
-    const mapCanvas = this.createCanvasElement();
+    this.bgCanvas = this.createCanvasElement();
+    this.mapCanvas = this.createCanvasElement();
+
+    // handle mouse down events
+    // TODO: move to method, handle up, move
+    this.mapCanvas.onmousedown = event => {
+      const screenOrigin = this.getScreenOrigin();
+      const screen = {
+        x: -event.y + screenOrigin.y,
+        y: event.x - screenOrigin.x,
+      };
+      const world = this.toWorld(screen);
+
+      console.log("RAW", event.x, event.y);
+
+      this.options.onMouseDown({
+        type: "down",
+        screen,
+        world,
+      });
+    };
 
     // append the canvas elements
-    this.options.wrap.append(backgroundCanvas, mapCanvas);
+    this.options.wrap.append(this.bgCanvas, this.mapCanvas);
 
     // get actual effective dimensions
-    this.width = backgroundCanvas.offsetWidth;
-    this.height = backgroundCanvas.offsetHeight;
+    this.width = this.bgCanvas.offsetWidth;
+    this.height = this.bgCanvas.offsetHeight;
 
     // use minimum of width/height as size
     this.size = Math.min(this.width, this.height) - 2;
 
     // set fixed canvas element dimensions
-    backgroundCanvas.setAttribute("width", `${this.width.toString()}px`);
-    backgroundCanvas.setAttribute("height", `${this.height.toString()}px`);
-    mapCanvas.setAttribute("width", `${this.width.toString()}px`);
-    mapCanvas.setAttribute("height", `${this.height.toString()}px`);
+    this.bgCanvas.setAttribute("width", `${this.width.toString()}px`);
+    this.bgCanvas.setAttribute("height", `${this.height.toString()}px`);
+    this.mapCanvas.setAttribute("width", `${this.width.toString()}px`);
+    this.mapCanvas.setAttribute("height", `${this.height.toString()}px`);
 
     // get contexts
-    const backgroundContext = backgroundCanvas.getContext("2d");
-    const mapContext = mapCanvas.getContext("2d");
+    const backgroundContext = this.bgCanvas.getContext("2d");
+    const mapContext = this.mapCanvas.getContext("2d");
 
     // throw error if contexts could not be acquired
     if (!backgroundContext) {
@@ -95,6 +131,13 @@ export class MapRenderer {
   start() {
     this.isRunning = true;
 
+    // TODO: wrong size is calculated for canvas height
+    // const currentWidth = this.bgCanvas.offsetWidth;
+    // const currentHeight = this.bgCanvas.offsetHeight;
+
+    // console.log("width", this.width, currentWidth);
+    // console.log("height", this.height, currentHeight);
+
     this.scheduleNextFrame();
   }
 
@@ -110,19 +153,34 @@ export class MapRenderer {
     ctx.stroke();
   }
 
-  drawDot(center: Coordinates, options: DotOptions = {}, ctx = this.map) {
-    const pos = this.toScreen(center);
-    const opt: Required<DotOptions> = {
+  drawDot(center: Coordinates, options: DrawDotOptions = {}, ctx = this.map) {
+    const opt: Required<DrawDotOptions> = {
       size: this.options.range / 100,
       color: "#FFF",
       ...options,
     };
-
+    const screenCenter = this.toScreen(center);
     const screenSize = opt.size * this.getScale();
 
     ctx.save();
     ctx.fillStyle = opt.color;
-    ctx.fillRect(pos.x - screenSize / 2, pos.y - screenSize / 2, screenSize, screenSize);
+    ctx.fillRect(screenCenter.x - screenSize / 2, screenCenter.y - screenSize / 2, screenSize, screenSize);
+    ctx.restore();
+  }
+
+  drawLine(from: Coordinates, to: Coordinates, options: DrawOptions = {}, ctx = this.map) {
+    const opt: Required<DrawOptions> = {
+      color: "#FFF",
+      ...options,
+    };
+    const screenFrom = this.toScreen(from);
+    const screenTo = this.toScreen(to);
+
+    ctx.save();
+    ctx.fillStyle = opt.color;
+    ctx.moveTo(screenFrom.x, screenFrom.y);
+    ctx.lineTo(screenTo.x, screenTo.y);
+    ctx.stroke();
     ctx.restore();
   }
 
@@ -149,13 +207,23 @@ export class MapRenderer {
     return typeof coordinates.angle === "number" && typeof coordinates.distance === "number";
   }
 
-  toScreen(coordinates: Coordinates): CartesianCoordinates {
-    const { x, y } = this.toCartesian(coordinates);
+  toScreen(world: Coordinates): CartesianCoordinates {
+    const { x, y } = this.toCartesian(world);
     const scale = this.getScale();
 
     return {
       x: x * scale,
       y: y * scale,
+    };
+  }
+
+  toWorld(screen: Coordinates): CartesianCoordinates {
+    const { x, y } = this.toCartesian(screen);
+    const scale = this.getScale();
+
+    return {
+      x: x / scale,
+      y: y / scale,
     };
   }
 
@@ -224,12 +292,21 @@ export class MapRenderer {
   }
 
   private setupTransforms() {
+    const screenOrigin = this.getScreenOrigin();
+
     // translate origins to the center of the canvas
-    this.bg.translate(this.width / 2 + 0.5, this.height / 2 + 0.5);
-    this.map.translate(this.width / 2 + 0.5, this.height / 2 + 0.5);
+    this.bg.translate(screenOrigin.x, screenOrigin.y);
+    this.map.translate(screenOrigin.x, screenOrigin.y);
 
     // also rotate so that positive x is up
     this.bg.rotate(-Math.PI / 2);
     this.map.rotate(-Math.PI / 2);
+  }
+
+  private getScreenOrigin(): CartesianCoordinates {
+    return {
+      x: this.width / 2,
+      y: this.height / 2,
+    };
   }
 }

@@ -1,7 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 
-import { MapRenderer } from "../lib/map-renderer";
+import { CartesianCoordinates, MapRenderer } from "../lib/map-renderer";
 
 export class BotView extends React.Component {
   private readonly wrapRef = React.createRef<HTMLDivElement>();
@@ -16,6 +16,7 @@ export class BotView extends React.Component {
 
     const speed = Math.PI; // rad/s
     let angle = 0;
+    const mouseDownCoordinates: CartesianCoordinates[] = [];
 
     // get measurements
     this.mapRenderer = new MapRenderer({
@@ -43,6 +44,18 @@ export class BotView extends React.Component {
         // fixed dot using cartesian coordinates
         map.drawDot({ angle: 0, distance: 500 }, { size: 100, color: "#00F" });
         map.drawDot({ x: 1000, y: 0 }, { size: 100, color: "#F00" });
+        map.drawDot({ x: 0, y: 0 }, { size: 100, color: "rgba(0, 255, 0, 0.5)" });
+
+        // draw test line
+        map.drawLine({ x: 0, y: 0 }, { x: -500, y: 0 });
+
+        // draw mouse down events
+        mouseDownCoordinates.forEach(coordinates => map.drawDot(coordinates));
+      },
+      onMouseDown: ({ screen, world }) => {
+        console.log("DOWN", screen.x, screen.y);
+
+        mouseDownCoordinates.push(world);
       },
     });
 
