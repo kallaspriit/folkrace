@@ -37,6 +37,11 @@ export class BotView extends React.Component {
     this.mapRenderer = new MapRenderer({
       wrap,
       range: 1, // metres
+      scale: {
+        horizontal: -1,
+        vertical: 1,
+      },
+      rotation: -Math.PI / 2,
       render: (map, { dt, frame }) => {
         // draw background once
         if (frame === 0) {

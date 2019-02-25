@@ -34,13 +34,18 @@ export class LidarMap extends React.Component {
     this.mapRenderer = new MapRenderer({
       wrap,
       range: 2, // meters
+      scale: {
+        horizontal: -1,
+        vertical: 1,
+      },
+      rotation: -Math.PI / 2,
       render: (map, { frame }) => {
         // draw background once
         if (frame === 0) {
           const step = 0.5;
 
           for (let radius = step; radius <= map.options.range; radius += step) {
-            map.drawCircle({ radius }, {}, map.bg);
+            map.drawCircle({ radius }, undefined, map.bg);
           }
         }
 

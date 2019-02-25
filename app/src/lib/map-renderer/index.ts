@@ -4,6 +4,11 @@ export interface MapRendererOptions {
   wrap: HTMLDivElement;
   range: number;
   padding?: number;
+  scale?: {
+    horizontal: number;
+    vertical: number;
+  };
+  rotation?: number;
   onMouseDown?(event: MapMouseEvent): void;
   render(self: MapRenderer, info: FrameInfo): void;
 }
@@ -113,6 +118,11 @@ export class MapRenderer {
   constructor(options: MapRendererOptions) {
     this.options = {
       padding: options.range / 10,
+      scale: {
+        horizontal: 1,
+        vertical: 1,
+      },
+      rotation: 0,
       onMouseDown: () => {
         /* do nothing */
       },
@@ -346,8 +356,11 @@ export class MapRenderer {
     this.applyStyle(style, ctx);
 
     ctx.translate(screenOrigin.x, screenOrigin.y);
-    ctx.rotate(Math.PI / 2);
-    ctx.scale(-1, 1);
+
+    // roll back transforms to get the text to draw correctly
+    ctx.rotate(-this.options.rotation);
+    ctx.scale(this.options.scale.horizontal, this.options.scale.vertical);
+
     ctx.fillText(opt.text, 0, 0);
     ctx.restore();
   }
@@ -508,23 +521,21 @@ export class MapRenderer {
   private setupTransforms() {
     const screenOrigin = this.getScreenOrigin();
 
-    // translate origins to the center of the canvas
-    // this.bg.translate(screenOrigin.x, screenOrigin.y);
-    // this.map.translate(screenOrigin.x, screenOrigin.y);
-
-    const scale = {
-      horizontal: -1,
-      vertical: 1,
-    };
-    const rotation = -Math.PI / 2;
-
-    this.bg.transform(scale.horizontal, 0, 0, scale.vertical, screenOrigin.x, screenOrigin.y);
-    this.map.transform(scale.horizontal, 0, 0, scale.vertical, screenOrigin.x, screenOrigin.y);
+    // transform background and map
+    this.bg.transform(this.options.scale.horizontal, 0, 0, this.options.scale.vertical, screenOrigin.x, screenOrigin.y);
+    this.map.transform(
+      this.options.scale.horizontal,
+      0,
+      0,
+      this.options.scale.vertical,
+      screenOrigin.x,
+      screenOrigin.y,
+    );
 
     // by the right hand rule, the yaw component of orientation increases as the child frame rotates counter-clockwise,
     // and for geographic poses, yaw is zero when pointing east.
-    this.bg.rotate(rotation);
-    this.map.rotate(rotation);
+    this.bg.rotate(this.options.rotation);
+    this.map.rotate(this.options.rotation);
   }
 
   private getScreenOrigin(): CartesianCoordinates {
