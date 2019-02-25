@@ -4,6 +4,10 @@ import styled from "styled-components";
 import { CartesianCoordinates, MapRenderer } from "../lib/map-renderer";
 import { OccupancyGrid } from "../lib/occupancy-grid";
 
+export interface TimedCartesianCoordinates extends CartesianCoordinates {
+  time: number;
+}
+
 export class BotView extends React.Component {
   private readonly wrapRef = React.createRef<HTMLDivElement>();
   private mapRenderer: MapRenderer | null = null;
@@ -32,8 +36,7 @@ export class BotView extends React.Component {
 
     const speed = Math.PI; // rad/s
     let angle = 0;
-    const mouseDownCoordinates: CartesianCoordinates[] = [];
-    const mouseUpCoordinates: CartesianCoordinates[] = [];
+    let mouseDownCoordinates: TimedCartesianCoordinates[] = [];
     // const grid = [
     //   [1.0, 0.8, 0.0, 0.5, 0.8, 1.0], //
     //   [1.0, 0.0, 0.0, 0.0, 1.0, 1.0],
@@ -47,6 +50,17 @@ export class BotView extends React.Component {
       { rows: 20, columns: 20, defaultValue: 0.1 },
       { cellWidth: 0.1, cellHeight: 0.1 },
     );
+    // const occupancyGrid = new OccupancyGrid(
+    //   [
+    //     [1.0, 0.8, 0.0, 0.5, 0.8, 1.0], //
+    //     [1.0, 0.0, 0.0, 0.0, 1.0, 1.0],
+    //     [1.0, 0.0, 0.1, 0.0, 1.0, 1.0],
+    //     [1.0, 0.0, 0.0, 0.0, 1.0, 1.0],
+    //     [1.0, 0.0, 0.6, 0.0, 0.6, 0.8],
+    //     [1.0, 0.0, 0.8, 0.0, 0.4, 0.6],
+    //   ],
+    //   { cellWidth: 0.1, cellHeight: 0.1 },
+    // );
 
     // get measurements
     this.mapRenderer = new MapRenderer({
@@ -117,17 +131,35 @@ export class BotView extends React.Component {
         });
 
         // draw mouse events
-        mouseDownCoordinates.forEach(coordinates => map.drawMarker({ center: coordinates }, { fillStyle: "#00F" }));
-        mouseUpCoordinates.forEach(coordinates => map.drawMarker({ center: coordinates }, { fillStyle: "#0F0" }));
+        const currentTime = Date.now();
+        const lifetime = 250;
+
+        // remove dead clicks
+        mouseDownCoordinates = mouseDownCoordinates.filter(({ time }) => currentTime - time < lifetime);
+
+        mouseDownCoordinates.forEach(({ x, y, time }) =>
+          map.drawPulse({ center: { x, y }, lifetime, age: currentTime - time }, { fillStyle: "#0F0" }),
+        );
+        // mouseUpCoordinates.forEach(coordinates => map.drawMarker({ center: coordinates }, { fillStyle: "#0F0" }));
       },
-      onMouseEvent: ({ type, screen, world }) => {
+      onMouseEvent: ({ type, world, isMouseDown, event }) => {
         switch (type) {
           case "down":
-            mouseDownCoordinates.push(world);
+            mouseDownCoordinates.push({ ...world, time: Date.now() });
+
+            occupancyGrid.setOccupancyAt({ center: world, occupancy: 1 });
+
             break;
 
-          case "up":
-            mouseUpCoordinates.push(world);
+          // case "up":
+          //   mouseUpCoordinates.push({ ...world, time: Date.now() });
+          //   break;
+
+          case "move":
+            if (isMouseDown && event.button === 0) {
+              occupancyGrid.setOccupancyAt({ center: world, occupancy: 1 });
+            }
+
             break;
         }
       },

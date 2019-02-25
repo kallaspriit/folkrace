@@ -1,4 +1,7 @@
+import color from "color";
 import Vector from "victor";
+
+import { map } from "../../services/map";
 
 export interface MapRendererOptions {
   wrap: HTMLDivElement;
@@ -50,6 +53,13 @@ export interface DrawStyle {
 export interface DrawCircleOptions {
   center?: Coordinates;
   radius: number;
+}
+
+export interface DrawPulseOptions {
+  center?: Coordinates;
+  lifetime?: number;
+  age?: number;
+  size?: number;
 }
 
 export interface DrawMarkerOptions {
@@ -116,6 +126,8 @@ export interface MapMouseEvent {
   type: MapMouseEventType;
   screen: CartesianCoordinates;
   world: CartesianCoordinates;
+  isMouseDown: boolean;
+  event: MouseEvent;
 }
 
 export type Coordinates = CartesianCoordinates | PolarCoordinates;
@@ -129,9 +141,10 @@ export class MapRenderer {
   width: number;
   height: number;
   size: number;
-  private isRunning = false;
   private frameNumber = 0;
   private lastRenderTime?: number;
+  private isRunning = false;
+  private mouseDownCounter = 0;
 
   constructor(options: MapRendererOptions) {
     this.options = {
@@ -226,6 +239,36 @@ export class MapRenderer {
     }
 
     ctx.restore();
+  }
+
+  drawPulse(options: DrawPulseOptions, style: DrawStyle = { strokeStyle: "#000" }, ctx = this.map) {
+    const opt: Required<DrawPulseOptions> = {
+      center: { x: 0, y: 0 },
+      lifetime: 300,
+      age: 0,
+      size: this.options.radius / 10,
+      ...options,
+    };
+
+    // don't draw dead pulses
+    if (opt.age > opt.lifetime) {
+      return;
+    }
+
+    const opacity = map(opt.age, 0, opt.lifetime, 1, 0);
+    const fillStyle = color(style.fillStyle || "#F00")
+      .alpha(opacity)
+      .toString();
+
+    this.drawCircle(
+      {
+        center: opt.center,
+        radius: map(opt.age, 0, opt.lifetime, opt.size / 10, opt.size),
+      },
+      {
+        fillStyle,
+      },
+    );
   }
 
   drawMarker(options: DrawMarkerOptions, style: DrawStyle = {}, ctx = this.map) {
@@ -544,7 +587,10 @@ export class MapRenderer {
   }
 
   clear(ctx = this.map) {
-    ctx.clearRect(-this.width / 2, -this.height / 2, this.width, this.height);
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, this.width, this.height);
+    ctx.restore();
   }
 
   setupDefaultStyle() {
@@ -660,10 +706,22 @@ export class MapRenderer {
     const screen = this.canvasToScreen(event);
     const world = this.screenToWorld(screen);
 
+    switch (type) {
+      case "down":
+        this.mouseDownCounter++;
+        break;
+
+      case "up":
+        this.mouseDownCounter--;
+        break;
+    }
+
     this.options.onMouseEvent({
       type,
       screen,
       world,
+      isMouseDown: this.mouseDownCounter > 0,
+      event,
     });
   }
 }
