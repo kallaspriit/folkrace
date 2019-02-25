@@ -55,7 +55,7 @@ export class LidarMap extends React.Component {
         if (measurements.length > 0) {
           // render measurements
           measurements.forEach(measurement => {
-            map.drawDot({
+            map.drawMarker({
               center: {
                 angle: map.toRadians(measurement.angle),
                 distance: measurement.distance / 10,

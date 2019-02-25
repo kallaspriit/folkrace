@@ -52,9 +52,16 @@ export interface DrawCircleOptions {
   radius: number;
 }
 
-export interface DrawDotOptions {
+export interface DrawMarkerOptions {
   center: Coordinates;
   size?: number;
+}
+
+export interface DrawBoxOptions {
+  origin: Coordinates;
+  width: number;
+  height: number;
+  padding?: number;
 }
 
 // TODO: support center, angle, length
@@ -89,10 +96,19 @@ export interface DrawGridOptions {
   columns: number;
 }
 
+export interface DrawOccupancyGridOptions {
+  center?: Coordinates;
+  grid: OccupancyGrid;
+  cellWidth: number;
+  cellHeight: number;
+}
+
 export interface DrawCoordinateSystemOptions {
   center?: Coordinates;
   length?: number;
 }
+
+export type OccupancyGrid = number[][];
 
 export type MapMouseEventType = "down" | "up" | "move";
 
@@ -212,8 +228,8 @@ export class MapRenderer {
     ctx.restore();
   }
 
-  drawDot(options: DrawDotOptions, style: DrawStyle = {}, ctx = this.map) {
-    const opt: Required<DrawDotOptions> = {
+  drawMarker(options: DrawMarkerOptions, style: DrawStyle = {}, ctx = this.map) {
+    const opt: Required<DrawMarkerOptions> = {
       size: this.options.radius / 50,
       ...options,
     };
@@ -227,6 +243,26 @@ export class MapRenderer {
     ctx.translate(screenCenter.x, screenCenter.y);
     ctx.rotate(angle);
     ctx.fillRect(-screenSize / 2, -screenSize / 2, screenSize, screenSize);
+
+    ctx.restore();
+  }
+
+  drawBox(options: DrawBoxOptions, style: DrawStyle = {}, ctx = this.map) {
+    const opt: Required<DrawBoxOptions> = {
+      padding: 0,
+      ...options,
+    };
+    const screenOrigin = this.worldToScreen(opt.origin);
+
+    ctx.save();
+    this.applyStyle(style, ctx);
+
+    ctx.fillRect(
+      screenOrigin.x + opt.padding,
+      screenOrigin.y + opt.padding,
+      this.scale(opt.width) - opt.padding * 2,
+      this.scale(opt.height) - opt.padding * 2,
+    );
 
     ctx.restore();
   }
@@ -294,6 +330,53 @@ export class MapRenderer {
         style,
         ctx,
       );
+    }
+  }
+
+  drawOccupancyGrid(options: DrawOccupancyGridOptions, style: DrawStyle = {}, ctx = this.map) {
+    const opt: Required<DrawOccupancyGridOptions> = {
+      center: { x: 0, y: 0 },
+      ...options,
+    };
+
+    // don't attempt to draw an empty map
+    if (opt.grid.length === 0) {
+      return;
+    }
+
+    const rows = opt.grid.length;
+    const columns = opt.grid[0].length;
+    const gridHeight = opt.cellHeight * rows;
+    const gridWidth = opt.cellWidth * columns;
+
+    for (let row = 0; row < rows; row++) {
+      for (let column = 0; column < columns; column++) {
+        if (!Array.isArray(opt.grid[row])) {
+          throw new Error(`Expected occupancy map row #${row} to be an array, got ${typeof opt.grid[row]}`);
+        }
+
+        const occupancy = opt.grid[row][column];
+
+        if (typeof occupancy !== "number") {
+          throw new Error(`Expected occupancy map row cell ${row}x${column} to be a number, got ${typeof occupancy}`);
+        }
+
+        // don't draw empty or unknown cells
+        if (occupancy <= 0) {
+          continue;
+        }
+
+        const origin = {
+          x: column * opt.cellWidth - gridWidth / 2,
+          y: row * opt.cellHeight - gridHeight / 2,
+        };
+
+        this.drawBox(
+          { origin, width: opt.cellWidth, height: opt.cellHeight, padding: 1 },
+          { fillStyle: `rgba(0, 0, 0, ${occupancy})` },
+          ctx,
+        );
+      }
     }
   }
 
