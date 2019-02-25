@@ -32,11 +32,13 @@ export class BotView extends React.Component {
     const speed = Math.PI; // rad/s
     let angle = 0;
     const mouseDownCoordinates: CartesianCoordinates[] = [];
+    const mouseUpCoordinates: CartesianCoordinates[] = [];
+    const grid = [[1, 1, 0, 1], [1, 0, 0, 1], [1, 0, 1, 0], [1, 0, 0, 0]];
 
     // get measurements
     this.mapRenderer = new MapRenderer({
       wrap,
-      range: 1, // metres
+      radius: 1, // metres
       scale: {
         horizontal: -1,
         vertical: 1,
@@ -45,23 +47,29 @@ export class BotView extends React.Component {
       render: (map, { dt, frame }) => {
         // draw background once
         if (frame === 0) {
-          const step = 0.5;
+          const step = 0.25;
 
-          for (let radius = step; radius <= map.options.range; radius += step) {
-            map.drawCircle({ radius }, undefined, map.bg);
+          map.drawGrid(
+            {
+              rows: 20,
+              columns: 20,
+              cellWidth: 0.1,
+              cellHeight: 0.1,
+            },
+            { strokeStyle: "#333" },
+            map.bg,
+          );
+
+          for (let radius = step; radius <= map.options.radius; radius += step) {
+            map.drawCircle({ radius }, { strokeStyle: "#444" }, map.bg);
+            map.drawText(
+              { origin: { x: 0, y: radius }, text: `${radius.toFixed(2)}m`, offset: { x: 10, y: 0 } },
+              { fillStyle: "#444", textBaseline: "middle" },
+              map.bg,
+            );
           }
 
           map.drawCoordinateSystem(undefined, map.bg);
-
-          // map.drawGrid(
-          //   {
-          //     rows: 4,
-          //     columns: 4,
-          //     cellWidth: 100,
-          //     cellHeight: 100,
-          //   },
-          //   map.bg,
-          // );
         }
 
         // clear map
@@ -89,13 +97,20 @@ export class BotView extends React.Component {
         //   to: { x: -0.5, y: 0 },
         // });
 
-        // draw mouse down events
-        mouseDownCoordinates.forEach(coordinates => map.drawDot({ center: coordinates }));
+        // draw mouse events
+        mouseDownCoordinates.forEach(coordinates => map.drawDot({ center: coordinates }, { fillStyle: "#00F" }));
+        mouseUpCoordinates.forEach(coordinates => map.drawDot({ center: coordinates }, { fillStyle: "#0F0" }));
       },
-      onMouseDown: ({ screen, world }) => {
-        console.log("DOWN", screen.x, screen.y);
+      onMouseEvent: ({ type, screen, world }) => {
+        switch (type) {
+          case "down":
+            mouseDownCoordinates.push(world);
+            break;
 
-        mouseDownCoordinates.push(world);
+          case "up":
+            mouseUpCoordinates.push(world);
+            break;
+        }
       },
     });
 

@@ -2,14 +2,14 @@ import Vector from "victor";
 
 export interface MapRendererOptions {
   wrap: HTMLDivElement;
-  range: number;
+  radius: number;
   padding?: number;
   scale?: {
     horizontal: number;
     vertical: number;
   };
   rotation?: number;
-  onMouseDown?(event: MapMouseEvent): void;
+  onMouseEvent?(event: MapMouseEvent): void;
   render(self: MapRenderer, info: FrameInfo): void;
 }
 
@@ -44,6 +44,7 @@ export interface DrawStyle {
   lineWidth?: number;
   font?: string;
   textAlign?: CanvasTextAlign;
+  textBaseline?: CanvasTextBaseline;
 }
 
 export interface DrawCircleOptions {
@@ -65,6 +66,7 @@ export interface DrawLineOptions {
 export interface DrawTextOptions {
   origin: Coordinates;
   text: string;
+  offset?: CartesianCoordinates;
 }
 
 export interface DrawArrowOptions extends DrawLineOptions {
@@ -92,7 +94,7 @@ export interface DrawCoordinateSystemOptions {
   length?: number;
 }
 
-export type MapMouseEventType = "down" | "up";
+export type MapMouseEventType = "down" | "up" | "move";
 
 export interface MapMouseEvent {
   type: MapMouseEventType;
@@ -117,13 +119,13 @@ export class MapRenderer {
 
   constructor(options: MapRendererOptions) {
     this.options = {
-      padding: options.range / 10,
+      padding: options.radius / 10,
       scale: {
         horizontal: 1,
         vertical: 1,
       },
       rotation: 0,
-      onMouseDown: () => {
+      onMouseEvent: () => {
         /* do nothing */
       },
       ...options,
@@ -133,22 +135,10 @@ export class MapRenderer {
     this.bgCanvas = this.createCanvasElement();
     this.mapCanvas = this.createCanvasElement();
 
-    // handle mouse down events
-    // TODO: move to method, handle up, move
-    this.mapCanvas.onmousedown = event => {
-      const screenOrigin = this.getScreenOrigin();
-      const screen = {
-        x: -event.y + screenOrigin.y,
-        y: event.x - screenOrigin.x,
-      };
-      const world = this.toWorld(screen);
-
-      this.options.onMouseDown({
-        type: "down",
-        screen,
-        world,
-      });
-    };
+    // handle mouse events
+    this.mapCanvas.onmousedown = event => this.handleMouseEvent("down", event);
+    this.mapCanvas.onmouseup = event => this.handleMouseEvent("up", event);
+    this.mapCanvas.onmousemove = event => this.handleMouseEvent("move", event);
 
     // append the canvas elements
     this.options.wrap.append(this.bgCanvas, this.mapCanvas);
@@ -198,12 +188,12 @@ export class MapRenderer {
     this.isRunning = false;
   }
 
-  drawCircle(options: DrawCircleOptions, style: DrawStyle = { strokeStyle: "#666" }, ctx = this.map) {
+  drawCircle(options: DrawCircleOptions, style: DrawStyle = { strokeStyle: "#000" }, ctx = this.map) {
     const opt: Required<DrawCircleOptions> = {
       center: { x: 0, y: 0 },
       ...options,
     };
-    const screenCenter = this.toScreen(opt.center);
+    const screenCenter = this.worldToScreen(opt.center);
 
     ctx.save();
     this.applyStyle(style, ctx);
@@ -224,11 +214,11 @@ export class MapRenderer {
 
   drawDot(options: DrawDotOptions, style: DrawStyle = {}, ctx = this.map) {
     const opt: Required<DrawDotOptions> = {
-      size: this.options.range / 50,
+      size: this.options.radius / 50,
       ...options,
     };
     const angle = this.isPolar(opt.center) ? opt.center.angle : 0;
-    const screenCenter = this.toScreen(opt.center);
+    const screenCenter = this.worldToScreen(opt.center);
     const screenSize = this.scale(opt.size);
 
     ctx.save();
@@ -245,8 +235,8 @@ export class MapRenderer {
     const opt: Required<DrawLineOptions> = {
       ...options,
     };
-    const screenFrom = this.toScreen(opt.from);
-    const screenTo = this.toScreen(opt.to);
+    const screenFrom = this.worldToScreen(opt.from);
+    const screenTo = this.worldToScreen(opt.to);
 
     ctx.save();
     this.applyStyle(style, ctx);
@@ -265,20 +255,40 @@ export class MapRenderer {
       ...options,
     };
 
-    const screenCellWidth = this.scale(opt.cellWidth);
+    const gridHeight = opt.cellHeight * opt.rows;
+    const gridWidth = opt.cellWidth * opt.columns;
 
-    for (let row = 0; row < opt.rows; row++) {
-      const rowX = row * screenCellWidth;
+    for (let row = 0; row <= opt.rows; row++) {
+      const rowX = row * opt.cellHeight;
 
       this.drawLine(
         {
           from: {
-            x: rowX,
-            y: 0,
+            x: -gridHeight / 2 + rowX,
+            y: -gridWidth / 2,
           },
           to: {
-            x: rowX,
-            y: 100,
+            x: -gridHeight / 2 + rowX,
+            y: gridWidth / 2,
+          },
+        },
+        style,
+        ctx,
+      );
+    }
+
+    for (let column = 0; column <= opt.columns; column++) {
+      const columnY = column * opt.cellWidth;
+
+      this.drawLine(
+        {
+          from: {
+            x: -gridHeight / 2,
+            y: -gridWidth / 2 + columnY,
+          },
+          to: {
+            x: gridHeight / 2,
+            y: -gridWidth / 2 + columnY,
           },
         },
         style,
@@ -289,15 +299,15 @@ export class MapRenderer {
 
   drawArrow(options: DrawArrowOptions, style: DrawStyle = {}, ctx = this.map) {
     const opt: Required<DrawArrowOptions> = {
-      tipSize: this.options.range / 50,
+      tipSize: this.options.radius / 50,
       name: "",
       ...options,
     };
 
     this.drawLine({ ...opt }, style, ctx);
 
-    const screenFrom = this.toScreen(opt.from);
-    const screenTo = this.toScreen(opt.to);
+    const screenFrom = this.worldToScreen(opt.from);
+    const screenTo = this.worldToScreen(opt.to);
     const directionVector = Vector.fromObject(screenTo).subtract(Vector.fromObject(screenFrom));
     const angle = directionVector.angle();
 
@@ -315,12 +325,12 @@ export class MapRenderer {
 
   drawDirection(options: DrawDirectionOptions, style: DrawStyle = {}, ctx = this.map) {
     const opt: Required<DrawDirectionOptions> = {
-      size: this.options.range / 50,
+      size: this.options.radius / 50,
       name: "",
       ...options,
     };
 
-    const screenCenter = this.toScreen(opt.center);
+    const screenCenter = this.worldToScreen(opt.center);
     const screenSize = this.scale(opt.size);
 
     ctx.save();
@@ -347,10 +357,11 @@ export class MapRenderer {
 
   drawText(options: DrawTextOptions, style: DrawStyle = {}, ctx = this.map) {
     const opt: Required<DrawTextOptions> = {
+      offset: { x: 0, y: 0 },
       ...options,
     };
 
-    const screenOrigin = this.toScreen(opt.origin);
+    const screenOrigin = this.worldToScreen(opt.origin);
 
     ctx.save();
     this.applyStyle(style, ctx);
@@ -361,14 +372,14 @@ export class MapRenderer {
     ctx.rotate(-this.options.rotation);
     ctx.scale(this.options.scale.horizontal, this.options.scale.vertical);
 
-    ctx.fillText(opt.text, 0, 0);
+    ctx.fillText(opt.text, opt.offset.x, opt.offset.y);
     ctx.restore();
   }
 
   drawCoordinateSystem(options: DrawCoordinateSystemOptions = {}, ctx = this.map) {
     const opt: Required<DrawCoordinateSystemOptions> = {
-      center: { x: -this.options.range, y: this.options.range },
-      length: this.options.range / 10,
+      center: { x: -this.options.radius * 0.9, y: -this.options.radius * 0.9 },
+      length: this.options.radius / 10,
       ...options,
     };
     const center = Vector.fromObject(this.toCartesian(opt.center));
@@ -401,11 +412,7 @@ export class MapRenderer {
     return coordinates;
   }
 
-  isPolar(coordinates: any): coordinates is PolarCoordinates {
-    return typeof coordinates.angle === "number" && typeof coordinates.distance === "number";
-  }
-
-  toScreen(world: Coordinates): CartesianCoordinates {
+  worldToScreen(world: Coordinates): CartesianCoordinates {
     const { x, y } = this.toCartesian(world);
 
     return {
@@ -414,7 +421,7 @@ export class MapRenderer {
     };
   }
 
-  toWorld(screen: Coordinates): CartesianCoordinates {
+  screenToWorld(screen: Coordinates): CartesianCoordinates {
     const { x, y } = this.toCartesian(screen);
     const scale = this.getScale();
 
@@ -424,8 +431,25 @@ export class MapRenderer {
     };
   }
 
+  canvasToScreen(canvas: CartesianCoordinates) {
+    const origin = Vector.fromObject(this.getScreenOrigin());
+    const screen = Vector.fromObject(canvas)
+      .subtract(origin)
+      .rotate(this.options.rotation)
+      .multiply(new Vector(this.options.scale.horizontal, this.options.scale.vertical));
+
+    return {
+      x: screen.x,
+      y: screen.y,
+    };
+  }
+
+  isPolar(coordinates: any): coordinates is PolarCoordinates {
+    return typeof coordinates.angle === "number" && typeof coordinates.distance === "number";
+  }
+
   getScale() {
-    return this.size / 2 / (this.options.range + this.options.padding);
+    return this.size / 2 / (this.options.radius + this.options.padding);
   }
 
   scale(distance: number) {
@@ -516,6 +540,10 @@ export class MapRenderer {
     if (options.textAlign) {
       ctx.textAlign = options.textAlign;
     }
+
+    if (options.textBaseline) {
+      ctx.textBaseline = options.textBaseline;
+    }
   }
 
   private setupTransforms() {
@@ -543,5 +571,16 @@ export class MapRenderer {
       x: this.width / 2,
       y: this.height / 2,
     };
+  }
+
+  private handleMouseEvent(type: MapMouseEventType, event: MouseEvent) {
+    const screen = this.canvasToScreen(event);
+    const world = this.screenToWorld(screen);
+
+    this.options.onMouseEvent({
+      type,
+      screen,
+      world,
+    });
   }
 }
