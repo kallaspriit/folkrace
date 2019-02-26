@@ -12,7 +12,7 @@ export interface VisualizerOptions {
     vertical: number;
   };
   rotation?: number;
-  onMouseEvent?(event: MapMouseEvent): void;
+  onMouseEvent?(event: VisualizerMouseEvent): void;
   render(info: FrameInfo): void;
 }
 
@@ -130,10 +130,10 @@ export type Cell = [number, number];
 
 export type Path = Cell[];
 
-export type MapMouseEventType = "down" | "up" | "move";
+export type VisualizerMouseEventType = "down" | "up" | "move";
 
-export interface MapMouseEvent {
-  type: MapMouseEventType;
+export interface VisualizerMouseEvent {
+  type: VisualizerMouseEventType;
   screen: CartesianCoordinates;
   world: CartesianCoordinates;
   isMouseDown: boolean;
@@ -753,7 +753,7 @@ export class Visualizer {
     };
   }
 
-  private handleMouseEvent(type: MapMouseEventType, event: MouseEvent) {
+  private handleMouseEvent(type: VisualizerMouseEventType, event: MouseEvent) {
     const screen = this.canvasToScreen(event);
     const world = this.screenToWorld(screen);
 

@@ -1,5 +1,5 @@
 import { OccupancyGrid } from "../occupancy-grid";
-import { FrameInfo, MapMouseEvent, TimedCartesianCoordinates, Visualizer } from "../visualizer";
+import { FrameInfo, TimedCartesianCoordinates, Visualizer, VisualizerMouseEvent } from "../visualizer";
 
 export interface SimulatorOptions {
   container: HTMLElement;
@@ -10,7 +10,7 @@ export interface SimulatorOptions {
 export class Simulator {
   private readonly visualizer: Visualizer;
   private readonly occupancyGrid: OccupancyGrid;
-  private mouseDownCoordinates: TimedCartesianCoordinates[] = [];
+  private pulses: TimedCartesianCoordinates[] = [];
   private gridModificationMode = 0;
 
   constructor(readonly options: SimulatorOptions) {
@@ -70,16 +70,20 @@ export class Simulator {
       cellHeight: this.options.cellSize,
     });
 
+    this.renderPulses();
+  }
+
+  private renderPulses() {
     // draw mouse events
     const currentTime = Date.now();
     const lifetime = 250;
 
-    // remove expired clicks
-    this.mouseDownCoordinates = this.mouseDownCoordinates.filter(({ time }) => currentTime - time < lifetime);
+    // remove expired pulses
+    this.pulses = this.pulses.filter(({ time }) => currentTime - time < lifetime);
 
-    // draw click pulses
-    this.mouseDownCoordinates.forEach(({ x, y, time }) =>
-      map.drawPulse({ center: { x, y }, lifetime, age: currentTime - time }, { fillStyle: "#0F0" }),
+    // draw pulses
+    this.pulses.forEach(({ x, y, time }) =>
+      this.visualizer.drawPulse({ center: { x, y }, lifetime, age: currentTime - time }, { fillStyle: "#0F0" }),
     );
   }
 
@@ -113,7 +117,7 @@ export class Simulator {
     map.drawCoordinateSystem(undefined, map.bg);
   }
 
-  private onMouseEvent(event: MapMouseEvent) {
+  private onMouseEvent(event: VisualizerMouseEvent) {
     switch (event.type) {
       case "down":
         this.onMouseDown(event);
@@ -131,7 +135,7 @@ export class Simulator {
     }
   }
 
-  private onMouseDown({ world }: MapMouseEvent) {
+  private onMouseDown({ world }: VisualizerMouseEvent) {
     const currentOccupancy = this.occupancyGrid.getOccupancyAt(world);
 
     if (currentOccupancy !== undefined) {
@@ -140,15 +144,15 @@ export class Simulator {
       }
 
       this.occupancyGrid.setOccupancyAt({ center: world, occupancy: currentOccupancy === 1 ? 0 : 1 });
-      this.mouseDownCoordinates.push({ ...world, time: Date.now() });
+      this.pulses.push({ ...world, time: Date.now() });
     }
   }
 
-  private onMouseUp(_event: MapMouseEvent) {
+  private onMouseUp(_event: VisualizerMouseEvent) {
     this.gridModificationMode = 0;
   }
 
-  private onMouseMove({ world, isMouseDown, event }: MapMouseEvent) {
+  private onMouseMove({ world, isMouseDown, event }: VisualizerMouseEvent) {
     if (isMouseDown && event.button === 0) {
       if (this.gridModificationMode === 0) {
         const currentOccupancy = this.occupancyGrid.getOccupancyAt(world);
