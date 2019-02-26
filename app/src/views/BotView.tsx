@@ -1,6 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 
+import { View } from "../components/View";
 import { CartesianCoordinates, MapRenderer } from "../lib/map-renderer";
 import { OccupancyGrid } from "../lib/occupancy-grid";
 
@@ -24,7 +25,11 @@ export class BotView extends React.Component {
   }
 
   render() {
-    return <Map ref={this.wrapRef} />;
+    return (
+      <View>
+        <Map ref={this.wrapRef} />
+      </View>
+    );
   }
 
   private setupMap() {
@@ -60,7 +65,7 @@ export class BotView extends React.Component {
       render: (map, { dt, frame }) => {
         // draw background once
         if (frame === 0) {
-          const step = 0.5;
+          const step = radius / 4;
           const rows = Math.ceil(map.height / map.getScale() / cellSize);
           const columns = Math.ceil(map.width / map.getScale() / cellSize);
 

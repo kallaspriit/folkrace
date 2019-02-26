@@ -17,20 +17,14 @@ export interface CellProps {
 export enum CellStatus {
   GOOD = "GOOD",
   WARN = "WARN",
-  BAD = "BAD"
+  BAD = "BAD",
 }
 
 export const Grid = styled.div<GridProps>`
   display: grid;
   grid-gap: ${props => props.theme.size.gridGap};
   margin: ${props => props.theme.size.gridGap};
-  height: calc(
-    100vh -
-      (
-        ${props => props.theme.size.menuHeight} +
-          (${props => props.theme.size.gridGap} * 2)
-      )
-  );
+  height: calc(100vh - (${props => props.theme.size.menuHeight} + (${props => props.theme.size.gridGap} * 2)));
 
   ${props =>
     props.columns
@@ -50,7 +44,7 @@ export const Grid = styled.div<GridProps>`
 const getGridItemStatusColorMap = (theme: Theme) => ({
   [CellStatus.GOOD]: theme.bg.good,
   [CellStatus.WARN]: theme.bg.warn,
-  [CellStatus.BAD]: theme.bg.bad
+  [CellStatus.BAD]: theme.bg.bad,
 });
 
 export const Cell = styled.div<CellProps & Clickable>`
@@ -76,19 +70,14 @@ export const Cell = styled.div<CellProps & Clickable>`
           justify-content: center;
           padding: 16px;
           overflow: hidden;
-          background-color: ${getGridItemStatusColorMap(props.theme)[
-            props.status
-          ]};
+          background-color: ${getGridItemStatusColorMap(props.theme)[props.status]};
         `
       : ""}
 
   ${props =>
     props.status === CellStatus.BAD
       ? css`
-          animation: ${props.theme.animation.pulse(
-              getGridItemStatusColorMap(props.theme)[props.status]
-            )}
-            3s ease;
+          animation: ${props.theme.animation.pulse(getGridItemStatusColorMap(props.theme)[props.status])} 3s ease;
           animation-iteration-count: infinite;
           animation-delay: 1s;
         `

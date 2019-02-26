@@ -44,8 +44,13 @@ export class LidarMap extends React.Component {
         if (frame === 0) {
           const step = 0.5;
 
-          for (let radius = step; radius <= map.options.radius; radius += step) {
-            map.drawCircle({ radius }, undefined, map.bg);
+          for (let circleRadius = step; circleRadius <= map.options.radius; circleRadius += step) {
+            map.drawCircle({ radius: circleRadius }, { strokeStyle: "#444" }, map.bg);
+            map.drawText(
+              { origin: { x: 0, y: circleRadius }, text: `${circleRadius.toFixed(2)}m`, offset: { x: 10, y: 0 } },
+              { fillStyle: "#444", textBaseline: "middle" },
+              map.bg,
+            );
           }
         }
 
