@@ -30,10 +30,12 @@ export class LidarMap extends React.Component {
       throw new Error("Wrap element was not found, this should not happen");
     }
 
+    const radius = 2;
+
     // get measurements
     this.mapRenderer = new MapRenderer({
       wrap,
-      radius: 2, // meters
+      radius, // meters
       scale: {
         horizontal: -1,
         vertical: 1,
@@ -42,9 +44,9 @@ export class LidarMap extends React.Component {
       render: (map, { frame }) => {
         // draw background once
         if (frame === 0) {
-          const step = 0.5;
+          const circleStep = radius / 4;
 
-          for (let circleRadius = step; circleRadius <= map.options.radius; circleRadius += step) {
+          for (let circleRadius = circleStep; circleRadius <= map.options.radius; circleRadius += circleStep) {
             map.drawCircle({ radius: circleRadius }, { strokeStyle: "#444" }, map.bg);
             map.drawText(
               { origin: { x: 0, y: circleRadius }, text: `${circleRadius.toFixed(2)}m`, offset: { x: 10, y: 0 } },

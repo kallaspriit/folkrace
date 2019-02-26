@@ -1,4 +1,4 @@
-import { BestFirstFinder as PathFinder, Grid } from "pathfinding";
+import { AStarFinder as PathFinder, DiagonalMovement, Grid, Heuristic } from "pathfinding";
 
 export interface OccupancyGridOptions {
   cellWidth: number;
@@ -125,7 +125,10 @@ export class OccupancyGrid {
 
   findShortestPath({ from, to }: FindShortestPathOptions): Path {
     const grid = new Grid(this.data);
-    const finder = new PathFinder();
+    const finder = new PathFinder({
+      diagonalMovement: DiagonalMovement.Never,
+      heuristic: Heuristic.euclidean,
+    });
     const path = finder.findPath(from[0], from[1], to[0], to[1], grid);
 
     return path as Cell[];

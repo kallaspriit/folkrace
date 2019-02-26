@@ -39,8 +39,7 @@ const Link = styled(NavLink)`
   width: 100%;
   height: 100%;
   text-decoration: none;
-  color: ${props =>
-    darken(props.theme.size.darkerLighterPercentage, props.theme.text.primary)};
+  color: ${props => darken(props.theme.size.darkerLighterPercentage, props.theme.text.primary)};
   background-color: rgba(0, 0, 0, 0);
   transition: background-color 300ms;
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
@@ -71,9 +70,9 @@ export const MainMenu: React.SFC<{}> = () => (
         </Link>
       </Item>
       <Item>
-        <Link to="/bot" activeClassName="active-main-menu-item">
+        <Link to="/simulation" activeClassName="active-main-menu-item">
           <BotIcon />
-          <Label>Bot</Label>
+          <Label>Simulation</Label>
         </Link>
       </Item>
       <Item>

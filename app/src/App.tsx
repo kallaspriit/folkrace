@@ -6,10 +6,10 @@ import { Provider } from "unstated";
 import { Hub } from "./components/Hub";
 import { MainMenu } from "./components/MainMenu";
 import { GlobalStyle, theme } from "./theme";
-import { BotView } from "./views/BotView";
 import { MapView } from "./views/MapView";
 import { RemoteView } from "./views/RemoteView";
 import { SettingsView } from "./views/SettingsView";
+import { SimulationView } from "./views/SimulationView";
 import { StatusView } from "./views/StatusView";
 
 export class App extends React.Component {
@@ -25,9 +25,9 @@ export class App extends React.Component {
                 <Route path="/status" component={StatusView} />
                 <Route path="/map" component={MapView} />
                 <Route path="/remote" component={RemoteView} />
-                <Route path="/bot" component={BotView} />
+                <Route path="/simulation" component={SimulationView} />
                 <Route path="/settings" component={SettingsView} />
-                <Route exact path="/">
+                <Route>
                   <Redirect to="/status" />
                 </Route>
               </Switch>

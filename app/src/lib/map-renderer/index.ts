@@ -33,6 +33,10 @@ export interface CartesianCoordinates {
   y: number;
 }
 
+export interface TimedCartesianCoordinates extends CartesianCoordinates {
+  time: number;
+}
+
 export interface PolarCoordinates {
   angle: number; // radians
   distance: number;
@@ -101,8 +105,8 @@ export interface DrawDirectionOptions {
 export interface DrawGridOptions {
   cellWidth: number;
   cellHeight: number;
-  rows: number;
-  columns: number;
+  rows?: number;
+  columns?: number;
   center?: Coordinates;
 }
 
@@ -153,7 +157,7 @@ export class MapRenderer {
 
   constructor(options: MapRendererOptions) {
     this.options = {
-      padding: options.radius / 10,
+      padding: 0,
       scale: {
         horizontal: 1,
         vertical: 1,
@@ -334,8 +338,13 @@ export class MapRenderer {
   }
 
   drawGrid(options: DrawGridOptions, style: DrawStyle = {}, ctx = this.map) {
+    const defaultRowCount = Math.ceil(this.height / this.getScale() / options.cellHeight);
+    const defaultColumnCount = Math.ceil(this.width / this.getScale() / options.cellWidth);
+
     const opt: Required<DrawGridOptions> = {
       center: { x: 0, y: 0 },
+      rows: defaultRowCount % 2 === 0 ? defaultRowCount : defaultRowCount + 1,
+      columns: defaultColumnCount % 2 === 0 ? defaultColumnCount : defaultColumnCount + 1,
       ...options,
     };
 
@@ -524,8 +533,14 @@ export class MapRenderer {
   }
 
   drawCoordinateSystem(options: DrawCoordinateSystemOptions = {}, ctx = this.map) {
+    const worldSize = this.screenToWorld({ x: this.width, y: this.height });
+
+    console.log({
+      worldSize,
+    });
+
     const opt: Required<DrawCoordinateSystemOptions> = {
-      center: { x: -this.options.radius * 0.9, y: -this.options.radius * 0.9 },
+      center: { x: (-worldSize.y / 2) * 0.9, y: (-worldSize.x / 2) * 0.9 },
       length: this.options.radius / 10,
       ...options,
     };
