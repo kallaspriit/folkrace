@@ -1,12 +1,12 @@
 import React from "react";
 import styled from "styled-components";
 
-import { MapRenderer } from "../lib/map-renderer";
+import { Visualizer } from "../lib/visualizer";
 import { containers } from "../services/containers";
 
 export class LidarMap extends React.Component {
   private readonly wrapRef = React.createRef<HTMLDivElement>();
-  private mapRenderer: MapRenderer | null = null;
+  private visualizer: Visualizer | null = null;
 
   componentDidMount() {
     // map setup is delayed to allow for it to get correct size
@@ -14,8 +14,9 @@ export class LidarMap extends React.Component {
   }
 
   componentWillUnmount() {
-    if (this.mapRenderer !== null) {
-      this.mapRenderer.destroy();
+    if (this.visualizer !== null) {
+      this.visualizer.stop();
+      this.visualizer = null;
     }
   }
 
@@ -33,15 +34,16 @@ export class LidarMap extends React.Component {
     const radius = 2;
 
     // get measurements
-    this.mapRenderer = new MapRenderer({
-      wrap,
+    this.visualizer = new Visualizer({
+      container: wrap,
       radius, // meters
       scale: {
         horizontal: -1,
         vertical: 1,
       },
       rotation: -Math.PI / 2,
-      render: (map, { frame }) => {
+      padding: 0.1,
+      render: ({ map, frame }) => {
         // draw background once
         if (frame === 0) {
           const circleStep = radius / 4;
@@ -54,6 +56,9 @@ export class LidarMap extends React.Component {
               map.bg,
             );
           }
+
+          // draw coordinates system
+          map.drawCoordinateSystem(undefined, map.bg);
         }
 
         // get measurements
@@ -73,7 +78,7 @@ export class LidarMap extends React.Component {
       },
     });
 
-    this.mapRenderer.start();
+    this.visualizer.start();
   }
 }
 

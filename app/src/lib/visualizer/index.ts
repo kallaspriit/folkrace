@@ -3,8 +3,8 @@ import Vector from "victor";
 
 import { map } from "../../services/map";
 
-export interface MapRendererOptions {
-  wrap: HTMLDivElement;
+export interface VisualizerOptions {
+  container: HTMLElement;
   radius: number;
   padding?: number;
   scale?: {
@@ -13,13 +13,14 @@ export interface MapRendererOptions {
   };
   rotation?: number;
   onMouseEvent?(event: MapMouseEvent): void;
-  render(self: MapRenderer, info: FrameInfo): void;
+  render(info: FrameInfo): void;
 }
 
 export interface FrameInfo {
   time: number;
   dt: number;
   frame: number;
+  map: Visualizer;
 }
 
 export interface PolarMeasurement extends PolarCoordinates {
@@ -141,8 +142,21 @@ export interface MapMouseEvent {
 
 export type Coordinates = CartesianCoordinates | PolarCoordinates;
 
-export class MapRenderer {
-  readonly options: Required<MapRendererOptions>;
+export interface Statistic {
+  name: string;
+  values: number[];
+  range: {
+    min: number;
+    max: number;
+  };
+}
+
+export interface Statistics {
+  [x: string]: Statistic;
+}
+
+export class Visualizer {
+  readonly options: Required<VisualizerOptions>;
   readonly bg: CanvasRenderingContext2D;
   readonly map: CanvasRenderingContext2D;
   readonly bgCanvas: HTMLCanvasElement;
@@ -155,7 +169,7 @@ export class MapRenderer {
   private isRunning = false;
   private mouseDownCounter = 0;
 
-  constructor(options: MapRendererOptions) {
+  constructor(options: VisualizerOptions) {
     this.options = {
       padding: 0,
       scale: {
@@ -179,7 +193,7 @@ export class MapRenderer {
     this.mapCanvas.onmousemove = event => this.handleMouseEvent("move", event);
 
     // append the canvas elements
-    this.options.wrap.append(this.bgCanvas, this.mapCanvas);
+    this.options.container.append(this.bgCanvas, this.mapCanvas);
 
     // get actual effective dimensions
     this.width = this.bgCanvas.offsetWidth;
@@ -222,7 +236,7 @@ export class MapRenderer {
     this.scheduleNextFrame();
   }
 
-  destroy() {
+  stop() {
     this.isRunning = false;
   }
 
@@ -540,7 +554,7 @@ export class MapRenderer {
     });
 
     const opt: Required<DrawCoordinateSystemOptions> = {
-      center: { x: (-worldSize.y / 2) * 0.9, y: (-worldSize.x / 2) * 0.9 },
+      center: { x: -worldSize.y / 2 + this.options.padding, y: -worldSize.x / 2 + this.options.padding },
       length: this.options.radius / 10,
       ...options,
     };
@@ -648,10 +662,11 @@ export class MapRenderer {
     const currentTime = Date.now();
     const dt = (this.lastRenderTime ? currentTime - this.lastRenderTime : 16) / 1000;
 
-    this.options.render(this, {
+    this.options.render({
       dt,
       time,
       frame: this.frameNumber++,
+      map: this,
     });
 
     this.lastRenderTime = currentTime;
