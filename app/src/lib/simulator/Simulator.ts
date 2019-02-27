@@ -1,3 +1,4 @@
+import { FpsCounter } from "../fps-counter";
 import { OccupancyGrid } from "../occupancy-grid";
 import { CartesianCoordinates, FrameInfo, Layer, LayerMouseEvent, LayerOptions, Visualizer } from "../visualizer";
 
@@ -12,8 +13,9 @@ export interface SimulatorOptions {
 }
 
 export class Simulator {
-  private readonly visualizer: Visualizer;
   private readonly occupancyGrid: OccupancyGrid;
+  private readonly fpsCounter: FpsCounter;
+  private readonly visualizer: Visualizer;
   private pulses: TimedCartesianCoordinates[] = [];
   private gridModificationMode = 0;
 
@@ -25,6 +27,9 @@ export class Simulator {
       { rows: gridSize, columns: gridSize, defaultValue: 0 },
       { cellWidth: options.cellSize, cellHeight: options.cellSize },
     );
+
+    // setup fps counter
+    this.fpsCounter = new FpsCounter();
 
     // setup visualizer
     this.visualizer = new Visualizer(this.options.container);
@@ -136,6 +141,7 @@ export class Simulator {
 
     // console.log(path);
 
+    // draw occupancy grid
     layer.drawOccupancyGrid({
       grid: this.occupancyGrid.data,
       path,
@@ -143,17 +149,30 @@ export class Simulator {
       cellHeight: this.options.cellSize,
     });
 
-    this.renderPulses(layer);
+    // draw pulses
+    this.drawPulses(layer);
+
+    // update the fps counter
+    this.fpsCounter.update();
   }
 
   private renderForeground({ layer }: FrameInfo) {
-    layer.drawLine({
-      from: { x: 0, y: 0 },
-      to: { x: layer.width, y: layer.height },
-    });
+    layer.clear();
+
+    const fps = this.fpsCounter.getFps();
+
+    layer.drawText(
+      {
+        origin: { x: 10, y: 10 },
+        text: `FPS: ${Math.ceil(fps)}`,
+      },
+      {
+        fillStyle: "#FFF",
+      },
+    );
   }
 
-  private renderPulses(layer: Layer) {
+  private drawPulses(layer: Layer) {
     // draw mouse events
     const currentTime = Date.now();
     const lifetime = 250;
@@ -165,24 +184,6 @@ export class Simulator {
     this.pulses.forEach(({ x, y, time }) =>
       layer.drawPulse({ center: { x, y }, lifetime, age: currentTime - time }, { fillStyle: "#0F0" }),
     );
-  }
-
-  private onMouseEvent(event: LayerMouseEvent) {
-    switch (event.type) {
-      case "down":
-        this.onMouseDown(event);
-
-        break;
-
-      case "up":
-        this.onMouseUp(event);
-        break;
-
-      case "move":
-        this.onMouseMove(event);
-
-        break;
-    }
   }
 
   private onMouseDown({ world }: LayerMouseEvent) {

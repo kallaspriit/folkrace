@@ -169,6 +169,7 @@ export class Layer {
         fillStyle: "#000",
         strokeStyle: "#000",
         font: "16px monospace",
+        textBaseline: "top",
       },
       getTransform: (_layer: Layer) => ({}),
       render: (_info: FrameInfo) => {
