@@ -7,6 +7,7 @@
     "folkbot",
     "monospace",
     "nipplejs",
+    "pathfinding",
     "typestrict"
   ],
   "typescript.tsdk": "node_modules\\typescript\\lib"

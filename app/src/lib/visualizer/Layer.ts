@@ -4,8 +4,6 @@ import Vector from "victor";
 import { map } from "../../services/map";
 
 export interface LayerOptions {
-  readonly radius: number; // TODO: refactor
-  readonly padding?: number;
   readonly defaultStyle?: DrawStyle;
   getTransform?(layer: Layer): Transform;
   render?(info: FrameInfo): void;
@@ -22,6 +20,7 @@ export interface Transform {
   horizontalTranslation?: number;
   verticalTranslation?: number;
   rotation?: number;
+  scale?: number;
 }
 
 export interface FrameInfo {
@@ -166,7 +165,6 @@ export class Layer {
 
   constructor(readonly canvas: HTMLCanvasElement, options: LayerOptions) {
     this.options = {
-      padding: 0,
       defaultStyle: {
         fillStyle: "#000",
         strokeStyle: "#000",
@@ -223,6 +221,7 @@ export class Layer {
       horizontalTranslation: 0,
       verticalTranslation: 0,
       rotation: 0,
+      scale: 1,
       ...this.options.getTransform(this),
     };
 
@@ -252,9 +251,6 @@ export class Layer {
     if (options.onMouseMoveEvent) {
       this.canvas.onmousemove = event => this.handleMouseEvent("move", event);
     }
-
-    // call the application-specific setup
-    this.options.getTransform(this);
   }
 
   start() {
@@ -296,7 +292,7 @@ export class Layer {
       center: { x: 0, y: 0 },
       lifetime: 300,
       age: 0,
-      size: this.options.radius / 10,
+      size: this.size / 50 / this.getScale(),
       ...options,
     };
 
@@ -323,7 +319,7 @@ export class Layer {
 
   drawMarker(options: DrawMarkerOptions, style: DrawStyle = {}) {
     const opt: Required<DrawMarkerOptions> = {
-      size: this.options.radius / 50,
+      size: this.size / 100 / this.getScale(),
       ...options,
     };
     const angle = this.isPolar(opt.center) ? opt.center.angle : 0;
@@ -492,7 +488,7 @@ export class Layer {
 
   drawArrow(options: DrawArrowOptions, style: DrawStyle = {}) {
     const opt: Required<DrawArrowOptions> = {
-      tipSize: this.options.radius / 50,
+      tipSize: this.size / 100 / this.getScale(),
       name: "",
       ...options,
     };
@@ -517,7 +513,7 @@ export class Layer {
 
   drawDirection(options: DrawDirectionOptions, style: DrawStyle = {}) {
     const opt: Required<DrawDirectionOptions> = {
-      size: this.options.radius / 50,
+      size: this.size / 100 / this.getScale(),
       name: "",
       ...options,
     };
@@ -570,9 +566,10 @@ export class Layer {
 
   drawCoordinateSystem(options: DrawCoordinateSystemOptions = {}) {
     const worldSize = this.screenToWorld({ x: this.width, y: this.height });
+    const length = this.size / 20 / this.getScale();
     const opt: Required<DrawCoordinateSystemOptions> = {
-      center: { x: -worldSize.y / 2 + this.options.padding, y: -worldSize.x / 2 + this.options.padding },
-      length: this.options.radius / 10,
+      center: { x: -worldSize.y / 2 + length, y: -worldSize.x / 2 + length },
+      length,
       ...options,
     };
     const center = Vector.fromObject(this.toCartesian(opt.center));
@@ -642,7 +639,7 @@ export class Layer {
   }
 
   getScale() {
-    return this.size / 2 / (this.options.radius + this.options.padding);
+    return this.transform.scale;
   }
 
   scale(distance: number) {

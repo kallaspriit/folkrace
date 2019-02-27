@@ -43,13 +43,13 @@ export class LidarMap extends React.Component<LidarMapProps> {
 
     // common map layer options
     const mapLayerOptions: LayerOptions = {
-      radius: this.props.radius,
-      padding: this.props.cellSize,
       getTransform: layer => {
         const screenOrigin = {
           x: layer.width / 2,
           y: layer.height / 2,
         };
+        const rotation = -Math.PI / 2;
+        const scale = layer.size / 2 / (this.props.radius + this.props.cellSize);
 
         return {
           horizontalScaling: -1,
@@ -58,7 +58,8 @@ export class LidarMap extends React.Component<LidarMapProps> {
           verticalScaling: 1,
           horizontalTranslation: screenOrigin.x,
           verticalTranslation: screenOrigin.y,
-          rotation: -Math.PI / 2,
+          rotation,
+          scale,
         };
       },
     };
@@ -107,7 +108,7 @@ export class LidarMap extends React.Component<LidarMapProps> {
     );
 
     // draw radius circles
-    for (let circleRadius = circleStep; circleRadius <= layer.options.radius; circleRadius += circleStep) {
+    for (let circleRadius = circleStep; circleRadius <= this.props.radius; circleRadius += circleStep) {
       layer.drawCircle({ radius: circleRadius }, { strokeStyle: "#444" });
       layer.drawText(
         { origin: { x: 0, y: circleRadius }, text: `${circleRadius.toFixed(2)}m`, offset: { x: 10, y: 0 } },
