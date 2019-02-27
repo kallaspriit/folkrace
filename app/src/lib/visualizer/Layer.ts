@@ -6,16 +6,22 @@ import { map } from "../../services/map";
 export interface LayerOptions {
   readonly radius: number; // TODO: refactor
   readonly padding?: number;
-  readonly scale?: {
-    readonly horizontal: number;
-    readonly vertical: number;
-  };
-  readonly rotation?: number;
   readonly defaultStyle?: DrawStyle;
+  getTransform?(layer: Layer): Transform;
   render?(info: FrameInfo): void;
   onMouseDownEvent?(event: LayerMouseDownEvent): void;
   onMouseUpEvent?(event: LayerMouseUpEvent): void;
   onMouseMoveEvent?(event: LayerMouseMoveEvent): void;
+}
+
+export interface Transform {
+  horizontalScaling?: number;
+  verticalSkewing?: number;
+  horizontalSkewing?: number;
+  verticalScaling?: number;
+  horizontalTranslation?: number;
+  verticalTranslation?: number;
+  rotation?: number;
 }
 
 export interface FrameInfo {
@@ -148,10 +154,11 @@ export type Path = Cell[];
 
 export class Layer {
   readonly options: Required<LayerOptions>;
+  readonly ctx: CanvasRenderingContext2D;
   readonly width: number;
   readonly height: number;
   readonly size: number;
-  readonly ctx: CanvasRenderingContext2D;
+  readonly transform: Required<Transform>;
   private mouseDownCounter = 0;
   private frameNumber = 0;
   private isRunning = false;
@@ -160,16 +167,12 @@ export class Layer {
   constructor(readonly canvas: HTMLCanvasElement, options: LayerOptions) {
     this.options = {
       padding: 0,
-      scale: {
-        horizontal: 1,
-        vertical: 1,
-      },
-      rotation: 0,
       defaultStyle: {
         fillStyle: "#000",
         strokeStyle: "#000",
         font: "16px monospace",
       },
+      getTransform: (_layer: Layer) => ({}),
       render: (_info: FrameInfo) => {
         /* do nothing */
       },
@@ -207,18 +210,32 @@ export class Layer {
     this.canvas.setAttribute("width", `${this.width.toString()}px`);
     this.canvas.setAttribute("height", `${this.height.toString()}px`);
 
-    const screenOrigin = this.getScreenOrigin();
+    // remove style dimension properties
+    this.canvas.style.removeProperty("width");
+    this.canvas.style.removeProperty("height");
 
-    // set transform and rotation
+    // resolve transform to use
+    this.transform = {
+      horizontalScaling: 1,
+      verticalSkewing: 0,
+      horizontalSkewing: 0,
+      verticalScaling: 1,
+      horizontalTranslation: 0,
+      verticalTranslation: 0,
+      rotation: 0,
+      ...this.options.getTransform(this),
+    };
+
+    // apply transformation and rotation
     this.ctx.transform(
-      this.options.scale.horizontal,
-      0,
-      0,
-      this.options.scale.vertical,
-      screenOrigin.x,
-      screenOrigin.y,
+      this.transform.horizontalScaling,
+      this.transform.verticalSkewing,
+      this.transform.horizontalSkewing,
+      this.transform.verticalScaling,
+      this.transform.horizontalTranslation,
+      this.transform.verticalTranslation,
     );
-    this.ctx.rotate(this.options.rotation);
+    this.ctx.rotate(this.transform.rotation);
 
     // set default styles
     this.applyStyle(this.options.defaultStyle);
@@ -235,6 +252,9 @@ export class Layer {
     if (options.onMouseMoveEvent) {
       this.canvas.onmousemove = event => this.handleMouseEvent("move", event);
     }
+
+    // call the application-specific setup
+    this.options.getTransform(this);
   }
 
   start() {
@@ -541,8 +561,8 @@ export class Layer {
     this.ctx.translate(screenOrigin.x, screenOrigin.y);
 
     // roll back transforms to get the text to draw correctly
-    this.ctx.rotate(-this.options.rotation);
-    this.ctx.scale(this.options.scale.horizontal, this.options.scale.vertical);
+    this.ctx.rotate(-this.transform.rotation);
+    this.ctx.scale(this.transform.horizontalScaling, this.transform.verticalScaling);
 
     this.ctx.fillText(opt.text, opt.offset.x, opt.offset.y);
     this.ctx.restore();
@@ -608,8 +628,8 @@ export class Layer {
     const origin = Vector.fromObject(this.getScreenOrigin());
     const screen = Vector.fromObject(canvas)
       .subtract(origin)
-      .rotate(this.options.rotation)
-      .multiply(new Vector(this.options.scale.horizontal, this.options.scale.vertical));
+      .rotate(this.transform.rotation)
+      .multiply(new Vector(this.transform.horizontalScaling, this.transform.verticalScaling));
 
     return {
       x: screen.x,
@@ -671,6 +691,7 @@ export class Layer {
     }
   }
 
+  // TODO: remove / refactor
   private getScreenOrigin(): CartesianCoordinates {
     return {
       x: this.width / 2,

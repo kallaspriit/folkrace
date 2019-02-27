@@ -44,12 +44,23 @@ export class LidarMap extends React.Component<LidarMapProps> {
     // common map layer options
     const mapLayerOptions: LayerOptions = {
       radius: this.props.radius,
-      scale: {
-        horizontal: -1,
-        vertical: 1,
-      },
-      rotation: -Math.PI / 2,
       padding: this.props.cellSize,
+      getTransform: layer => {
+        const screenOrigin = {
+          x: layer.width / 2,
+          y: layer.height / 2,
+        };
+
+        return {
+          horizontalScaling: -1,
+          verticalSkewing: 0,
+          horizontalSkewing: 0,
+          verticalScaling: 1,
+          horizontalTranslation: screenOrigin.x,
+          verticalTranslation: screenOrigin.y,
+          rotation: -Math.PI / 2,
+        };
+      },
     };
 
     this.visualizer.createLayer({

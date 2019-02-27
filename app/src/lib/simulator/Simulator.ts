@@ -32,19 +32,32 @@ export class Simulator {
     // common map layer options
     const mapLayerOptions: LayerOptions = {
       radius: options.radius, // metres
-      scale: {
-        horizontal: -1,
-        vertical: 1,
-      },
-      rotation: -Math.PI / 2,
       padding: options.cellSize,
+      getTransform: layer => {
+        const screenOrigin = {
+          x: layer.width / 2,
+          y: layer.height / 2,
+        };
+
+        return {
+          horizontalScaling: -1,
+          verticalSkewing: 0,
+          horizontalSkewing: 0,
+          verticalScaling: 1,
+          horizontalTranslation: screenOrigin.x,
+          verticalTranslation: screenOrigin.y,
+          rotation: -Math.PI / 2,
+        };
+      },
     };
 
+    // background
     this.visualizer.createLayer({
       ...mapLayerOptions,
       render: this.renderBackground.bind(this),
     });
 
+    // map
     this.visualizer.createLayer({
       ...mapLayerOptions,
       render: this.renderMap.bind(this),
@@ -53,8 +66,10 @@ export class Simulator {
       onMouseMoveEvent: this.onMouseMove.bind(this),
     });
 
-    // TODO: add foreground
-    // this.fg = this.visualizer.createLayer();
+    // foreground
+    // this.visualizer.createLayer({
+
+    // });
   }
 
   start() {
