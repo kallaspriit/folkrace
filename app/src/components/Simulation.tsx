@@ -3,11 +3,6 @@ import styled from "styled-components";
 
 import { Simulator } from "../lib/simulator";
 
-export interface SimulationOptions {
-  radius: number;
-  cellSize: number;
-}
-
 export class Simulation extends React.Component {
   private readonly containerRef = React.createRef<HTMLDivElement>();
   private simulator: Simulator | null = null;
