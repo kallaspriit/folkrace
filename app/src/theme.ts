@@ -59,8 +59,11 @@ export const GlobalStyle = createGlobalStyle`
   @font-face {
     font-family: "heebo-regular";
     src: url("fonts/Heebo-Regular.ttf");
-    font-weight: normal;
-    font-style: normal;
+  }
+
+  @font-face {
+    font-family: "roboto-mono-light";
+    src: url("fonts/RobotoMono-Light.ttf");
   }
 
   // default to using border box sizing

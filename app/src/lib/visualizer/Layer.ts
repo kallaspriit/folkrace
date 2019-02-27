@@ -145,6 +145,16 @@ export interface DrawCoordinateSystemOptions {
   length?: number;
 }
 
+export interface DrawGraphOptions {
+  origin: Coordinates;
+  title: string;
+  data: number[];
+  width?: number;
+  height?: number;
+  min?: number;
+  max?: number;
+}
+
 export type OccupancyGrid = number[][];
 
 export type Cell = [number, number];
@@ -549,7 +559,7 @@ export class Layer {
 
     if (opt.name.length > 0) {
       const origin = this.toCartesian(opt.center);
-      origin.x += opt.size;
+      origin.x += opt.size * 2;
 
       this.drawText({ origin, text: opt.name }, style);
     }
@@ -591,6 +601,64 @@ export class Layer {
 
     this.drawArrow({ from: opt.center, to: toX, name: "X" }, { lineWidth: 2, color: "#F00", textAlign: "center" });
     this.drawArrow({ from: opt.center, to: toY, name: "Y" }, { lineWidth: 2, color: "#0F0", textAlign: "center" });
+  }
+
+  drawGraph(options: DrawGraphOptions) {
+    const opt: Required<DrawGraphOptions> = {
+      width: 200,
+      height: 80,
+      min: Math.min(...options.data),
+      max: Math.max(...options.data),
+      ...options,
+    };
+
+    this.drawText(
+      {
+        origin: options.origin,
+        text: options.title,
+        offset: {
+          x: 10,
+          y: 10,
+        },
+      },
+      {
+        fillStyle: "#FFF",
+      },
+    );
+
+    const screenOrigin = this.worldToScreen(opt.origin);
+    const range = opt.max - opt.min;
+    const startIndex = Math.max(opt.data.length - opt.width, 0);
+
+    this.ctx.save();
+    this.ctx.translate(screenOrigin.x, screenOrigin.y);
+
+    // draw background
+    this.ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
+    this.ctx.fillRect(0, 0, opt.width, opt.height);
+
+    let xPos = opt.width;
+
+    // draw line
+    this.ctx.strokeStyle = "rgba(0, 200, 0, 0.75)";
+    this.ctx.beginPath();
+
+    for (let i = opt.data.length; i >= startIndex; i--) {
+      const value = opt.data[i];
+      const yPos = opt.height - Math.round((value / range) * opt.height);
+
+      if (i === 0) {
+        this.ctx.moveTo(xPos, yPos);
+      } else {
+        this.ctx.lineTo(xPos, yPos);
+      }
+
+      xPos--;
+    }
+
+    this.ctx.stroke();
+
+    this.ctx.restore();
   }
 
   polarToCartesian({ angle, distance }: PolarCoordinates): CartesianCoordinates {
@@ -655,7 +723,7 @@ export class Layer {
   }
 
   scale(distance: number) {
-    return distance * this.getScale();
+    return Math.ceil(distance * this.getScale()) + 0.5;
   }
 
   toRadians(angleDegrees: number) {
@@ -688,6 +756,7 @@ export class Layer {
     }
 
     if (options.font) {
+      console.log("SET FONT", options.font);
       this.ctx.font = options.font;
     }
 

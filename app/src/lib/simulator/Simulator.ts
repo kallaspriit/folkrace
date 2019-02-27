@@ -19,6 +19,10 @@ export class Simulator {
   private pulses: TimedCartesianCoordinates[] = [];
   private gridModificationMode = 0;
 
+  private testData: number[] = [];
+  private testValue = 30;
+  private testVelocity = 0;
+
   constructor(readonly options: SimulatorOptions) {
     const gridSize = (options.radius * 2) / options.cellSize;
 
@@ -36,6 +40,12 @@ export class Simulator {
 
     // common map layer options
     const mapLayerOptions: LayerOptions = {
+      defaultStyle: {
+        fillStyle: "#000",
+        strokeStyle: "#000",
+        font: "16px roboto-mono-light",
+        textBaseline: "top",
+      },
       getTransform: layer => {
         const screenOrigin = {
           x: layer.width / 2,
@@ -74,6 +84,12 @@ export class Simulator {
 
     // foreground
     this.visualizer.createLayer({
+      defaultStyle: {
+        fillStyle: "#000",
+        strokeStyle: "#000",
+        font: "16px roboto-mono-light",
+        textBaseline: "top",
+      },
       render: this.renderForeground.bind(this),
     });
   }
@@ -161,15 +177,34 @@ export class Simulator {
 
     const fps = this.fpsCounter.getFps();
 
-    layer.drawText(
-      {
-        origin: { x: 10, y: 10 },
-        text: `FPS: ${Math.ceil(fps)}`,
-      },
-      {
-        fillStyle: "#FFF",
-      },
+    // layer.drawText(
+    //   {
+    //     origin: { x: 10, y: 10 },
+    //     text: `FPS: ${Math.ceil(fps)}`,
+    //   },
+    //   {
+    //     fillStyle: "#FFF",
+    //   },
+    // );
+
+    this.testVelocity = Math.max(
+      Math.min(this.testVelocity + Math.random() * 0.1 - 0.05, this.testValue < 60 ? 0.5 : 0),
+      this.testValue > 0 ? -0.5 : 0,
     );
+    this.testValue = Math.max(Math.min(this.testValue + this.testVelocity, 60), 0);
+    this.testData.push(this.testValue);
+
+    if (this.testData.length > 200) {
+      this.testData.shift();
+    }
+
+    layer.drawGraph({
+      title: `FPS: ${Math.ceil(fps)}`,
+      origin: { x: 10, y: 10 },
+      data: this.testData,
+      min: 0,
+      max: 60,
+    });
   }
 
   private drawPulses(layer: Layer) {
