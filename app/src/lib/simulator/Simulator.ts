@@ -68,9 +68,9 @@ export class Simulator {
     });
 
     // foreground
-    // this.visualizer.createLayer({
-
-    // });
+    this.visualizer.createLayer({
+      render: this.renderForeground.bind(this),
+    });
   }
 
   start() {
@@ -144,6 +144,13 @@ export class Simulator {
     });
 
     this.renderPulses(layer);
+  }
+
+  private renderForeground({ layer }: FrameInfo) {
+    layer.drawLine({
+      from: { x: 0, y: 0 },
+      to: { x: layer.width, y: layer.height },
+    });
   }
 
   private renderPulses(layer: Layer) {

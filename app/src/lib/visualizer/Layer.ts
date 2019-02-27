@@ -212,6 +212,17 @@ export class Layer {
     this.canvas.style.removeProperty("width");
     this.canvas.style.removeProperty("height");
 
+    // mouse events should pass through if no listeners were set
+    const passThroughMouseEvents =
+      options.onMouseDownEvent === undefined &&
+      options.onMouseUpEvent === undefined &&
+      options.onMouseMoveEvent === undefined;
+
+    // disable canvas pointer events (pass them through) if no event listeners are present
+    if (passThroughMouseEvents) {
+      this.canvas.style.pointerEvents = "none";
+    }
+
     // resolve transform to use
     this.transform = {
       horizontalScaling: 1,
