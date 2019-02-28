@@ -1,14 +1,14 @@
 import { dummyLogger, Logger } from "ts-log";
 
-export interface SimulatedRobotOptions {
+export interface ExampleOptions {
   readonly log?: Logger;
 }
 
-export class SimulatedRobot {
-  private readonly options: Required<SimulatedRobotOptions>;
+export class Example {
+  private readonly options: Required<ExampleOptions>;
   private readonly log: Logger;
 
-  constructor(options: SimulatedRobotOptions) {
+  constructor(options: ExampleOptions) {
     this.options = {
       log: dummyLogger,
       ...options,

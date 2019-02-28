@@ -1,6 +1,7 @@
-import { MultiTransport } from "../lib/transport/MultiTransport";
+import { MultiTransport } from "../lib/transport";
 
 import { nativeTransport } from "./nativeTransport";
+import { simulatedTransport } from "./simulatedTransport";
 import { websocketTransport } from "./websocketTransport";
 
 export const multiTransport = new MultiTransport({
@@ -10,3 +11,4 @@ export const multiTransport = new MultiTransport({
 // register sub-transports in preferred order
 multiTransport.addTransport(nativeTransport);
 multiTransport.addTransport(websocketTransport);
+multiTransport.addTransport(simulatedTransport);

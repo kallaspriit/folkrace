@@ -1,4 +1,4 @@
-import { NativeTransport } from "../lib/transport/NativeTransport";
+import { NativeTransport } from "../lib/transport";
 
 export const nativeTransport = new NativeTransport({
   // log: console
