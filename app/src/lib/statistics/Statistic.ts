@@ -3,6 +3,7 @@ export interface StatisticOptions {
   readonly min?: number;
   readonly max?: number;
   readonly unit?: string;
+  readonly decimalPlaces?: number;
   readonly historyLength?: number;
 }
 

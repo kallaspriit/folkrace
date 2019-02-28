@@ -5,6 +5,8 @@
     "Odometry",
     "Unmount",
     "folkbot",
+    "gamepadconnected",
+    "gamepaddisconnected",
     "monospace",
     "nipplejs",
     "pathfinding",

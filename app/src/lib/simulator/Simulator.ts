@@ -1,4 +1,5 @@
 import { FpsCounter } from "../fps-counter";
+import { GamepadManager, ManagedGamepad } from "../gamepad";
 import { OccupancyGrid, Path } from "../occupancy-grid";
 import { Statistics } from "../statistics";
 import { CartesianCoordinates, FrameInfo, Layer, LayerMouseEvent, LayerOptions, Visualizer } from "../visualizer";
@@ -23,7 +24,9 @@ export class Simulator {
   private readonly occupancyGrid: OccupancyGrid;
   private readonly fpsCounter: FpsCounter;
   private readonly statistics: Statistics;
+  private readonly gamepadManager: GamepadManager;
   private readonly visualizer: Visualizer;
+  private gamepad?: ManagedGamepad;
   private pulses: TimedCartesianCoordinates[] = [];
   private gridModificationMode = 0;
   private lastPathPlanningTime = 0;
@@ -44,17 +47,36 @@ export class Simulator {
     // setup statistics manager
     this.statistics = new Statistics();
 
-    // create statistics
-    this.statistics.create({
-      name: Stat.FPS,
-      min: 0,
-      max: 62,
-    });
-    this.statistics.create({
-      name: Stat.PATH_FINDER,
-      unit: "ms",
-      min: 0,
-      max: 100,
+    // setup gamepad
+    this.gamepadManager = new GamepadManager({
+      log: console,
+      onConnect: gamepad => {
+        console.log("GOT GAMEPAD", gamepad, this.gamepadManager.gamepads);
+
+        this.gamepad = this.gamepadManager.getFirstAvailableGamepad();
+      },
+      onDisconnect: gamepad => {
+        console.log("LOST GAMEPAD", gamepad, this.gamepadManager.gamepads);
+
+        this.gamepad = this.gamepadManager.getFirstAvailableGamepad();
+      },
+      onUpdate: gamepad => {
+        // console.log("GAMEPAD UPDATED", gamepad.index, gamepad.axes, gamepad.buttons);
+        gamepad.axes.forEach((axisValue, axisIndex) => {
+          const name = `Gamepad #${gamepad.index}.${axisIndex}`;
+
+          if (!this.statistics.getByName(name)) {
+            this.statistics.create({
+              name,
+              min: -1,
+              max: 1,
+              decimalPlaces: 2,
+            });
+          }
+
+          this.statistics.report(name, axisValue);
+        });
+      },
     });
 
     // setup visualizer
@@ -113,6 +135,20 @@ export class Simulator {
         textBaseline: "top",
       },
       render: this.renderForeground.bind(this),
+    });
+
+    // create statistics
+    this.statistics.create({
+      name: Stat.FPS,
+      min: 0,
+      max: 62,
+    });
+
+    this.statistics.create({
+      name: Stat.PATH_FINDER,
+      unit: "ms",
+      min: 0,
+      max: 100,
     });
   }
 
@@ -215,13 +251,48 @@ export class Simulator {
     // draw statistic graphs
     this.statistics.statistics.forEach((statistic, i) => {
       layer.drawGraph({
-        name: `${statistic.options.name}: ${statistic.getLatest().toFixed(0)}${statistic.options.unit || ""}`,
+        name: `${statistic.options.name}: ${statistic
+          .getLatest()
+          .toFixed(statistic.options.decimalPlaces || 0)}${statistic.options.unit || ""}`,
         origin: { x: 10, y: 10 + i * 90 },
         min: statistic.options.min,
         max: statistic.options.max,
         values: statistic.values,
       });
     });
+
+    // draw gamepad buttons as a grid
+    // for (const gamepad of this.gamepadManager.gamepads) {
+    //   // reduce the button values to a grid
+    //   const grid = [
+    //     gamepad.buttons.reduce<number[]>((values, button) => {
+    //       // values.push(button.value);
+    //       values.push(1);
+
+    //       return values;
+    //     }, []),
+    //   ];
+    //   const cellSize = 100;
+    //   const center = { x: 0, y: 0 };
+
+    //   layer.drawGrid(
+    //     {
+    //       center,
+    //       rows: 1,
+    //       columns: gamepad.buttons.length,
+    //       cellWidth: cellSize,
+    //       cellHeight: cellSize,
+    //     },
+    //     { strokeStyle: "#F00" },
+    //   );
+
+    //   layer.drawOccupancyGrid({
+    //     grid,
+    //     center: { x: 600, y: 300 },
+    //     cellWidth: cellSize,
+    //     cellHeight: cellSize,
+    //   });
+    // }
   }
 
   private drawPulses(layer: Layer) {

@@ -463,6 +463,7 @@ export class Layer {
     const columns = opt.grid[0].length;
     const gridHeight = opt.cellHeight * rows;
     const gridWidth = opt.cellWidth * columns;
+    const center = this.toCartesian(opt.center);
 
     // draw grid
     for (let row = 0; row < rows; row++) {
@@ -483,8 +484,8 @@ export class Layer {
         }
 
         const origin = {
-          x: column * opt.cellWidth - gridWidth / 2,
-          y: row * opt.cellHeight - gridHeight / 2,
+          x: center.x + column * opt.cellWidth - gridWidth / 2,
+          y: center.y + row * opt.cellHeight - gridHeight / 2,
         };
 
         this.drawBox(
