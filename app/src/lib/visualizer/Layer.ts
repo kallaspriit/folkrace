@@ -147,12 +147,12 @@ export interface DrawCoordinateSystemOptions {
 
 export interface DrawGraphOptions {
   origin: Coordinates;
-  title: string;
-  data: number[];
-  width?: number;
-  height?: number;
+  name: string;
+  values: number[];
   min?: number;
   max?: number;
+  width?: number;
+  height?: number;
 }
 
 export type OccupancyGrid = number[][];
@@ -604,31 +604,18 @@ export class Layer {
   }
 
   drawGraph(options: DrawGraphOptions) {
-    const opt: Required<DrawGraphOptions> = {
+    const opt = {
       width: 200,
       height: 80,
-      min: Math.min(...options.data),
-      max: Math.max(...options.data),
       ...options,
     };
 
-    this.drawText(
-      {
-        origin: options.origin,
-        text: options.title,
-        offset: {
-          x: 10,
-          y: 10,
-        },
-      },
-      {
-        fillStyle: "#FFF",
-      },
-    );
-
     const screenOrigin = this.worldToScreen(opt.origin);
-    const range = opt.max - opt.min;
-    const startIndex = Math.max(opt.data.length - opt.width, 0);
+    const startIndex = Math.max(opt.values.length - opt.width, 0);
+    const samples = opt.values.slice(startIndex, opt.values.length);
+    const min = options.min !== undefined ? options.min : Math.min(...samples);
+    const max = options.max !== undefined ? options.max : Math.max(...samples);
+    const range = max - min;
 
     this.ctx.save();
     this.ctx.translate(screenOrigin.x, screenOrigin.y);
@@ -640,12 +627,16 @@ export class Layer {
     let xPos = opt.width;
 
     // draw line
-    this.ctx.strokeStyle = "rgba(0, 200, 0, 0.75)";
     this.ctx.beginPath();
 
-    for (let i = opt.data.length; i >= startIndex; i--) {
-      const value = opt.data[i];
-      const yPos = opt.height - Math.round((value / range) * opt.height);
+    let wasAnyValueCapped = false;
+
+    // build the line path
+    for (let i = samples.length; i >= 0; i--) {
+      const value = samples[i];
+      const cappedValue = Math.min(Math.max(value, min), max);
+      const isCapped = Math.abs(cappedValue - value) > 0.1;
+      const yPos = opt.height - Math.round(((cappedValue - min) / range) * opt.height);
 
       if (i === 0) {
         this.ctx.moveTo(xPos, yPos);
@@ -654,11 +645,33 @@ export class Layer {
       }
 
       xPos--;
+
+      if (isCapped) {
+        wasAnyValueCapped = true;
+      }
     }
 
-    this.ctx.stroke();
+    // draw red when any of the values were capped to min/max
+    this.ctx.strokeStyle = wasAnyValueCapped ? "rgba(200, 0, 0, 0.75)" : "rgba(0, 200, 0, 0.75)";
 
+    // draw graph line and restore
+    this.ctx.stroke();
     this.ctx.restore();
+
+    // draw name on top of the graph
+    this.drawText(
+      {
+        origin: options.origin,
+        text: options.name,
+        offset: {
+          x: 10,
+          y: 10,
+        },
+      },
+      {
+        fillStyle: "#FFF",
+      },
+    );
   }
 
   polarToCartesian({ angle, distance }: PolarCoordinates): CartesianCoordinates {
@@ -723,7 +736,7 @@ export class Layer {
   }
 
   scale(distance: number) {
-    return Math.ceil(distance * this.getScale()) + 0.5;
+    return distance * this.getScale();
   }
 
   toRadians(angleDegrees: number) {
@@ -756,7 +769,6 @@ export class Layer {
     }
 
     if (options.font) {
-      console.log("SET FONT", options.font);
       this.ctx.font = options.font;
     }
 

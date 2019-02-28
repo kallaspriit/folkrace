@@ -1,5 +1,6 @@
 import { FpsCounter } from "../fps-counter";
-import { OccupancyGrid } from "../occupancy-grid";
+import { OccupancyGrid, Path } from "../occupancy-grid";
+import { Statistics } from "../statistics";
 import { CartesianCoordinates, FrameInfo, Layer, LayerMouseEvent, LayerOptions, Visualizer } from "../visualizer";
 
 export interface TimedCartesianCoordinates extends CartesianCoordinates {
@@ -10,18 +11,23 @@ export interface SimulatorOptions {
   container: HTMLElement;
   radius: number;
   cellSize: number;
+  pathPlanningIntervalMs: number;
+}
+
+export enum Stat {
+  FPS = "FPS",
+  PATH_FINDER = "Path finder",
 }
 
 export class Simulator {
   private readonly occupancyGrid: OccupancyGrid;
   private readonly fpsCounter: FpsCounter;
+  private readonly statistics: Statistics;
   private readonly visualizer: Visualizer;
   private pulses: TimedCartesianCoordinates[] = [];
   private gridModificationMode = 0;
-
-  private testData: number[] = [];
-  private testValue = 30;
-  private testVelocity = 0;
+  private lastPathPlanningTime = 0;
+  private path: Path = [];
 
   constructor(readonly options: SimulatorOptions) {
     const gridSize = (options.radius * 2) / options.cellSize;
@@ -34,6 +40,22 @@ export class Simulator {
 
     // setup fps counter
     this.fpsCounter = new FpsCounter();
+
+    // setup statistics manager
+    this.statistics = new Statistics();
+
+    // create statistics
+    this.statistics.create({
+      name: Stat.FPS,
+      min: 0,
+      max: 62,
+    });
+    this.statistics.create({
+      name: Stat.PATH_FINDER,
+      unit: "ms",
+      min: 0,
+      max: 100,
+    });
 
     // setup visualizer
     this.visualizer = new Visualizer(this.options.container);
@@ -148,19 +170,28 @@ export class Simulator {
     // clear map
     layer.clear();
 
-    // const pathStartTime = Date.now();
-    const path = this.occupancyGrid.findShortestPath({
-      from: [0, 0],
-      to: [this.occupancyGrid.data.length - 1, this.occupancyGrid.data[0].length - 1],
-    });
-    // const pathTimeTaken = Date.now() - pathStartTime;
+    const currentTime = Date.now();
+
+    // perform path planning at certain interval
+    if (currentTime - this.lastPathPlanningTime > this.options.pathPlanningIntervalMs) {
+      const pathStartTime = Date.now();
+      this.path = this.occupancyGrid.findShortestPath({
+        from: [0, 0],
+        to: [this.occupancyGrid.data.length - 1, this.occupancyGrid.data[0].length - 1],
+      });
+      const pathTimeTaken = Date.now() - pathStartTime;
+
+      this.statistics.report(Stat.PATH_FINDER, pathTimeTaken);
+
+      this.lastPathPlanningTime = currentTime;
+    }
 
     // console.log(path);
 
     // draw occupancy grid
     layer.drawOccupancyGrid({
       grid: this.occupancyGrid.data,
-      path,
+      path: this.path,
       cellWidth: this.options.cellSize,
       cellHeight: this.options.cellSize,
     });
@@ -175,35 +206,21 @@ export class Simulator {
   private renderForeground({ layer }: FrameInfo) {
     layer.clear();
 
+    // get current fps
     const fps = this.fpsCounter.getFps();
 
-    // layer.drawText(
-    //   {
-    //     origin: { x: 10, y: 10 },
-    //     text: `FPS: ${Math.ceil(fps)}`,
-    //   },
-    //   {
-    //     fillStyle: "#FFF",
-    //   },
-    // );
+    // report the FPS statistic
+    this.statistics.report(Stat.FPS, fps);
 
-    this.testVelocity = Math.max(
-      Math.min(this.testVelocity + Math.random() * 0.1 - 0.05, this.testValue < 60 ? 0.5 : 0),
-      this.testValue > 0 ? -0.5 : 0,
-    );
-    this.testValue = Math.max(Math.min(this.testValue + this.testVelocity, 60), 0);
-    this.testData.push(this.testValue);
-
-    if (this.testData.length > 200) {
-      this.testData.shift();
-    }
-
-    layer.drawGraph({
-      title: `FPS: ${Math.ceil(fps)}`,
-      origin: { x: 10, y: 10 },
-      data: this.testData,
-      min: 0,
-      max: 60,
+    // draw statistic graphs
+    this.statistics.statistics.forEach((statistic, i) => {
+      layer.drawGraph({
+        name: `${statistic.options.name}: ${statistic.getLatest().toFixed(0)}${statistic.options.unit || ""}`,
+        origin: { x: 10, y: 10 + i * 90 },
+        min: statistic.options.min,
+        max: statistic.options.max,
+        values: statistic.values,
+      });
     });
   }
 
