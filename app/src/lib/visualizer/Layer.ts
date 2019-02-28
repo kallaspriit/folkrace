@@ -98,6 +98,7 @@ export interface DrawBoxOptions {
   width: number;
   height: number;
   padding?: number;
+  centered?: boolean;
 }
 
 // TODO: support center, angle, length
@@ -129,7 +130,8 @@ export interface DrawGridOptions {
   cellHeight: number;
   rows?: number;
   columns?: number;
-  center?: Coordinates;
+  origin?: Coordinates;
+  centered?: boolean;
 }
 
 export interface DrawOccupancyGridOptions {
@@ -137,7 +139,8 @@ export interface DrawOccupancyGridOptions {
   cellHeight: number;
   grid: OccupancyGrid;
   path?: Path;
-  center?: Coordinates;
+  origin?: Coordinates;
+  centered?: boolean;
 }
 
 export interface DrawCoordinateSystemOptions {
@@ -302,7 +305,7 @@ export class Layer {
       this.ctx.fill();
     }
 
-    if (style.strokeStyle) {
+    if (style.strokeStyle || (!style.strokeStyle && !style.fillStyle)) {
       this.ctx.stroke();
     }
 
@@ -361,19 +364,36 @@ export class Layer {
   drawBox(options: DrawBoxOptions, style: DrawStyle = {}) {
     const opt: Required<DrawBoxOptions> = {
       padding: 0,
+      centered: false,
       ...options,
     };
-    const screenOrigin = this.worldToScreen(opt.origin);
+
+    const origin = this.worldToScreen(opt.origin);
+    const width = this.scale(opt.width);
+    const height = this.scale(opt.height);
+
+    const offset = opt.centered ? { x: -width / 2, y: -height / 2 } : { x: 0, y: 0 };
 
     this.ctx.save();
     this.applyStyle(style);
 
-    this.ctx.fillRect(
-      screenOrigin.x + opt.padding,
-      screenOrigin.y + opt.padding,
-      this.scale(opt.width) - opt.padding * 2,
-      this.scale(opt.height) - opt.padding * 2,
-    );
+    if (style.fillStyle) {
+      this.ctx.fillRect(
+        origin.x + offset.x + opt.padding,
+        origin.y + offset.y + opt.padding,
+        width - opt.padding * 2,
+        height - opt.padding * 2,
+      );
+    }
+
+    if (style.strokeStyle || (!style.strokeStyle && !style.fillStyle)) {
+      this.ctx.strokeRect(
+        origin.x + offset.x + opt.padding,
+        origin.y + offset.y + opt.padding,
+        width - opt.padding * 2,
+        height - opt.padding * 2,
+      );
+    }
 
     this.ctx.restore();
   }
@@ -401,27 +421,31 @@ export class Layer {
     const defaultColumnCount = Math.ceil(this.width / this.getScale() / options.cellWidth);
 
     const opt: Required<DrawGridOptions> = {
-      center: { x: 0, y: 0 },
+      origin: { x: 0, y: 0 },
+      centered: false,
       rows: defaultRowCount % 2 === 0 ? defaultRowCount : defaultRowCount + 1,
       columns: defaultColumnCount % 2 === 0 ? defaultColumnCount : defaultColumnCount + 1,
       ...options,
     };
 
-    const gridHeight = opt.cellHeight * opt.rows;
-    const gridWidth = opt.cellWidth * opt.columns;
+    const height = opt.cellHeight * opt.rows;
+    const width = opt.cellWidth * opt.columns;
+
+    const origin = this.toCartesian(opt.origin);
+    const offset: CartesianCoordinates = opt.centered ? { x: -width / 2, y: -height / 2 } : { x: 0, y: 0 };
 
     for (let row = 0; row <= opt.rows; row++) {
-      const rowX = row * opt.cellHeight;
+      const rowY = row * opt.cellHeight;
 
       this.drawLine(
         {
           from: {
-            x: -gridHeight / 2 + rowX,
-            y: -gridWidth / 2,
+            x: origin.x + offset.x,
+            y: origin.y + offset.y + rowY,
           },
           to: {
-            x: -gridHeight / 2 + rowX,
-            y: gridWidth / 2,
+            x: origin.x + offset.x + width,
+            y: origin.y + offset.y + rowY,
           },
         },
         style,
@@ -429,17 +453,17 @@ export class Layer {
     }
 
     for (let column = 0; column <= opt.columns; column++) {
-      const columnY = column * opt.cellWidth;
+      const columnX = column * opt.cellWidth;
 
       this.drawLine(
         {
           from: {
-            x: -gridHeight / 2,
-            y: -gridWidth / 2 + columnY,
+            x: origin.x + offset.x + columnX,
+            y: origin.y + offset.y,
           },
           to: {
-            x: gridHeight / 2,
-            y: -gridWidth / 2 + columnY,
+            x: origin.x + offset.x + columnX,
+            y: origin.y + offset.y + height,
           },
         },
         style,
@@ -449,7 +473,8 @@ export class Layer {
 
   drawOccupancyGrid(options: DrawOccupancyGridOptions, style: DrawStyle = {}) {
     const opt: Required<DrawOccupancyGridOptions> = {
-      center: { x: 0, y: 0 },
+      origin: { x: 0, y: 0 },
+      centered: false,
       path: [],
       ...options,
     };
@@ -461,9 +486,12 @@ export class Layer {
 
     const rows = opt.grid.length;
     const columns = opt.grid[0].length;
-    const gridHeight = opt.cellHeight * rows;
-    const gridWidth = opt.cellWidth * columns;
-    const center = this.toCartesian(opt.center);
+
+    const width = opt.cellWidth * columns;
+    const height = opt.cellHeight * rows;
+
+    const origin = this.toCartesian(opt.origin);
+    const offset: CartesianCoordinates = opt.centered ? { x: -width / 2, y: -height / 2 } : { x: 0, y: 0 };
 
     // draw grid
     for (let row = 0; row < rows; row++) {
@@ -483,13 +511,18 @@ export class Layer {
           continue;
         }
 
-        const origin = {
-          x: center.x + column * opt.cellWidth - gridWidth / 2,
-          y: center.y + row * opt.cellHeight - gridHeight / 2,
+        const delta = {
+          x: column * opt.cellWidth,
+          y: row * opt.cellHeight,
+        };
+
+        const position = {
+          x: origin.x + offset.x + delta.x,
+          y: origin.y + offset.y + delta.y,
         };
 
         this.drawBox(
-          { origin, width: opt.cellWidth, height: opt.cellHeight, padding: 1 },
+          { origin: position, width: opt.cellWidth, height: opt.cellHeight, padding: 1 },
           { fillStyle: `rgba(0, 0, 0, ${occupancy})` },
         );
       }
@@ -497,13 +530,18 @@ export class Layer {
 
     // draw path
     for (const [column, row] of opt.path) {
-      const origin = {
-        x: column * opt.cellWidth - gridWidth / 2,
-        y: row * opt.cellHeight - gridHeight / 2,
+      const delta = {
+        x: column * opt.cellWidth,
+        y: row * opt.cellHeight,
+      };
+
+      const position = {
+        x: origin.x + offset.x + delta.x,
+        y: origin.y + offset.x + delta.y,
       };
 
       this.drawBox(
-        { origin, width: opt.cellWidth, height: opt.cellHeight, padding: 1 },
+        { origin: position, width: opt.cellWidth, height: opt.cellHeight, padding: 1 },
         { fillStyle: "rgba(0, 255, 0, 0.2)" },
       );
     }

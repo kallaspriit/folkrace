@@ -117,7 +117,7 @@ export class Simulator {
       render: this.renderBackground.bind(this),
     });
 
-    // map
+    // // map
     this.visualizer.createLayer({
       ...mapLayerOptions,
       render: this.renderMap.bind(this),
@@ -166,14 +166,19 @@ export class Simulator {
       return;
     }
 
+    const cellWidth = this.options.cellSize;
+    const cellHeight = this.options.cellSize;
     const gridSize = (this.options.radius * 2) / this.options.cellSize;
     const circleStep = this.options.radius / 4;
 
     // draw full size background grid
     layer.drawGrid(
       {
-        cellWidth: this.occupancyGrid.options.cellWidth,
-        cellHeight: this.occupancyGrid.options.cellHeight,
+        cellWidth,
+        cellHeight,
+        columns: 2 * Math.ceil(layer.height / layer.getScale() / cellWidth / 2),
+        rows: 2 * Math.ceil(layer.width / layer.getScale() / cellHeight / 2),
+        centered: true,
       },
       { strokeStyle: "#222" },
     );
@@ -183,8 +188,9 @@ export class Simulator {
       {
         rows: gridSize,
         columns: gridSize,
-        cellWidth: this.occupancyGrid.options.cellWidth,
-        cellHeight: this.occupancyGrid.options.cellHeight,
+        cellWidth,
+        cellHeight,
+        centered: true,
       },
       { strokeStyle: "#333" },
     );
@@ -230,6 +236,7 @@ export class Simulator {
       path: this.path,
       cellWidth: this.options.cellSize,
       cellHeight: this.options.cellSize,
+      centered: true,
     });
 
     // draw pulses
@@ -254,45 +261,81 @@ export class Simulator {
         name: `${statistic.options.name}: ${statistic
           .getLatest()
           .toFixed(statistic.options.decimalPlaces || 0)}${statistic.options.unit || ""}`,
-        origin: { x: 10, y: 10 + i * 90 },
+        origin: { x: 10, y: 30 + i * 90 },
         min: statistic.options.min,
         max: statistic.options.max,
         values: statistic.values,
       });
     });
 
+    // layer.drawGrid(
+    //   {
+    //     rows: 2,
+    //     columns: 4,
+    //     cellWidth: 100,
+    //     cellHeight: 100,
+    //     origin,
+    //     centered,
+    //   },
+    //   { strokeStyle: "#F00" },
+    // );
+
+    // layer.drawOccupancyGrid(
+    //   {
+    //     grid: [
+    //       [0.2, 0.4, 0.6, 0.8], //
+    //       [0.8, 0.6, 0.4, 0.2], //
+    //     ],
+    //     cellWidth: 100,
+    //     cellHeight: 100,
+    //     origin,
+    //     centered,
+    //   },
+    //   { strokeStyle: "#F00" },
+    // );
+
+    // layer.drawBox(
+    //   {
+    //     origin,
+    //     width: 10,
+    //     height: 10,
+    //     centered,
+    //   },
+    //   { fillStyle: "#0F0" },
+    // );
+
     // draw gamepad buttons as a grid
-    // for (const gamepad of this.gamepadManager.gamepads) {
-    //   // reduce the button values to a grid
-    //   const grid = [
-    //     gamepad.buttons.reduce<number[]>((values, button) => {
-    //       // values.push(button.value);
-    //       values.push(1);
+    for (const gamepad of this.gamepadManager.gamepads) {
+      // reduce the button values to a grid
+      const grid = [
+        gamepad.buttons.reduce<number[]>((values, button) => {
+          values.push(button.value);
+          // values.push(1);
 
-    //       return values;
-    //     }, []),
-    //   ];
-    //   const cellSize = 100;
-    //   const center = { x: 0, y: 0 };
+          return values;
+        }, []),
+      ];
+      const cellSize = 200 / gamepad.buttons.length;
+      const origin = { x: 10, y: 10 };
 
-    //   layer.drawGrid(
-    //     {
-    //       center,
-    //       rows: 1,
-    //       columns: gamepad.buttons.length,
-    //       cellWidth: cellSize,
-    //       cellHeight: cellSize,
-    //     },
-    //     { strokeStyle: "#F00" },
-    //   );
+      layer.drawGrid(
+        {
+          origin,
+          rows: 1,
+          columns: gamepad.buttons.length,
+          cellWidth: cellSize,
+          cellHeight: cellSize,
+        },
+        { strokeStyle: "#333" },
+      );
 
-    //   layer.drawOccupancyGrid({
-    //     grid,
-    //     center: { x: 600, y: 300 },
-    //     cellWidth: cellSize,
-    //     cellHeight: cellSize,
-    //   });
-    // }
+      layer.drawOccupancyGrid({
+        grid,
+        origin,
+        cellWidth: cellSize,
+        cellHeight: cellSize,
+      });
+    }
   }
 
   private drawPulses(layer: Layer) {
