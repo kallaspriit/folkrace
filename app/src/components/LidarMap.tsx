@@ -92,6 +92,9 @@ export class LidarMap extends React.Component<LidarMapProps> {
       {
         cellWidth: this.props.cellSize,
         cellHeight: this.props.cellSize,
+        columns: 2 * Math.ceil(layer.height / layer.getScale() / this.props.cellSize / 2),
+        rows: 2 * Math.ceil(layer.width / layer.getScale() / this.props.cellSize / 2),
+        centered: true,
       },
       { strokeStyle: "#222" },
     );
@@ -103,6 +106,7 @@ export class LidarMap extends React.Component<LidarMapProps> {
         columns: gridSize,
         cellWidth: this.props.cellSize,
         cellHeight: this.props.cellSize,
+        centered: true,
       },
       { strokeStyle: "#333" },
     );
@@ -133,7 +137,7 @@ export class LidarMap extends React.Component<LidarMapProps> {
         {
           center: {
             angle: layer.toRadians(measurement.angle),
-            distance: measurement.distance / 100,
+            distance: measurement.distance / 1000,
           },
         },
         {

@@ -23,9 +23,10 @@ const fakeMeasurements: LidarMeasurement[] = [
 export const MapView: React.SFC = () => (
   <View>
     <LidarMap
-      radius={2}
+      radius={4}
       cellSize={0.1}
-      measurements={() => /*containers.measurements.state.measurements*/ fakeMeasurements}
+      measurements={() => containers.measurements.state.measurements}
+      // measurements={() => fakeMeasurements}
     />
   </View>
 );

@@ -96,6 +96,8 @@ export class WebsocketTransport implements Transport {
     this.ws.onmessage = event => {
       const message = event.data;
 
+      // this.log.info("got message", message);
+
       // notify the listeners of message received
       this.listeners.forEach(listener => listener.onMessageReceived(this, message));
     };

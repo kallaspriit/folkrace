@@ -1,6 +1,9 @@
+import { config } from "../../config";
+import { robot } from "../../services/robot";
 import { FpsCounter } from "../fps-counter";
 import { GamepadManager, ManagedGamepad } from "../gamepad";
 import { OccupancyGrid, Path } from "../occupancy-grid";
+import { RemoteController } from "../remote-controller";
 import { Statistics } from "../statistics";
 import { CartesianCoordinates, FrameInfo, Layer, LayerMouseEvent, LayerOptions, Visualizer } from "../visualizer";
 
@@ -25,12 +28,15 @@ export class Simulator {
   private readonly fpsCounter: FpsCounter;
   private readonly statistics: Statistics;
   private readonly gamepadManager: GamepadManager;
+  private readonly remoteController: RemoteController;
   private readonly visualizer: Visualizer;
   private gamepad?: ManagedGamepad;
   private pulses: TimedCartesianCoordinates[] = [];
   private gridModificationMode = 0;
   private lastPathPlanningTime = 0;
   private path: Path = [];
+  private isRunning = false;
+  private tickFrameRequest?: number;
 
   constructor(readonly options: SimulatorOptions) {
     const gridSize = (options.radius * 2) / options.cellSize;
@@ -77,6 +83,13 @@ export class Simulator {
           this.statistics.report(name, axisValue);
         });
       },
+    });
+
+    // setup remote controller
+    this.remoteController = new RemoteController({
+      vehicle: config.vehicle,
+      robot,
+      log: console,
     });
 
     // setup visualizer
@@ -154,10 +167,51 @@ export class Simulator {
 
   start() {
     this.visualizer.start();
+
+    this.isRunning = true;
+
+    this.scheduleNextTick();
   }
 
   stop() {
+    this.isRunning = false;
+
+    if (this.tickFrameRequest !== undefined) {
+      cancelAnimationFrame(this.tickFrameRequest);
+
+      this.tickFrameRequest = undefined;
+    }
+
     this.visualizer.stop();
+  }
+
+  private scheduleNextTick() {
+    if (!this.isRunning) {
+      return;
+    }
+
+    this.tickFrameRequest = requestAnimationFrame(() => {
+      this.tickFrameRequest = undefined;
+
+      if (!this.isRunning) {
+        return;
+      }
+
+      this.tick();
+
+      this.scheduleNextTick();
+    });
+  }
+
+  private tick() {
+    // console.log("TICK");
+    if (this.gamepad) {
+      const speed = this.gamepad.axes[3] * -1;
+      const omega = this.gamepad.axes[0];
+
+      this.remoteController.setSpeed(speed);
+      this.remoteController.setOmega(omega);
+    }
   }
 
   private renderBackground({ layer, frame }: FrameInfo) {
@@ -268,42 +322,6 @@ export class Simulator {
       });
     });
 
-    // layer.drawGrid(
-    //   {
-    //     rows: 2,
-    //     columns: 4,
-    //     cellWidth: 100,
-    //     cellHeight: 100,
-    //     origin,
-    //     centered,
-    //   },
-    //   { strokeStyle: "#F00" },
-    // );
-
-    // layer.drawOccupancyGrid(
-    //   {
-    //     grid: [
-    //       [0.2, 0.4, 0.6, 0.8], //
-    //       [0.8, 0.6, 0.4, 0.2], //
-    //     ],
-    //     cellWidth: 100,
-    //     cellHeight: 100,
-    //     origin,
-    //     centered,
-    //   },
-    //   { strokeStyle: "#F00" },
-    // );
-
-    // layer.drawBox(
-    //   {
-    //     origin,
-    //     width: 10,
-    //     height: 10,
-    //     centered,
-    //   },
-    //   { fillStyle: "#0F0" },
-    // );
-
     // draw gamepad buttons as a grid
     for (const gamepad of this.gamepadManager.gamepads) {
       // reduce the button values to a grid
@@ -326,7 +344,7 @@ export class Simulator {
           cellWidth: cellSize,
           cellHeight: cellSize,
         },
-        { strokeStyle: "#333" },
+        { strokeStyle: "#111" },
       );
 
       layer.drawOccupancyGrid({
