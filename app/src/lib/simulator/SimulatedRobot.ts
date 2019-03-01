@@ -1,5 +1,7 @@
 import { dummyLogger, Logger } from "ts-log";
 
+import { SerialState, SerialType } from "../../containers/StatusContainer";
+
 export interface SimulatedRobotOptions {
   readonly log?: Logger;
 }
@@ -28,12 +30,46 @@ Messages to report:
 8: e:M1:M2 (encoder values)
 9. reset
 10: l:ANGLE1:DISTANCE1:QUALITY1:ANGLE2:DISTANCE2:QUALITY2:ANGLE3:DISTANCE3:QUALITY3:ANGLE4:DISTANCE4:QUALITY4
+11: serial:SerialType:SerialState
 */
+
+export enum Command {
+  HANDSHAKE = "!handshake",
+  VOLTAGE = "voltage",
+  SPEED = "s",
+  RPM = "rpm",
+  CURRENT = "current",
+  PING = "ping",
+  STATE = "state",
+  PROXY = "proxy",
+  LIDAR = "lidar",
+  PONG = "pong",
+  BUTTON = "button",
+  E = "e",
+  RESET = "reset",
+  L = "l",
+  SERIAL = "serial",
+}
+
+export interface ButtonStateMap {
+  left: number;
+  right: number;
+  start: number;
+}
+
+export interface MotorValue {
+  left: number;
+  right: number;
+}
 
 export class SimulatedRobot {
   private readonly options: Required<SimulatedRobotOptions>;
   private readonly log: Logger;
   private readonly messageListeners: MessageListenerFn[] = [];
+  private readonly buttonStates: ButtonStateMap = { left: 1, right: 1, start: 1 };
+  private readonly targetSpeeds: MotorValue = { left: 0, right: 0 };
+  private readonly currents: MotorValue = { left: 0, right: 0 };
+  private readonly encoderValues: MotorValue = { left: 0, right: 0 };
 
   constructor(options: SimulatedRobotOptions) {
     this.options = {
@@ -50,32 +86,85 @@ export class SimulatedRobot {
   }
 
   send(message: string) {
-    this.messageListeners.forEach(messageListener => messageListener(message));
+    // make it async
+    setImmediate(() => {
+      this.messageListeners.forEach(messageListener => messageListener(message));
+    });
   }
 
   receive(message: string) {
-    this.log.info(`received "${message}"`);
+    const [command, ...args] = message.split(":") as [Command, string[]];
 
-    switch (message) {
-      case "!handshake":
+    switch (command) {
+      case Command.HANDSHAKE:
         this.reportHandshake();
         break;
 
-      case "voltage":
+      case Command.STATE:
+        this.reportState();
+        break;
+
+      case Command.VOLTAGE:
         this.reportVoltage();
         break;
+
+      default:
+        this.log.warn(`missing handler for "${message}"`);
+
+        return;
     }
+
+    this.log.info(`handled command "${message}"`);
   }
 
   private reportHandshake() {
     // respond to handshake
     this.send("!handshake");
 
+    // also fake connected USB serial
+    this.send(`serial:${SerialType.USB}:${SerialState.CONNECTED}`);
+
     // also send initial state
+    // this.reportVoltage();
+  }
+
+  private reportState() {
+    this.reportButtonStates();
+    this.reportTargetSpeed();
+    this.reportLidarState();
     this.reportVoltage();
+    this.reportCurrent();
+    this.reportEncoderValues();
   }
 
   private reportVoltage() {
     this.send("voltage:15.9");
+  }
+
+  private reportButtonState(button: keyof ButtonStateMap) {
+    this.send(`button:${button}:${this.buttonStates[button]}`);
+  }
+
+  private reportButtonStates() {
+    this.reportButtonState("left");
+    this.reportButtonState("right");
+    this.reportButtonState("start");
+  }
+
+  private reportTargetSpeed() {
+    this.send(`s:${this.targetSpeeds.left}:${this.targetSpeeds.right}`);
+  }
+
+  private reportLidarState() {
+    // TODO: report actualy simulated lidar state
+    this.send("lidar:0:0:0:0:0");
+  }
+
+  private reportCurrent() {
+    this.send(`current:${this.currents.left}:${this.currents.right}`);
+  }
+
+  private reportEncoderValues() {
+    this.send(`e:${this.encoderValues.left}:${this.encoderValues.right}`);
   }
 }
