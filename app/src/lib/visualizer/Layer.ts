@@ -58,6 +58,8 @@ export interface CartesianCoordinates {
   y: number;
 }
 
+export type Size = CartesianCoordinates;
+
 export interface PolarCoordinates {
   angle: number; // radians
   distance: number;
@@ -146,7 +148,15 @@ export interface DrawOccupancyGridOptions {
 
 export interface DrawCoordinateSystemOptions {
   center?: Coordinates;
+  gridSize?: number;
   length?: number;
+}
+
+export interface DrawObjectOptions {
+  center: Coordinates;
+  size: Size;
+  angle: number;
+  draw?(ctx: CanvasRenderingContext2D, options: Required<DrawObjectOptions> & { layer: Layer }): void;
 }
 
 export interface DrawGraphOptions {
@@ -629,9 +639,14 @@ export class Layer {
 
   drawCoordinateSystem(options: DrawCoordinateSystemOptions = {}) {
     const worldSize = this.screenToWorld({ x: this.width, y: this.height });
-    const length = this.size / 20 / this.getScale();
+    const gridSize = options.gridSize !== undefined ? options.gridSize : this.size / 50 / this.getScale();
+    const length = gridSize * 2;
     const opt: Required<DrawCoordinateSystemOptions> = {
-      center: { x: -worldSize.y / 2 + length, y: -worldSize.x / 2 + length },
+      center: {
+        x: -Math.ceil(worldSize.y / 2 / gridSize) * gridSize + length,
+        y: -Math.ceil(worldSize.x / 2 / gridSize) * gridSize + length,
+      },
+      gridSize,
       length,
       ...options,
     };
@@ -713,6 +728,45 @@ export class Layer {
         fillStyle: "#FFF",
       },
     );
+  }
+
+  drawObject(options: DrawObjectOptions) {
+    const opt: Required<DrawObjectOptions> = {
+      size: {
+        x: this.size / 50 / this.getScale(),
+        y: this.size / 50 / this.getScale(),
+      },
+      draw: (ctx, { size }) => {
+        const screenSize = this.worldToScreen(size);
+
+        // draw body
+        ctx.fillStyle = "#900";
+        ctx.fillRect(-screenSize.x / 2, -screenSize.y / 2, screenSize.x, screenSize.y);
+
+        // draw direction arrow
+        const arrowScale = 0.5;
+        const arrowSize = Math.min(screenSize.x, screenSize.y) * arrowScale;
+
+        ctx.fillStyle = "#FFF";
+        ctx.beginPath();
+        ctx.moveTo(-arrowSize / 2, -arrowSize / 2);
+        ctx.lineTo(0, arrowSize / 2);
+        ctx.lineTo(arrowSize / 2, -arrowSize / 2);
+        ctx.lineTo(-arrowSize / 2, -arrowSize / 2);
+        ctx.fill();
+      },
+      ...options,
+    };
+    const screenCenter = this.worldToScreen(opt.center);
+
+    this.ctx.save();
+
+    this.ctx.translate(screenCenter.x, screenCenter.y);
+    this.ctx.rotate(opt.angle);
+
+    opt.draw(this.ctx, { ...opt, layer: this });
+
+    this.ctx.restore();
   }
 
   polarToCartesian({ angle, distance }: PolarCoordinates): CartesianCoordinates {

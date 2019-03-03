@@ -31,11 +31,11 @@ export const config = {
     },
   },
   vehicle: {
-    trackWidth: 0.15, // meters
+    trackWidth: 0.12, // meters
     maxSpeed: 1, // meters per second
     wheelDiameter: 0.039, // meters
     encoderCountsPerRotation: 20, // encoder pulse count per revolution
     gearboxRatio: 25, // 25/1 gearbox ratio
-    speedUpdateInterval: 50, // 20Hz
+    speedUpdateInterval: 1000 / 20, // 20Hz
   },
 };

@@ -78,10 +78,12 @@ export class WebsocketTransport implements Transport {
       // update state
       this.setState(TransportState.DISCONNECTED);
 
-      // attempt to reconnect
-      setTimeout(() => {
-        void this.connect();
-      }, this.options.reconnectInterval);
+      // only attempt to reconnect if connection has succeeded before
+      if (this.wasConnected) {
+        setTimeout(() => {
+          void this.connect();
+        }, this.options.reconnectInterval);
+      }
     };
 
     // handle error event

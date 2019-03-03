@@ -1,6 +1,10 @@
 import { dummyLogger, Logger } from "ts-log";
 
+import { config } from "../../config";
 import { SerialState, SerialType } from "../../containers/StatusContainer";
+import { Ticker, TickInfo } from "../ticker";
+import { TrackedVehicleKinematics } from "../tracked-vehicle-kinematics";
+import { CartesianCoordinates } from "../visualizer";
 
 export interface SimulatedRobotOptions {
   readonly log?: Logger;
@@ -42,34 +46,40 @@ export enum Command {
   PING = "ping",
   STATE = "state",
   PROXY = "proxy",
-  LIDAR = "lidar",
+  LIDAR_STATE = "lidar",
   PONG = "pong",
   BUTTON = "button",
-  E = "e",
+  ENCODER = "e",
   RESET = "reset",
-  L = "l",
+  LIDAR_MEASUREMENT = "l",
   SERIAL = "serial",
 }
 
-export interface ButtonStateMap {
-  left: number;
-  right: number;
-  start: number;
+export interface ButtonStates {
+  readonly left: number;
+  readonly right: number;
+  readonly start: number;
 }
 
 export interface MotorValue {
-  left: number;
-  right: number;
+  readonly left: number;
+  readonly right: number;
 }
 
 export class SimulatedRobot {
+  location: CartesianCoordinates = { x: 0, y: 0 };
+  speed: MotorValue = { left: 0, right: 0 };
+  angle = 0;
+
   private readonly options: Required<SimulatedRobotOptions>;
   private readonly log: Logger;
+  private readonly kinematics: TrackedVehicleKinematics;
+  private readonly ticker: Ticker;
   private readonly messageListeners: MessageListenerFn[] = [];
-  private readonly buttonStates: ButtonStateMap = { left: 1, right: 1, start: 1 };
-  private readonly targetSpeeds: MotorValue = { left: 0, right: 0 };
-  private readonly currents: MotorValue = { left: 0, right: 0 };
-  private readonly encoderValues: MotorValue = { left: 0, right: 0 };
+  private buttonStates: ButtonStates = { left: 1, right: 1, start: 1 };
+  private current: MotorValue = { left: 0, right: 0 };
+  private encoderValues: MotorValue = { left: 0, right: 0 };
+  private targetSpeed: MotorValue = { left: 0, right: 0 };
 
   constructor(options: SimulatedRobotOptions) {
     this.options = {
@@ -77,6 +87,17 @@ export class SimulatedRobot {
       ...options,
     };
     this.log = this.options.log;
+
+    // setup kinematics
+    this.kinematics = new TrackedVehicleKinematics(config.vehicle);
+
+    // setup ticker
+    this.ticker = new Ticker({
+      tick: this.tick.bind(this),
+    });
+
+    // TODO: don't run unless simulated transport is used
+    this.ticker.start();
   }
 
   addMessageListener(listener: MessageListenerFn) {
@@ -93,7 +114,7 @@ export class SimulatedRobot {
   }
 
   receive(message: string) {
-    const [command, ...args] = message.split(":") as [Command, string[]];
+    const [command, ...args] = message.split(":");
 
     switch (command) {
       case Command.HANDSHAKE:
@@ -108,6 +129,10 @@ export class SimulatedRobot {
         this.reportVoltage();
         break;
 
+      case Command.SPEED:
+        this.setSpeed({ left: parseFloat(args[0]), right: parseFloat(args[1]) });
+        break;
+
       default:
         this.log.warn(`missing handler for "${message}"`);
 
@@ -115,6 +140,24 @@ export class SimulatedRobot {
     }
 
     this.log.info(`handled command "${message}"`);
+  }
+
+  setSpeed(speed: MotorValue) {
+    this.targetSpeed = speed;
+  }
+
+  private tick(info: TickInfo) {
+    this.tickLocation(info);
+  }
+
+  private tickLocation({ dt }: TickInfo) {
+    // TODO: apply realistic acceleration
+    this.speed = this.targetSpeed;
+
+    this.encoderValues = {
+      left: this.speed.left * dt,
+      right: this.speed.right * dt,
+    };
   }
 
   private reportHandshake() {
@@ -141,7 +184,7 @@ export class SimulatedRobot {
     this.send("voltage:15.9");
   }
 
-  private reportButtonState(button: keyof ButtonStateMap) {
+  private reportButtonState(button: keyof ButtonStates) {
     this.send(`button:${button}:${this.buttonStates[button]}`);
   }
 
@@ -152,7 +195,7 @@ export class SimulatedRobot {
   }
 
   private reportTargetSpeed() {
-    this.send(`s:${this.targetSpeeds.left}:${this.targetSpeeds.right}`);
+    this.send(`s:${this.targetSpeed.left}:${this.targetSpeed.right}`);
   }
 
   private reportLidarState() {
@@ -161,7 +204,7 @@ export class SimulatedRobot {
   }
 
   private reportCurrent() {
-    this.send(`current:${this.currents.left}:${this.currents.right}`);
+    this.send(`current:${this.current.left}:${this.current.right}`);
   }
 
   private reportEncoderValues() {

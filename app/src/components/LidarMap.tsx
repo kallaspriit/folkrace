@@ -3,6 +3,7 @@ import styled from "styled-components";
 
 import { LidarMeasurement } from "../containers/MeasurementsContainer";
 import { FrameInfo, LayerOptions, Visualizer } from "../lib/visualizer";
+import { drawRobot } from "../services/drawRobot";
 
 export interface LidarMapProps {
   radius: number;
@@ -146,6 +147,14 @@ export class LidarMap extends React.Component<LidarMapProps> {
         },
       );
     }
+
+    // draw robot
+    // TODO: draw at predicted coordinates / angle
+    drawRobot({
+      center: { x: 0, y: 0 },
+      angle: 0,
+      layer,
+    });
   }
 }
 

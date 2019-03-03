@@ -7,16 +7,24 @@ export interface TrackedVehicleOptions {
   speedUpdateInterval: number;
 }
 
-export interface MotorSpeeds {
-  left: number;
-  right: number;
+export interface MotorValue {
+  readonly left: number;
+  readonly right: number;
+}
+
+export interface Motion {
+  position: {
+    x: number;
+    y: number;
+  };
+  angle: number;
 }
 
 // https://pdfs.semanticscholar.org/29ae/0bc974737b58afd63b6edb8d0837a3383321.pdf
 export class TrackedVehicleKinematics {
   constructor(private readonly options: TrackedVehicleOptions) {}
 
-  static isSpeedDifferent(a: MotorSpeeds, b: MotorSpeeds, threshold = 0) {
+  static isSpeedDifferent(a: MotorValue, b: MotorValue, threshold = 0) {
     const leftDifference = Math.abs(a.left - b.left);
     const rightDifference = Math.abs(a.right - b.right);
 
@@ -26,34 +34,8 @@ export class TrackedVehicleKinematics {
     return !isLeftDifferent && !isRightDifferent;
   }
 
-  /**
-   * Returns motor speeds in m/s for requested forward speed at given rotational speed.
-   *
-   * @param speed Speed in m/s
-   * @param omega Rotational speed in rad/s
-   */
-  calculateMotorSpeeds(speed: number, omega: number): MotorSpeeds {
-    // TODO: calculate actual kinematics
-    return this.limit(
-      {
-        left: speed + omega,
-        right: speed - omega,
-      },
-      this.options.maxSpeed,
-    );
-  }
-
-  getSpeedEncoderCount(speed: number) {
-    const circumference = this.options.wheelDiameter * Math.PI;
-    const rps = speed / circumference;
-    const actualEncoderCountPerRevolution = this.options.encoderCountsPerRotation * this.options.gearboxRatio;
-    const targetEncoderCountPerSecond = rps * actualEncoderCountPerRevolution;
-
-    return Math.floor(targetEncoderCountPerSecond);
-  }
-
-  limit(speeds: MotorSpeeds, maxSpeed: number): MotorSpeeds {
-    const maxRequestedSpeedMagnitude = Math.max(Math.abs(speeds.left), Math.abs(speeds.right));
+  static getLimitedSpeed(speed: MotorValue, maxSpeed: number): MotorValue {
+    const maxRequestedSpeedMagnitude = Math.max(Math.abs(speed.left), Math.abs(speed.right));
     const normalizationFactor = Math.min(maxSpeed / maxRequestedSpeedMagnitude, 1.0);
 
     // console.log("normalize", {
@@ -64,15 +46,64 @@ export class TrackedVehicleKinematics {
     // });
 
     return {
-      left: speeds.left * normalizationFactor,
-      right: speeds.right * normalizationFactor,
+      left: speed.left * normalizationFactor,
+      right: speed.right * normalizationFactor,
     };
   }
 
-  getEncoderSpeeds(speeds: MotorSpeeds): MotorSpeeds {
+  getSpeedEncoderCount(speedMetersPerSecond: number) {
+    const circumference = this.options.wheelDiameter * Math.PI;
+    const gearedEncoderCountsPerRevolution = this.options.encoderCountsPerRotation * this.options.gearboxRatio;
+    const rotationsPerSecond = speedMetersPerSecond / circumference;
+    const targetEncoderCountPerSecond = rotationsPerSecond * gearedEncoderCountsPerRevolution;
+
+    return Math.floor(targetEncoderCountPerSecond);
+  }
+
+  getEncoderCountSpeed(encoderCountsPerSecond: number) {
+    const circumference = this.options.wheelDiameter * Math.PI;
+    const gearedEncoderCountsPerRevolution = this.options.encoderCountsPerRotation * this.options.gearboxRatio;
+
+    const revolutionsPerSecond = encoderCountsPerSecond / gearedEncoderCountsPerRevolution;
+    const speed = revolutionsPerSecond / circumference;
+
+    return speed;
+  }
+
+  motorToEncoderSpeed(motorSpeed: MotorValue): MotorValue {
     return {
-      left: this.getSpeedEncoderCount(speeds.left),
-      right: this.getSpeedEncoderCount(speeds.right),
+      left: this.getSpeedEncoderCount(motorSpeed.left),
+      right: this.getSpeedEncoderCount(motorSpeed.right),
+    };
+  }
+
+  encoderToMotorSpeed(encoderSpeed: MotorValue): MotorValue {
+    return {
+      left: this.getEncoderCountSpeed(encoderSpeed.left),
+      right: this.getEncoderCountSpeed(encoderSpeed.right),
+    };
+  }
+
+  motionToSpeed(speed: number, omega: number): MotorValue {
+    // TODO: calculate actual kinematics
+    const speeds: MotorValue = {
+      left: speed + omega,
+      right: speed - omega,
+    };
+
+    return TrackedVehicleKinematics.getLimitedSpeed(speeds, this.options.maxSpeed);
+  }
+
+  speedToMotion(encoderSpeed: MotorValue): Motion {
+    // convert encoder speeds to track speeds in meters per second
+    const motorSpeed = this.encoderToMotorSpeed(encoderSpeed);
+
+    return {
+      position: {
+        x: 0,
+        y: 0,
+      },
+      angle: 0,
     };
   }
 }

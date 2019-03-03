@@ -1,4 +1,5 @@
 import { config } from "../../config";
+import { drawRobot } from "../../services/drawRobot";
 import { robot } from "../../services/robot";
 import { FpsCounter } from "../fps-counter";
 import { GamepadManager, ManagedGamepad } from "../gamepad";
@@ -6,7 +7,15 @@ import { OccupancyGrid, Path } from "../occupancy-grid";
 import { RemoteController } from "../remote-controller";
 import { Statistics } from "../statistics";
 import { Ticker, TickInfo } from "../ticker";
-import { CartesianCoordinates, FrameInfo, Layer, LayerMouseEvent, LayerOptions, Visualizer } from "../visualizer";
+import {
+  CartesianCoordinates,
+  Coordinates,
+  FrameInfo,
+  Layer,
+  LayerMouseEvent,
+  LayerOptions,
+  Visualizer,
+} from "../visualizer";
 
 export interface TimedCartesianCoordinates extends CartesianCoordinates {
   time: number;
@@ -184,6 +193,9 @@ export class Simulator {
   private tick(info: TickInfo) {
     this.tickGamepad(info);
     this.tickPathFinder(info);
+
+    // update the fps counter
+    this.fpsCounter.update();
   }
 
   private tickGamepad(info: TickInfo) {
@@ -262,8 +274,10 @@ export class Simulator {
       );
     }
 
-    // draw coordinates system
-    layer.drawCoordinateSystem();
+    // draw coordinates system on the grid
+    layer.drawCoordinateSystem({
+      gridSize: this.options.cellSize,
+    });
   }
 
   private renderMap({ layer }: FrameInfo) {
@@ -282,8 +296,13 @@ export class Simulator {
     // draw pulses
     this.drawPulses(layer);
 
-    // update the fps counter
-    this.fpsCounter.update();
+    // draw robot
+    // TODO: draw at actual coordinates / angle
+    drawRobot({
+      center: { x: 0, y: 0 },
+      angle: 0,
+      layer,
+    });
   }
 
   private renderForeground({ layer }: FrameInfo) {

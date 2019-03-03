@@ -32,7 +32,7 @@ export class Simulation extends React.Component {
 
     this.simulator = new Simulator({
       container,
-      radius: 5,
+      radius: 4,
       cellSize: 0.1,
       pathPlanningIntervalMs: 100,
     });
