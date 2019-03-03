@@ -1,9 +1,4 @@
-import {
-  create,
-  EventData,
-  JoystickManagerEventTypes,
-  JoystickOutputData
-} from "nipplejs";
+import { create, EventData, JoystickManagerEventTypes, JoystickOutputData } from "nipplejs";
 import React from "react";
 
 export interface JoystickProps {
@@ -33,11 +28,11 @@ export class Joystick extends React.Component<JoystickProps> {
       size: 200,
       position: {
         left: "50%",
-        top: "50%"
+        top: "50%",
       },
       mode: "static",
       lockX: this.props.x === true,
-      lockY: this.props.y === true
+      lockY: this.props.y === true,
     });
 
     const { onEvent } = this.props;

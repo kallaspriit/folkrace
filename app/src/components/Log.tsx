@@ -37,7 +37,7 @@ const logEntryTypeColorMap = {
   [MessageType.INFO]: "#666",
   [MessageType.RX]: "#090",
   [MessageType.TX]: "#FF8000",
-  [MessageType.ERROR]: "#900"
+  [MessageType.ERROR]: "#900",
 };
 
 const LogEntryMessage = styled.span<LogEntryMessageProps>`
@@ -78,12 +78,8 @@ export const Log: React.SFC = () => (
           {log.state.entries.map(entry => (
             <LogEntry key={entry.id}>
               <LogEntryTime>{formatTime(entry.time)}</LogEntryTime>
-              <LogEntryMessage type={entry.type}>
-                {entry.message}
-              </LogEntryMessage>
-              {entry.count > 1 ? (
-                <LogEntryCount>{entry.count}</LogEntryCount>
-              ) : null}
+              <LogEntryMessage type={entry.type}>{entry.message}</LogEntryMessage>
+              {entry.count > 1 ? <LogEntryCount>{entry.count}</LogEntryCount> : null}
             </LogEntry>
           ))}
         </LogWrap>

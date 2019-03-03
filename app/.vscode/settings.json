@@ -4,6 +4,7 @@
     "Debounced",
     "Odometry",
     "Unmount",
+    "deadzone",
     "folkbot",
     "gamepadconnected",
     "gamepaddisconnected",

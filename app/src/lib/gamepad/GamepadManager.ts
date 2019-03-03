@@ -5,6 +5,7 @@ import { ManagedGamepad } from "./";
 export interface GamepadManagerOptions {
   readonly log?: Logger;
   readonly autoPoll?: boolean;
+  readonly defaultDeadzone?: number;
   onConnect?(gamepad: ManagedGamepad): void;
   onDisconnect?(gamepad: ManagedGamepad): void;
   onUpdate?(gamepad: ManagedGamepad): void;
@@ -19,6 +20,7 @@ export class GamepadManager {
     this.options = {
       log: dummyLogger,
       autoPoll: true,
+      defaultDeadzone: 0,
       onConnect: _gamepad => {
         /* nothing */
       },
@@ -51,7 +53,11 @@ export class GamepadManager {
       );
 
       // create managed gamepad
-      const managedGamepad = new ManagedGamepad({ index: gamepad.index, log: this.log });
+      const managedGamepad = new ManagedGamepad({
+        index: gamepad.index,
+        defaultDeadzone: this.options.defaultDeadzone,
+        log: this.log,
+      });
 
       // listen for updates, trigger update events
       managedGamepad.addUpdateListener(updatedGamepad => this.options.onUpdate(updatedGamepad));

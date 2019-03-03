@@ -16,6 +16,16 @@ export interface MotorSpeeds {
 export class TrackedVehicleKinematics {
   constructor(private readonly options: TrackedVehicleOptions) {}
 
+  static isSpeedDifferent(a: MotorSpeeds, b: MotorSpeeds, threshold = 0) {
+    const leftDifference = Math.abs(a.left - b.left);
+    const rightDifference = Math.abs(a.right - b.right);
+
+    const isLeftDifferent = leftDifference <= threshold;
+    const isRightDifferent = rightDifference <= threshold;
+
+    return !isLeftDifferent && !isRightDifferent;
+  }
+
   /**
    * Returns motor speeds in m/s for requested forward speed at given rotational speed.
    *

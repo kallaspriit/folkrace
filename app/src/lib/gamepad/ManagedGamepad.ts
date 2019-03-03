@@ -1,8 +1,9 @@
 import { dummyLogger, Logger } from "ts-log";
 
 export interface ManagedGamepadOptions {
-  readonly log?: Logger;
   readonly index: number;
+  readonly defaultDeadzone?: number;
+  readonly log?: Logger;
 }
 
 export type HandleUpdateFn = (gamepad: ManagedGamepad) => void;
@@ -11,6 +12,8 @@ export class ManagedGamepad {
   index: number;
   axes: number[] = [];
   buttons: GamepadButton[] = [];
+  private deadzone: number[] = [];
+  private defaultDeadzone: number = 0;
   private readonly options: Required<ManagedGamepadOptions>;
   private readonly log: Logger;
   private updateListeners: HandleUpdateFn[] = [];
@@ -19,11 +22,24 @@ export class ManagedGamepad {
 
   constructor(options: ManagedGamepadOptions) {
     this.options = {
+      defaultDeadzone: 0,
       log: dummyLogger,
       ...options,
     };
-    this.log = this.options.log;
     this.index = this.options.index;
+    this.defaultDeadzone = this.options.defaultDeadzone;
+    this.log = this.options.log;
+
+    // get initial state
+    this.poll();
+  }
+
+  setDeadzone(axisIndex: number, deadzone: number) {
+    this.deadzone[axisIndex] = deadzone;
+  }
+
+  setDefaultDeadzone(deadzone: number) {
+    this.defaultDeadzone = deadzone;
   }
 
   addUpdateListener(listener: HandleUpdateFn) {
@@ -73,21 +89,9 @@ export class ManagedGamepad {
     }
   }
 
-  getState() {
-    // get gamepad by index
-    const gamepad = navigator.getGamepads()[this.index];
-
-    // return undefined if no valid gamepad could be found
-    if (gamepad === undefined || gamepad === null) {
-      return undefined;
-    }
-
-    return gamepad;
-  }
-
-  private poll() {
+  poll() {
     // get current gamepad info
-    const gamepad = this.getState();
+    const gamepad = this.getCurrentState();
 
     // give up if not found
     if (!gamepad) {
@@ -105,9 +109,36 @@ export class ManagedGamepad {
     this.axes = [...gamepad.axes];
     this.buttons = [...gamepad.buttons];
 
+    // applies deadzone to axes
+    this.applyDeadzone();
+
     // call the update listeners
     for (const updateListener of this.updateListeners) {
       updateListener(this);
     }
+  }
+
+  private getCurrentState() {
+    // get gamepad by index
+    const gamepad = navigator.getGamepads()[this.index];
+
+    // return undefined if no valid gamepad could be found
+    if (gamepad === undefined || gamepad === null) {
+      return undefined;
+    }
+
+    return gamepad;
+  }
+
+  private applyDeadzone() {
+    this.axes = this.axes.map((value, index) => {
+      const deadzone = this.deadzone[index] !== undefined ? this.deadzone[index] : this.defaultDeadzone;
+
+      if (Math.abs(value) < deadzone) {
+        return 0;
+      }
+
+      return value;
+    });
   }
 }

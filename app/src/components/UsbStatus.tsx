@@ -12,16 +12,10 @@ export const UsbStatus: React.SFC = () => (
   <Subscribe to={[StatusContainer]}>
     {(status: StatusContainer) => {
       const connectedSerial = status.getConnectedSerial();
-      const usbStatus =
-        connectedSerial !== undefined ? CellStatus.GOOD : CellStatus.BAD;
-      const Icon =
-        connectedSerial && connectedSerial.type === SerialType.BLUETOOTH
-          ? BluetoothIcon
-          : SerialIcon;
+      const usbStatus = connectedSerial !== undefined ? CellStatus.GOOD : CellStatus.BAD;
+      const Icon = connectedSerial && connectedSerial.type === SerialType.BLUETOOTH ? BluetoothIcon : SerialIcon;
       const title = connectedSerial ? connectedSerial.type : "Serial";
-      const description = titleCase(
-        connectedSerial ? connectedSerial.state : "Disconnected"
-      );
+      const description = titleCase(connectedSerial ? connectedSerial.state : "Disconnected");
 
       return (
         <Cell status={usbStatus}>

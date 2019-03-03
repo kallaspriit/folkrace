@@ -55,6 +55,7 @@ export class Simulator {
 
     // setup gamepad
     this.gamepadManager = new GamepadManager({
+      defaultDeadzone: 0.01,
       log: console,
       onConnect: gamepad => {
         console.log("GOT GAMEPAD", gamepad, this.gamepadManager.gamepads);
@@ -204,14 +205,40 @@ export class Simulator {
   }
 
   private tick() {
-    // console.log("TICK");
-    if (this.gamepad) {
-      const speed = this.gamepad.axes[3] * -1;
-      const omega = this.gamepad.axes[0];
+    this.tickGamepad();
+    this.tickPathFinder();
+  }
 
-      this.remoteController.setSpeed(speed);
-      this.remoteController.setOmega(omega);
+  private tickGamepad() {
+    if (!this.gamepad) {
+      return;
     }
+
+    const speed = this.gamepad.axes[3] * -1;
+    const omega = this.gamepad.axes[0];
+
+    this.remoteController.setSpeed(speed);
+    this.remoteController.setOmega(omega);
+  }
+
+  private tickPathFinder() {
+    const currentTime = Date.now();
+    const timeSinceLastUpdate = currentTime - this.lastPathPlanningTime;
+
+    if (timeSinceLastUpdate < this.options.pathPlanningIntervalMs) {
+      return;
+    }
+
+    const pathStartTime = Date.now();
+    this.path = this.occupancyGrid.findShortestPath({
+      from: [0, 0],
+      to: [this.occupancyGrid.data.length - 1, this.occupancyGrid.data[0].length - 1],
+    });
+    const pathTimeTaken = Date.now() - pathStartTime;
+
+    this.statistics.report(Stat.PATH_FINDER, pathTimeTaken);
+
+    this.lastPathPlanningTime = currentTime;
   }
 
   private renderBackground({ layer, frame }: FrameInfo) {
@@ -265,24 +292,6 @@ export class Simulator {
   private renderMap({ layer }: FrameInfo) {
     // clear map
     layer.clear();
-
-    const currentTime = Date.now();
-
-    // perform path planning at certain interval
-    if (currentTime - this.lastPathPlanningTime > this.options.pathPlanningIntervalMs) {
-      const pathStartTime = Date.now();
-      this.path = this.occupancyGrid.findShortestPath({
-        from: [0, 0],
-        to: [this.occupancyGrid.data.length - 1, this.occupancyGrid.data[0].length - 1],
-      });
-      const pathTimeTaken = Date.now() - pathStartTime;
-
-      this.statistics.report(Stat.PATH_FINDER, pathTimeTaken);
-
-      this.lastPathPlanningTime = currentTime;
-    }
-
-    // console.log(path);
 
     // draw occupancy grid
     layer.drawOccupancyGrid({

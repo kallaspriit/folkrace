@@ -14,12 +14,7 @@ export const LidarStatus: React.SFC = () => (
       const { status, description } = getLidarStatus(lidar);
 
       return (
-        <Cell
-          status={status}
-          onClick={() =>
-            lidar.state.isStarted ? robot.stopLidar() : robot.startLidar()
-          }
-        >
+        <Cell status={status} onClick={() => (lidar.state.isStarted ? robot.stopLidar() : robot.startLidar())}>
           <LidarIcon />
           <Text primary>Lidar</Text>
           <Text>{description}</Text>
@@ -35,9 +30,7 @@ function getLidarStatus(lidar: LidarContainer) {
 
   if (lidar.state.isValid) {
     status = CellStatus.GOOD;
-    description = `${Math.round(lidar.state.currentRpm)}/${
-      lidar.state.targetRpm
-    } RPM`;
+    description = `${Math.round(lidar.state.currentRpm)}/${lidar.state.targetRpm} RPM`;
   } else if (lidar.state.isStarted) {
     status = CellStatus.WARN;
     description = "Unstable";
@@ -45,6 +38,6 @@ function getLidarStatus(lidar: LidarContainer) {
 
   return {
     status,
-    description
+    description,
   };
 }
