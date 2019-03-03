@@ -5,6 +5,7 @@ import { GamepadManager, ManagedGamepad } from "../gamepad";
 import { OccupancyGrid, Path } from "../occupancy-grid";
 import { RemoteController } from "../remote-controller";
 import { Statistics } from "../statistics";
+import { Ticker, TickInfo } from "../ticker";
 import { CartesianCoordinates, FrameInfo, Layer, LayerMouseEvent, LayerOptions, Visualizer } from "../visualizer";
 
 export interface TimedCartesianCoordinates extends CartesianCoordinates {
@@ -30,13 +31,12 @@ export class Simulator {
   private readonly gamepadManager: GamepadManager;
   private readonly remoteController: RemoteController;
   private readonly visualizer: Visualizer;
+  private ticker: Ticker;
   private gamepad?: ManagedGamepad;
   private pulses: TimedCartesianCoordinates[] = [];
   private gridModificationMode = 0;
   private lastPathPlanningTime = 0;
   private path: Path = [];
-  private isRunning = false;
-  private tickFrameRequest?: number;
 
   constructor(readonly options: SimulatorOptions) {
     const gridSize = (options.radius * 2) / options.cellSize;
@@ -164,52 +164,29 @@ export class Simulator {
       min: 0,
       max: 100,
     });
+
+    // setup ticker
+    this.ticker = new Ticker({
+      tick: this.tick.bind(this),
+    });
   }
 
   start() {
     this.visualizer.start();
-
-    this.isRunning = true;
-
-    this.scheduleNextTick();
+    this.ticker.start();
   }
 
   stop() {
-    this.isRunning = false;
-
-    if (this.tickFrameRequest !== undefined) {
-      cancelAnimationFrame(this.tickFrameRequest);
-
-      this.tickFrameRequest = undefined;
-    }
-
+    this.ticker.stop();
     this.visualizer.stop();
   }
 
-  private scheduleNextTick() {
-    if (!this.isRunning) {
-      return;
-    }
-
-    this.tickFrameRequest = requestAnimationFrame(() => {
-      this.tickFrameRequest = undefined;
-
-      if (!this.isRunning) {
-        return;
-      }
-
-      this.tick();
-
-      this.scheduleNextTick();
-    });
+  private tick(info: TickInfo) {
+    this.tickGamepad(info);
+    this.tickPathFinder(info);
   }
 
-  private tick() {
-    this.tickGamepad();
-    this.tickPathFinder();
-  }
-
-  private tickGamepad() {
+  private tickGamepad(info: TickInfo) {
     if (!this.gamepad) {
       return;
     }
@@ -221,7 +198,7 @@ export class Simulator {
     this.remoteController.setOmega(omega);
   }
 
-  private tickPathFinder() {
+  private tickPathFinder(info: TickInfo) {
     const currentTime = Date.now();
     const timeSinceLastUpdate = currentTime - this.lastPathPlanningTime;
 

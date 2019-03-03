@@ -2,6 +2,7 @@ import color from "color";
 import Vector from "victor";
 
 import { map } from "../../services/map";
+import { Ticker, TickInfo } from "../ticker";
 
 export interface LayerOptions {
   readonly defaultStyle?: DrawStyle;
@@ -171,10 +172,8 @@ export class Layer {
   readonly height: number;
   readonly size: number;
   readonly transform: Required<Transform>;
+  private ticker: Ticker;
   private mouseDownCounter = 0;
-  private frameNumber = 0;
-  private isRunning = false;
-  private lastRenderTime?: number;
 
   constructor(readonly canvas: HTMLCanvasElement, options: LayerOptions) {
     this.options = {
@@ -276,16 +275,19 @@ export class Layer {
     if (options.onMouseMoveEvent) {
       this.canvas.onmousemove = event => this.handleMouseEvent("move", event);
     }
+
+    // setup ticker
+    this.ticker = new Ticker({
+      tick: this.tick.bind(this),
+    });
   }
 
   start() {
-    this.isRunning = true;
-
-    this.scheduleNextFrame();
+    this.ticker.start();
   }
 
   stop() {
-    this.isRunning = false;
+    this.ticker.stop();
   }
 
   drawCircle(options: DrawCircleOptions, style: DrawStyle = { strokeStyle: "#000" }) {
@@ -828,32 +830,10 @@ export class Layer {
     };
   }
 
-  private renderFrame(time: number) {
-    if (!this.isRunning) {
-      return;
-    }
-
-    const currentTime = Date.now();
-    const dt = (this.lastRenderTime ? currentTime - this.lastRenderTime : 16) / 1000;
-
+  private tick(info: TickInfo) {
     this.options.render({
-      dt,
-      time,
-      frame: this.frameNumber++,
+      ...info,
       layer: this,
-    });
-
-    this.lastRenderTime = currentTime;
-  }
-
-  private scheduleNextFrame() {
-    window.requestAnimationFrame(newTime => {
-      if (!this.isRunning) {
-        return;
-      }
-
-      this.renderFrame(newTime);
-      this.scheduleNextFrame();
     });
   }
 
