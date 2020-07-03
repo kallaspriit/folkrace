@@ -197,8 +197,17 @@ public class MainActivity extends Activity implements Hub.Listener {
   }
 
   private void setupApp() {
+    String ownIp = Util.getIpAddress(this);
+    //String appUrl = "http://" + ownIp + ":" + HTTP_SERVER_PORT + "/";
+    String appUrl = "http://localhost:" + HTTP_SERVER_PORT + "/";
+
+    Log.i(TAG, "device ip: " + ownIp);
+    Log.i(TAG, "app url: " + appUrl);
+
     // show the local index view if not already loaded
-    webView.loadUrl("http://127.0.0.1:" + HTTP_SERVER_PORT + "/");
+    //webView.loadUrl("http://127.0.0.1:" + HTTP_SERVER_PORT + "/");
+    webView.loadUrl(appUrl);
+    //webView.loadUrl("https://google.com/");
   }
 
   private void handleShowToast(String[] parameters) {
