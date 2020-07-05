@@ -21,13 +21,13 @@ export class GamepadManager {
       log: dummyLogger,
       autoPoll: true,
       defaultDeadzone: 0,
-      onConnect: _gamepad => {
+      onConnect: (_gamepad) => {
         /* nothing */
       },
-      onDisconnect: _gamepad => {
+      onDisconnect: (_gamepad) => {
         /* nothing */
       },
-      onUpdate: _gamepad => {
+      onUpdate: (_gamepad) => {
         /* nothing */
       },
       ...options,
@@ -42,14 +42,12 @@ export class GamepadManager {
     }
 
     // listen for gamepad connect events
-    window.addEventListener("gamepadconnected", e => {
+    window.addEventListener("gamepadconnected", (e) => {
       const event = e as GamepadEvent;
       const gamepad = event.gamepad;
 
       this.log.info(
-        `gamepad #${gamepad.index} "${gamepad.id}" connected (${gamepad.buttons.length} buttons, ${
-          gamepad.axes.length
-        } axes)`,
+        `gamepad #${gamepad.index} "${gamepad.id}" connected (${gamepad.buttons.length} buttons, ${gamepad.axes.length} axes)`
       );
 
       // create managed gamepad
@@ -60,7 +58,9 @@ export class GamepadManager {
       });
 
       // listen for updates, trigger update events
-      managedGamepad.addUpdateListener(updatedGamepad => this.options.onUpdate(updatedGamepad));
+      managedGamepad.addUpdateListener((updatedGamepad) =>
+        this.options.onUpdate(updatedGamepad)
+      );
 
       // start polling if requested automatically
       if (this.options.autoPoll) {
@@ -75,7 +75,7 @@ export class GamepadManager {
     });
 
     // listen for gamepad disconnect events
-    window.addEventListener("gamepaddisconnected", e => {
+    window.addEventListener("gamepaddisconnected", (e) => {
       const event = e as GamepadEvent;
       const gamepad = event.gamepad;
 
@@ -85,9 +85,7 @@ export class GamepadManager {
       // handle failure to find the gamepad
       if (!managedGamepad) {
         this.log.warn(
-          `gamepad #${gamepad.index} "${
-            gamepad.id
-          }" disconnected but no managed gamepad with this index was found, this should not happen`,
+          `gamepad #${gamepad.index} "${gamepad.id}" disconnected but no managed gamepad with this index was found, this should not happen`
         );
 
         return;
@@ -96,7 +94,7 @@ export class GamepadManager {
       this.log.info(`gamepad #${gamepad.index} "${gamepad.id}" disconnected`);
 
       // remove the gamepad from the list of managed gamepads
-      this.gamepads = this.gamepads.filter(item => item !== managedGamepad);
+      this.gamepads = this.gamepads.filter((item) => item !== managedGamepad);
 
       // stop polling
       managedGamepad.stopPolling();
@@ -109,7 +107,7 @@ export class GamepadManager {
   }
 
   getGamepadByIndex(index: number) {
-    return this.gamepads.find(gamepad => gamepad.index === index);
+    return this.gamepads.find((gamepad) => gamepad.index === index);
   }
 
   getFirstAvailableGamepad() {

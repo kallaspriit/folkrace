@@ -44,13 +44,14 @@ export class LidarMap extends React.Component<LidarMapProps> {
 
     // common map layer options
     const mapLayerOptions: LayerOptions = {
-      getTransform: layer => {
+      getTransform: (layer) => {
         const screenOrigin = {
           x: layer.width / 2,
           y: layer.height / 2,
         };
         const rotation = -Math.PI / 2;
-        const scale = layer.size / 2 / (this.props.radius + this.props.cellSize);
+        const scale =
+          layer.size / 2 / (this.props.radius + this.props.cellSize);
 
         return {
           horizontalScaling: -1,
@@ -93,11 +94,15 @@ export class LidarMap extends React.Component<LidarMapProps> {
       {
         cellWidth: this.props.cellSize,
         cellHeight: this.props.cellSize,
-        columns: 2 * Math.ceil(layer.height / layer.getScale() / this.props.cellSize / 2),
-        rows: 2 * Math.ceil(layer.width / layer.getScale() / this.props.cellSize / 2),
+        columns:
+          2 *
+          Math.ceil(layer.height / layer.getScale() / this.props.cellSize / 2),
+        rows:
+          2 *
+          Math.ceil(layer.width / layer.getScale() / this.props.cellSize / 2),
         centered: true,
       },
-      { strokeStyle: "#222" },
+      { strokeStyle: "#222" }
     );
 
     // draw map sized active grid
@@ -109,15 +114,23 @@ export class LidarMap extends React.Component<LidarMapProps> {
         cellHeight: this.props.cellSize,
         centered: true,
       },
-      { strokeStyle: "#333" },
+      { strokeStyle: "#333" }
     );
 
     // draw radius circles
-    for (let circleRadius = circleStep; circleRadius <= this.props.radius; circleRadius += circleStep) {
+    for (
+      let circleRadius = circleStep;
+      circleRadius <= this.props.radius;
+      circleRadius += circleStep
+    ) {
       layer.drawCircle({ radius: circleRadius }, { strokeStyle: "#444" });
       layer.drawText(
-        { origin: { x: 0, y: circleRadius }, text: `${circleRadius.toFixed(2)}m`, offset: { x: 10, y: 0 } },
-        { fillStyle: "#444", textBaseline: "middle" },
+        {
+          origin: { x: 0, y: circleRadius },
+          text: `${circleRadius.toFixed(2)}m`,
+          offset: { x: 10, y: 0 },
+        },
+        { fillStyle: "#444", textBaseline: "middle" }
       );
     }
 
@@ -144,7 +157,7 @@ export class LidarMap extends React.Component<LidarMapProps> {
         {
           // draw lower quality measurements with lower opacity
           fillStyle: `rgba(255, 255, 255, ${measurement.quality / 100})`,
-        },
+        }
       );
     }
 

@@ -32,7 +32,7 @@
             android:name=".UsbEventReceiverActivity"
             android:excludeFromRecents="true"
             android:exported="false"
-            android:label="YOUR APPLICATION NAME - This appears in the permission popup"
+            android:label="FolkBot"
             android:noHistory="true"
             android:process=":UsbEventReceiverActivityProcess"
             android:taskAffinity="com.example.taskAffinityUsbEventReceiver"

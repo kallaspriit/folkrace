@@ -109,7 +109,9 @@ export class SimulatedRobot {
   send(message: string) {
     // make it async
     setImmediate(() => {
-      this.messageListeners.forEach(messageListener => messageListener(message));
+      this.messageListeners.forEach((messageListener) =>
+        messageListener(message)
+      );
     });
   }
 
@@ -130,7 +132,10 @@ export class SimulatedRobot {
         break;
 
       case Command.SPEED:
-        this.setSpeed({ left: parseFloat(args[0]), right: parseFloat(args[1]) });
+        this.setSpeed({
+          left: parseFloat(args[0]),
+          right: parseFloat(args[1]),
+        });
         break;
 
       default:

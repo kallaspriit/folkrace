@@ -63,7 +63,7 @@ export class StatusContainer extends Container<State> {
 
   setSerialState(type: SerialType, state: SerialState, deviceName?: string) {
     const typeKey = Object.keys(SerialType).find(
-      typeName => SerialType[typeName as keyof typeof SerialType] === type,
+      (typeName) => SerialType[typeName as keyof typeof SerialType] === type
     ) as keyof typeof SerialType;
 
     // update serial state
@@ -72,7 +72,7 @@ export class StatusContainer extends Container<State> {
         serials: {
           [typeKey]: { $merge: { state, deviceName } },
         },
-      }),
+      })
     );
   }
 
@@ -115,10 +115,12 @@ export class StatusContainer extends Container<State> {
   }
 
   getConnectedSerial(): Serial | undefined {
-    const serialNames = Object.keys(this.state.serials) as (keyof typeof SerialType)[];
+    const serialNames = Object.keys(
+      this.state.serials
+    ) as (keyof typeof SerialType)[];
     const connectedSerial = serialNames
-      .map(serialName => this.state.serials[serialName])
-      .find(serial => serial.state === SerialState.CONNECTED);
+      .map((serialName) => this.state.serials[serialName])
+      .find((serial) => serial.state === SerialState.CONNECTED);
 
     return connectedSerial;
   }

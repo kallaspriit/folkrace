@@ -1,4 +1,11 @@
-export function map(x: number, inMin: number, inMax: number, outMin: number, outMax: number, capped = true) {
+export function map(
+  x: number,
+  inMin: number,
+  inMax: number,
+  outMin: number,
+  outMax: number,
+  capped = true
+) {
   const uncapped = ((x - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
 
   if (!capped) {

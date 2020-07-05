@@ -23,9 +23,10 @@ export const containers: ContainerMap = {} as ContainerMap;
 
 // updates the containers to use
 export function setContainers(newContainers: ContainerMap) {
-  Object.keys(newContainers).forEach(key => {
+  Object.keys(newContainers).forEach((key) => {
     const containerName = key as keyof ContainerMap;
 
-    containers[containerName] = newContainers[containerName];
+    // TODO: figure out how to type nicer
+    containers[containerName] = newContainers[containerName] as any;
   });
 }

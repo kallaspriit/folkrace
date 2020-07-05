@@ -1,4 +1,9 @@
-import { create, EventData, JoystickManagerEventTypes, JoystickOutputData } from "nipplejs";
+import {
+  create,
+  EventData,
+  JoystickManagerEventTypes,
+  JoystickOutputData,
+} from "nipplejs";
 import React from "react";
 
 export interface JoystickProps {

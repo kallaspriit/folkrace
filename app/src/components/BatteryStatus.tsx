@@ -13,7 +13,9 @@ export const BatteryStatus: React.SFC = () => (
   <Subscribe to={[StatusContainer]}>
     {(status: StatusContainer) => {
       const batteryStatus = getBatteryStatus(status.batteryState);
-      const description = status.state.batteryVoltage ? `${status.state.batteryVoltage.toFixed(1)}V` : "Unknown";
+      const description = status.state.batteryVoltage
+        ? `${status.state.batteryVoltage.toFixed(1)}V`
+        : "Unknown";
 
       return (
         <Cell status={batteryStatus} onClick={() => robot.requestVoltage()}>

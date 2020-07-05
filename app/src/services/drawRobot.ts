@@ -1,6 +1,14 @@
 import { Coordinates, Layer } from "../lib/visualizer";
 
-export function drawRobot({ center, angle, layer }: { center: Coordinates; angle: number; layer: Layer }) {
+export function drawRobot({
+  center,
+  angle,
+  layer,
+}: {
+  center: Coordinates;
+  angle: number;
+  layer: Layer;
+}) {
   layer.drawObject({
     center,
     angle,

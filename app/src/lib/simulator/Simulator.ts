@@ -9,7 +9,6 @@ import { Statistics } from "../statistics";
 import { Ticker, TickInfo } from "../ticker";
 import {
   CartesianCoordinates,
-  Coordinates,
   FrameInfo,
   Layer,
   LayerMouseEvent,
@@ -53,7 +52,7 @@ export class Simulator {
     // setup occupancy grid
     this.occupancyGrid = OccupancyGrid.generate(
       { rows: gridSize, columns: gridSize, defaultValue: 0 },
-      { cellWidth: options.cellSize, cellHeight: options.cellSize },
+      { cellWidth: options.cellSize, cellHeight: options.cellSize }
     );
 
     // setup fps counter
@@ -66,17 +65,17 @@ export class Simulator {
     this.gamepadManager = new GamepadManager({
       defaultDeadzone: 0.01,
       log: console,
-      onConnect: gamepad => {
+      onConnect: (gamepad) => {
         console.log("GOT GAMEPAD", gamepad, this.gamepadManager.gamepads);
 
         this.gamepad = this.gamepadManager.getFirstAvailableGamepad();
       },
-      onDisconnect: gamepad => {
+      onDisconnect: (gamepad) => {
         console.log("LOST GAMEPAD", gamepad, this.gamepadManager.gamepads);
 
         this.gamepad = this.gamepadManager.getFirstAvailableGamepad();
       },
-      onUpdate: gamepad => {
+      onUpdate: (gamepad) => {
         // console.log("GAMEPAD UPDATED", gamepad.index, gamepad.axes, gamepad.buttons);
         gamepad.axes.forEach((axisValue, axisIndex) => {
           const name = `Gamepad #${gamepad.index}.${axisIndex}`;
@@ -113,7 +112,7 @@ export class Simulator {
         font: "16px roboto-mono-light",
         textBaseline: "top",
       },
-      getTransform: layer => {
+      getTransform: (layer) => {
         const screenOrigin = {
           x: layer.width / 2,
           y: layer.height / 2,
@@ -221,7 +220,10 @@ export class Simulator {
     const pathStartTime = Date.now();
     this.path = this.occupancyGrid.findShortestPath({
       from: [0, 0],
-      to: [this.occupancyGrid.data.length - 1, this.occupancyGrid.data[0].length - 1],
+      to: [
+        this.occupancyGrid.data.length - 1,
+        this.occupancyGrid.data[0].length - 1,
+      ],
     });
     const pathTimeTaken = Date.now() - pathStartTime;
 
@@ -250,7 +252,7 @@ export class Simulator {
         rows: 2 * Math.ceil(layer.width / layer.getScale() / cellHeight / 2),
         centered: true,
       },
-      { strokeStyle: "#222" },
+      { strokeStyle: "#222" }
     );
 
     // draw map sized active grid
@@ -262,15 +264,23 @@ export class Simulator {
         cellHeight,
         centered: true,
       },
-      { strokeStyle: "#333" },
+      { strokeStyle: "#333" }
     );
 
     // draw radius circles
-    for (let circleRadius = circleStep; circleRadius <= this.options.radius; circleRadius += circleStep) {
+    for (
+      let circleRadius = circleStep;
+      circleRadius <= this.options.radius;
+      circleRadius += circleStep
+    ) {
       layer.drawCircle({ radius: circleRadius }, { strokeStyle: "#444" });
       layer.drawText(
-        { origin: { x: 0, y: circleRadius }, text: `${circleRadius.toFixed(2)}m`, offset: { x: 10, y: 0 } },
-        { fillStyle: "#444", textBaseline: "middle" },
+        {
+          origin: { x: 0, y: circleRadius },
+          text: `${circleRadius.toFixed(2)}m`,
+          offset: { x: 10, y: 0 },
+        },
+        { fillStyle: "#444", textBaseline: "middle" }
       );
     }
 
@@ -319,7 +329,9 @@ export class Simulator {
       layer.drawGraph({
         name: `${statistic.options.name}: ${statistic
           .getLatest()
-          .toFixed(statistic.options.decimalPlaces || 0)}${statistic.options.unit || ""}`,
+          .toFixed(statistic.options.decimalPlaces || 0)}${
+          statistic.options.unit || ""
+        }`,
         origin: { x: 10, y: 30 + i * 90 },
         min: statistic.options.min,
         max: statistic.options.max,
@@ -349,7 +361,7 @@ export class Simulator {
           cellWidth: cellSize,
           cellHeight: cellSize,
         },
-        { strokeStyle: "#111" },
+        { strokeStyle: "#111" }
       );
 
       layer.drawOccupancyGrid({
@@ -367,11 +379,16 @@ export class Simulator {
     const lifetime = 250;
 
     // remove expired pulses
-    this.pulses = this.pulses.filter(({ time }) => currentTime - time < lifetime);
+    this.pulses = this.pulses.filter(
+      ({ time }) => currentTime - time < lifetime
+    );
 
     // draw pulses
     this.pulses.forEach(({ x, y, time }) =>
-      layer.drawPulse({ center: { x, y }, lifetime, age: currentTime - time }, { fillStyle: "#0F0" }),
+      layer.drawPulse(
+        { center: { x, y }, lifetime, age: currentTime - time },
+        { fillStyle: "#0F0" }
+      )
     );
   }
 
@@ -383,7 +400,10 @@ export class Simulator {
         this.gridModificationMode = currentOccupancy === 0 ? 1 : -1;
       }
 
-      this.occupancyGrid.setOccupancyAt({ center: world, occupancy: currentOccupancy === 1 ? 0 : 1 });
+      this.occupancyGrid.setOccupancyAt({
+        center: world,
+        occupancy: currentOccupancy === 1 ? 0 : 1,
+      });
       this.pulses.push({ ...world, time: Date.now() });
     }
   }
@@ -403,6 +423,9 @@ export class Simulator {
       this.gridModificationMode = currentOccupancy === 0 ? 1 : -1;
     }
 
-    this.occupancyGrid.setOccupancyAt({ center: world, occupancy: this.gridModificationMode === 1 ? 1 : 0 });
+    this.occupancyGrid.setOccupancyAt({
+      center: world,
+      occupancy: this.gridModificationMode === 1 ? 1 : 0,
+    });
   }
 }

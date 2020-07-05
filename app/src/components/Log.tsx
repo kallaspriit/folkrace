@@ -26,7 +26,7 @@ const LogWrap = styled(AutoScroll)`
 const LogEntry = styled.div``;
 
 const LogEntryTime = styled.span`
-  color: ${props => props.theme.text.secondary};
+  color: ${(props) => props.theme.text.secondary};
 `;
 
 interface LogEntryMessageProps {
@@ -42,7 +42,7 @@ const logEntryTypeColorMap = {
 
 const LogEntryMessage = styled.span<LogEntryMessageProps>`
   padding-left: 6px;
-  border-left: 2px solid ${props => logEntryTypeColorMap[props.type]};
+  border-left: 2px solid ${(props) => logEntryTypeColorMap[props.type]};
   margin-left: 6px;
 `;
 
@@ -51,23 +51,23 @@ const LogEntryCount = styled.span`
   padding: 0 4px;
   margin-left: 8px;
   border-radius: 8px;
-  background-color: ${props => props.theme.text.primary};
-  color: ${props => props.theme.bg.tertiary};
+  background-color: ${(props) => props.theme.text.primary};
+  color: ${(props) => props.theme.bg.tertiary};
 `;
 
 const ClearLogButton = styled.div<Clickable>`
   box-sizing: content-box;
   position: absolute;
-  bottom: ${props => props.theme.size.gridGap};
-  right: ${props => props.theme.size.gridGap};
+  bottom: ${(props) => props.theme.size.gridGap};
+  right: ${(props) => props.theme.size.gridGap};
   width: 32px;
   height: 32px;
   padding: 10px;
-  background-color: ${props => props.theme.bg.tertiary};
+  background-color: ${(props) => props.theme.bg.tertiary};
 `;
 
 const ClearLogIcon = styled(ClearIcon)`
-  background-color: ${props => props.theme.text.secondary};
+  background-color: ${(props) => props.theme.text.secondary};
 `;
 
 export const Log: React.SFC = () => (
@@ -75,11 +75,15 @@ export const Log: React.SFC = () => (
     {(log: LogContainer) => (
       <StatusGridItem>
         <LogWrap>
-          {log.state.entries.map(entry => (
+          {log.state.entries.map((entry) => (
             <LogEntry key={entry.id}>
               <LogEntryTime>{formatTime(entry.time)}</LogEntryTime>
-              <LogEntryMessage type={entry.type}>{entry.message}</LogEntryMessage>
-              {entry.count > 1 ? <LogEntryCount>{entry.count}</LogEntryCount> : null}
+              <LogEntryMessage type={entry.type}>
+                {entry.message}
+              </LogEntryMessage>
+              {entry.count > 1 ? (
+                <LogEntryCount>{entry.count}</LogEntryCount>
+              ) : null}
             </LogEntry>
           ))}
         </LogWrap>

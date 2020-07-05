@@ -1,6 +1,9 @@
 import { ContainerMap } from "../services/containers";
 
-export function handleLidarMeasurementCommand(args: string[], { measurements }: ContainerMap) {
+export function handleLidarMeasurementCommand(
+  args: string[],
+  { measurements }: ContainerMap
+) {
   // the command includes 4 measurements
   for (let i = 0; i < 4; i++) {
     void measurements.add({

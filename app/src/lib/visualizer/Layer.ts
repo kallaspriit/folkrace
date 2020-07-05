@@ -156,7 +156,10 @@ export interface DrawObjectOptions {
   center: Coordinates;
   size: Size;
   angle: number;
-  draw?(ctx: CanvasRenderingContext2D, options: Required<DrawObjectOptions> & { layer: Layer }): void;
+  draw?(
+    ctx: CanvasRenderingContext2D,
+    options: Required<DrawObjectOptions> & { layer: Layer }
+  ): void;
 }
 
 export interface DrawGraphOptions {
@@ -214,7 +217,9 @@ export class Layer {
 
     // this should generally not fail
     if (!ctx) {
-      throw new Error("Getting layer 2D context failed, this should not happen");
+      throw new Error(
+        "Getting layer 2D context failed, this should not happen"
+      );
     }
 
     // store context
@@ -266,7 +271,7 @@ export class Layer {
       this.transform.horizontalSkewing,
       this.transform.verticalScaling,
       this.transform.horizontalTranslation,
-      this.transform.verticalTranslation,
+      this.transform.verticalTranslation
     );
     this.ctx.rotate(this.transform.rotation);
 
@@ -275,15 +280,15 @@ export class Layer {
 
     // only add mouse events if listener is registered
     if (options.onMouseDownEvent) {
-      this.canvas.onmousedown = event => this.handleMouseEvent("down", event);
+      this.canvas.onmousedown = (event) => this.handleMouseEvent("down", event);
     }
 
     if (options.onMouseUpEvent) {
-      this.canvas.onmouseup = event => this.handleMouseEvent("up", event);
+      this.canvas.onmouseup = (event) => this.handleMouseEvent("up", event);
     }
 
     if (options.onMouseMoveEvent) {
-      this.canvas.onmousemove = event => this.handleMouseEvent("move", event);
+      this.canvas.onmousemove = (event) => this.handleMouseEvent("move", event);
     }
 
     // setup ticker
@@ -300,7 +305,10 @@ export class Layer {
     this.ticker.stop();
   }
 
-  drawCircle(options: DrawCircleOptions, style: DrawStyle = { strokeStyle: "#000" }) {
+  drawCircle(
+    options: DrawCircleOptions,
+    style: DrawStyle = { strokeStyle: "#000" }
+  ) {
     const opt: Required<DrawCircleOptions> = {
       center: { x: 0, y: 0 },
       ...options,
@@ -311,7 +319,13 @@ export class Layer {
     this.applyStyle(style);
 
     this.ctx.beginPath();
-    this.ctx.arc(screenCenter.x, screenCenter.y, this.scale(opt.radius), 0, Math.PI * 2);
+    this.ctx.arc(
+      screenCenter.x,
+      screenCenter.y,
+      this.scale(opt.radius),
+      0,
+      Math.PI * 2
+    );
 
     if (style.fillStyle) {
       this.ctx.fill();
@@ -324,7 +338,10 @@ export class Layer {
     this.ctx.restore();
   }
 
-  drawPulse(options: DrawPulseOptions, style: DrawStyle = { strokeStyle: "#000" }) {
+  drawPulse(
+    options: DrawPulseOptions,
+    style: DrawStyle = { strokeStyle: "#000" }
+  ) {
     const opt: Required<DrawPulseOptions> = {
       center: { x: 0, y: 0 },
       lifetime: 300,
@@ -350,7 +367,7 @@ export class Layer {
       },
       {
         fillStyle,
-      },
+      }
     );
   }
 
@@ -384,7 +401,9 @@ export class Layer {
     const width = this.scale(opt.width);
     const height = this.scale(opt.height);
 
-    const offset = opt.centered ? { x: -width / 2, y: -height / 2 } : { x: 0, y: 0 };
+    const offset = opt.centered
+      ? { x: -width / 2, y: -height / 2 }
+      : { x: 0, y: 0 };
 
     this.ctx.save();
     this.applyStyle(style);
@@ -394,7 +413,7 @@ export class Layer {
         origin.x + offset.x + opt.padding,
         origin.y + offset.y + opt.padding,
         width - opt.padding * 2,
-        height - opt.padding * 2,
+        height - opt.padding * 2
       );
     }
 
@@ -403,7 +422,7 @@ export class Layer {
         origin.x + offset.x + opt.padding,
         origin.y + offset.y + opt.padding,
         width - opt.padding * 2,
-        height - opt.padding * 2,
+        height - opt.padding * 2
       );
     }
 
@@ -429,14 +448,21 @@ export class Layer {
   }
 
   drawGrid(options: DrawGridOptions, style: DrawStyle = {}) {
-    const defaultRowCount = Math.ceil(this.height / this.getScale() / options.cellHeight);
-    const defaultColumnCount = Math.ceil(this.width / this.getScale() / options.cellWidth);
+    const defaultRowCount = Math.ceil(
+      this.height / this.getScale() / options.cellHeight
+    );
+    const defaultColumnCount = Math.ceil(
+      this.width / this.getScale() / options.cellWidth
+    );
 
     const opt: Required<DrawGridOptions> = {
       origin: { x: 0, y: 0 },
       centered: false,
       rows: defaultRowCount % 2 === 0 ? defaultRowCount : defaultRowCount + 1,
-      columns: defaultColumnCount % 2 === 0 ? defaultColumnCount : defaultColumnCount + 1,
+      columns:
+        defaultColumnCount % 2 === 0
+          ? defaultColumnCount
+          : defaultColumnCount + 1,
       ...options,
     };
 
@@ -444,7 +470,9 @@ export class Layer {
     const width = opt.cellWidth * opt.columns;
 
     const origin = this.toCartesian(opt.origin);
-    const offset: CartesianCoordinates = opt.centered ? { x: -width / 2, y: -height / 2 } : { x: 0, y: 0 };
+    const offset: CartesianCoordinates = opt.centered
+      ? { x: -width / 2, y: -height / 2 }
+      : { x: 0, y: 0 };
 
     for (let row = 0; row <= opt.rows; row++) {
       const rowY = row * opt.cellHeight;
@@ -460,7 +488,7 @@ export class Layer {
             y: origin.y + offset.y + rowY,
           },
         },
-        style,
+        style
       );
     }
 
@@ -478,7 +506,7 @@ export class Layer {
             y: origin.y + offset.y + height,
           },
         },
-        style,
+        style
       );
     }
   }
@@ -503,19 +531,26 @@ export class Layer {
     const height = opt.cellHeight * rows;
 
     const origin = this.toCartesian(opt.origin);
-    const offset: CartesianCoordinates = opt.centered ? { x: -width / 2, y: -height / 2 } : { x: 0, y: 0 };
+    const offset: CartesianCoordinates = opt.centered
+      ? { x: -width / 2, y: -height / 2 }
+      : { x: 0, y: 0 };
 
     // draw grid
     for (let row = 0; row < rows; row++) {
       for (let column = 0; column < columns; column++) {
         if (!Array.isArray(opt.grid[row])) {
-          throw new Error(`Expected occupancy map row #${row} to be an array, got ${typeof opt.grid[row]}`);
+          throw new Error(
+            `Expected occupancy map row #${row} to be an array, got ${typeof opt
+              .grid[row]}`
+          );
         }
 
         const occupancy = opt.grid[row][column];
 
         if (typeof occupancy !== "number") {
-          throw new Error(`Expected occupancy map row cell ${row}x${column} to be a number, got ${typeof occupancy}`);
+          throw new Error(
+            `Expected occupancy map row cell ${row}x${column} to be a number, got ${typeof occupancy}`
+          );
         }
 
         // don't draw empty or unknown cells
@@ -534,8 +569,13 @@ export class Layer {
         };
 
         this.drawBox(
-          { origin: position, width: opt.cellWidth, height: opt.cellHeight, padding: 1 },
-          { fillStyle: `rgba(0, 0, 0, ${occupancy})` },
+          {
+            origin: position,
+            width: opt.cellWidth,
+            height: opt.cellHeight,
+            padding: 1,
+          },
+          { fillStyle: `rgba(0, 0, 0, ${occupancy})` }
         );
       }
     }
@@ -553,8 +593,13 @@ export class Layer {
       };
 
       this.drawBox(
-        { origin: position, width: opt.cellWidth, height: opt.cellHeight, padding: 1 },
-        { fillStyle: "rgba(0, 255, 0, 0.2)" },
+        {
+          origin: position,
+          width: opt.cellWidth,
+          height: opt.cellHeight,
+          padding: 1,
+        },
+        { fillStyle: "rgba(0, 255, 0, 0.2)" }
       );
     }
   }
@@ -570,7 +615,9 @@ export class Layer {
 
     const screenFrom = this.worldToScreen(opt.from);
     const screenTo = this.worldToScreen(opt.to);
-    const directionVector = Vector.fromObject(screenTo).subtract(Vector.fromObject(screenFrom));
+    const directionVector = Vector.fromObject(screenTo).subtract(
+      Vector.fromObject(screenFrom)
+    );
     const angle = directionVector.angle();
 
     this.drawDirection(
@@ -580,7 +627,7 @@ export class Layer {
         angle,
         size: opt.tipSize,
       },
-      style,
+      style
     );
   }
 
@@ -631,7 +678,10 @@ export class Layer {
 
     // roll back transforms to get the text to draw correctly
     this.ctx.rotate(-this.transform.rotation);
-    this.ctx.scale(this.transform.horizontalScaling, this.transform.verticalScaling);
+    this.ctx.scale(
+      this.transform.horizontalScaling,
+      this.transform.verticalScaling
+    );
 
     this.ctx.fillText(opt.text, opt.offset.x, opt.offset.y);
     this.ctx.restore();
@@ -639,7 +689,10 @@ export class Layer {
 
   drawCoordinateSystem(options: DrawCoordinateSystemOptions = {}) {
     const worldSize = this.screenToWorld({ x: this.width, y: this.height });
-    const gridSize = options.gridSize !== undefined ? options.gridSize : this.size / 50 / this.getScale();
+    const gridSize =
+      options.gridSize !== undefined
+        ? options.gridSize
+        : this.size / 50 / this.getScale();
     const length = gridSize * 2;
     const opt: Required<DrawCoordinateSystemOptions> = {
       center: {
@@ -655,8 +708,14 @@ export class Layer {
     const toX = center.clone().add(new Vector(opt.length, 0));
     const toY = center.clone().add(new Vector(0, opt.length));
 
-    this.drawArrow({ from: opt.center, to: toX, name: "X" }, { lineWidth: 2, color: "#F00", textAlign: "center" });
-    this.drawArrow({ from: opt.center, to: toY, name: "Y" }, { lineWidth: 2, color: "#0F0", textAlign: "center" });
+    this.drawArrow(
+      { from: opt.center, to: toX, name: "X" },
+      { lineWidth: 2, color: "#F00", textAlign: "center" }
+    );
+    this.drawArrow(
+      { from: opt.center, to: toY, name: "Y" },
+      { lineWidth: 2, color: "#0F0", textAlign: "center" }
+    );
   }
 
   drawGraph(options: DrawGraphOptions) {
@@ -692,7 +751,8 @@ export class Layer {
       const value = samples[i];
       const cappedValue = Math.min(Math.max(value, min), max);
       const isCapped = Math.abs(cappedValue - value) > 0.1;
-      const yPos = opt.height - Math.round(((cappedValue - min) / range) * opt.height);
+      const yPos =
+        opt.height - Math.round(((cappedValue - min) / range) * opt.height);
 
       if (i === 0) {
         this.ctx.moveTo(xPos, yPos);
@@ -708,7 +768,9 @@ export class Layer {
     }
 
     // draw red when any of the values were capped to min/max
-    this.ctx.strokeStyle = wasAnyValueCapped ? "rgba(200, 0, 0, 0.75)" : "rgba(0, 200, 0, 0.75)";
+    this.ctx.strokeStyle = wasAnyValueCapped
+      ? "rgba(200, 0, 0, 0.75)"
+      : "rgba(0, 200, 0, 0.75)";
 
     // draw graph line and restore
     this.ctx.stroke();
@@ -726,12 +788,13 @@ export class Layer {
       },
       {
         fillStyle: "#FFF",
-      },
+      }
     );
   }
 
   drawObject(options: DrawObjectOptions) {
     const opt: Required<DrawObjectOptions> = {
+      ...options,
       size: {
         x: this.size / 50 / this.getScale(),
         y: this.size / 50 / this.getScale(),
@@ -741,7 +804,12 @@ export class Layer {
 
         // draw body
         ctx.fillStyle = "#900";
-        ctx.fillRect(-screenSize.x / 2, -screenSize.y / 2, screenSize.x, screenSize.y);
+        ctx.fillRect(
+          -screenSize.x / 2,
+          -screenSize.y / 2,
+          screenSize.x,
+          screenSize.y
+        );
 
         // draw direction arrow
         const arrowScale = 0.5;
@@ -755,7 +823,6 @@ export class Layer {
         ctx.lineTo(-arrowSize / 2, -arrowSize / 2);
         ctx.fill();
       },
-      ...options,
     };
     const screenCenter = this.worldToScreen(opt.center);
 
@@ -769,7 +836,10 @@ export class Layer {
     this.ctx.restore();
   }
 
-  polarToCartesian({ angle, distance }: PolarCoordinates): CartesianCoordinates {
+  polarToCartesian({
+    angle,
+    distance,
+  }: PolarCoordinates): CartesianCoordinates {
     return {
       x: distance * Math.cos(angle),
       y: distance * Math.sin(angle),
@@ -814,7 +884,12 @@ export class Layer {
     const screen = Vector.fromObject(canvas)
       .subtract(origin)
       .rotate(this.transform.rotation)
-      .multiply(new Vector(this.transform.horizontalScaling, this.transform.verticalScaling));
+      .multiply(
+        new Vector(
+          this.transform.horizontalScaling,
+          this.transform.verticalScaling
+        )
+      );
 
     return {
       x: screen.x,
@@ -823,7 +898,10 @@ export class Layer {
   }
 
   isPolar(coordinates: any): coordinates is PolarCoordinates {
-    return typeof coordinates.angle === "number" && typeof coordinates.distance === "number";
+    return (
+      typeof coordinates.angle === "number" &&
+      typeof coordinates.distance === "number"
+    );
   }
 
   getScale() {

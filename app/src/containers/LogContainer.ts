@@ -30,8 +30,11 @@ export class LogContainer extends Container<LogState> {
 
   addEntry(message: string, avoidDuplicate = true) {
     // update state (use the callback syntax not to miss any updates if called in series)
-    this.setState(previousState => {
-      const lastEntry = this.state.entries.length > 0 ? this.state.entries[this.state.entries.length - 1] : null;
+    this.setState((previousState) => {
+      const lastEntry =
+        this.state.entries.length > 0
+          ? this.state.entries[this.state.entries.length - 1]
+          : null;
       const type = this.resolveMessageType(message);
 
       // skip the message if requested not to add the same message twice in a row
@@ -77,13 +80,13 @@ export class LogContainer extends Container<LogState> {
       return {
         entries,
       };
-    }).catch(error => console.error(error));
+    }).catch((error) => console.error(error));
   }
 
   clear() {
     this.setState({
       entries: [],
-    }).catch(error => console.error(error));
+    }).catch((error) => console.error(error));
   }
 
   private resolveMessageType(message: string): MessageType {

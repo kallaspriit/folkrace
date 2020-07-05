@@ -47,7 +47,9 @@ export class ManagedGamepad {
   }
 
   removeUpdateListener(listener: HandleUpdateFn) {
-    this.updateListeners = this.updateListeners.filter(item => item !== listener);
+    this.updateListeners = this.updateListeners.filter(
+      (item) => item !== listener
+    );
   }
 
   startPolling() {
@@ -95,7 +97,9 @@ export class ManagedGamepad {
 
     // give up if not found
     if (!gamepad) {
-      this.log.warn(`attempted to poll gamepad #${this.index} but the gamepad could not be found`);
+      this.log.warn(
+        `attempted to poll gamepad #${this.index} but the gamepad could not be found`
+      );
 
       // stop polling unavailable gamepad
       if (this.isPolling) {
@@ -132,7 +136,10 @@ export class ManagedGamepad {
 
   private applyDeadzone() {
     this.axes = this.axes.map((value, index) => {
-      const deadzone = this.deadzone[index] !== undefined ? this.deadzone[index] : this.defaultDeadzone;
+      const deadzone =
+        this.deadzone[index] !== undefined
+          ? this.deadzone[index]
+          : this.defaultDeadzone;
 
       if (Math.abs(value) < deadzone) {
         return 0;

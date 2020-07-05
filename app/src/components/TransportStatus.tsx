@@ -1,5 +1,5 @@
 import React from "react";
-import titleCase from "title-case";
+import { titleCase } from "title-case";
 import { Subscribe } from "unstated";
 
 import { StatusContainer } from "../containers/StatusContainer";
@@ -15,15 +15,25 @@ export const TransportStatus: React.SFC = () => (
   <Subscribe to={[StatusContainer]}>
     {(status: StatusContainer) => {
       const transportStatus =
-        status.state.transportState === TransportState.CONNECTED ? CellStatus.GOOD : CellStatus.BAD;
+        status.state.transportState === TransportState.CONNECTED
+          ? CellStatus.GOOD
+          : CellStatus.BAD;
       const description =
-        status.state.transportState !== TransportState.CONNECTED || status.state.remoteIp === undefined
+        status.state.transportState !== TransportState.CONNECTED ||
+        status.state.remoteIp === undefined
           ? titleCase(status.state.transportState)
           : status.state.remoteIp;
 
       return (
-        <Cell status={transportStatus} onClick={() => robot.ping(status.getConnectedSerial() === undefined)}>
-          {multiTransport.getName() === "Native" ? <NativeIcon /> : <WebsocketIcon />}
+        <Cell
+          status={transportStatus}
+          onClick={() => robot.ping(status.getConnectedSerial() === undefined)}
+        >
+          {multiTransport.getName() === "Native" ? (
+            <NativeIcon />
+          ) : (
+            <WebsocketIcon />
+          )}
           <Text primary>{multiTransport.getName()}</Text>
           <Text>{description}</Text>
         </Cell>

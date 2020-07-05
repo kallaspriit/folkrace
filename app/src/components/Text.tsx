@@ -6,6 +6,6 @@ export interface TextProps {
 
 export const Text = styled.div<TextProps>`
   text-align: center;
-  font-variant: ${props => (props.primary ? "all-small-caps" : "normal")};
+  font-variant: ${(props) => (props.primary ? "all-small-caps" : "normal")};
   line-height: 1.2em;
 `;

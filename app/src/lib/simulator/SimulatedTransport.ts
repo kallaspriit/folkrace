@@ -23,7 +23,9 @@ export class SimulatedTransport implements Transport {
     this.log = this.options.log;
 
     // listen for simulated robot messages
-    this.options.simulatedRobot.addMessageListener(message => this.onMessageReceived(message));
+    this.options.simulatedRobot.addMessageListener((message) =>
+      this.onMessageReceived(message)
+    );
   }
 
   getName() {
@@ -52,7 +54,9 @@ export class SimulatedTransport implements Transport {
     // send the message to the simulated robot
     this.options.simulatedRobot.receive(message);
 
-    this.listeners.forEach(listener => listener.onMessageSent(this, message, true));
+    this.listeners.forEach((listener) =>
+      listener.onMessageSent(this, message, true)
+    );
 
     return true;
   }
@@ -70,14 +74,18 @@ export class SimulatedTransport implements Transport {
     this.state = newState;
 
     // notify the listeners of state change
-    this.listeners.forEach(listener => listener.onStateChanged(this, newState, previousState));
+    this.listeners.forEach((listener) =>
+      listener.onStateChanged(this, newState, previousState)
+    );
   }
 
   private onMessageReceived(message: string) {
     this.log.info(`received: "${message}"`);
 
     // notify the listeners of message received
-    this.listeners.forEach(listener => listener.onMessageReceived(this, message));
+    this.listeners.forEach((listener) =>
+      listener.onMessageReceived(this, message)
+    );
 
     // handle handshake response
     if (message === "!handshake") {

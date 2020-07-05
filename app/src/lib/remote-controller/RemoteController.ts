@@ -2,7 +2,11 @@ import throttle from "lodash.throttle";
 import { dummyLogger, Logger } from "ts-log";
 
 import { Robot } from "../robot";
-import { MotorValue, TrackedVehicleKinematics, TrackedVehicleOptions } from "../tracked-vehicle-kinematics";
+import {
+  MotorValue,
+  TrackedVehicleKinematics,
+  TrackedVehicleOptions,
+} from "../tracked-vehicle-kinematics";
 
 export interface RemoteControllerOptions {
   robot: Robot;
@@ -27,7 +31,10 @@ export class RemoteController {
     this.robot = this.options.robot;
     this.kinematics = new TrackedVehicleKinematics(this.options.vehicle);
 
-    this.scheduleUpdateMotorSpeeds = throttle(() => this.updateMotorSpeeds(), this.options.vehicle.speedUpdateInterval);
+    this.scheduleUpdateMotorSpeeds = throttle(
+      () => this.updateMotorSpeeds(),
+      this.options.vehicle.speedUpdateInterval
+    );
   }
 
   setSpeed(speed: number) {
@@ -47,7 +54,13 @@ export class RemoteController {
     const encoderSpeeds = this.kinematics.motorToEncoderSpeed(motorSpeeds);
 
     // only send the speed if different from last
-    if (!this.lastSentSpeed || TrackedVehicleKinematics.isSpeedDifferent(encoderSpeeds, this.lastSentSpeed)) {
+    if (
+      !this.lastSentSpeed ||
+      TrackedVehicleKinematics.isSpeedDifferent(
+        encoderSpeeds,
+        this.lastSentSpeed
+      )
+    ) {
       this.robot.setSpeed(encoderSpeeds.left, encoderSpeeds.right);
 
       this.lastSentSpeed = encoderSpeeds;

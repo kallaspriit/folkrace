@@ -10,4 +10,5 @@ export const addLogListener = (listener: LogListenerFn) => {
 };
 
 // global log function callable from anywhere, can be intercepted by any number of listeners
-export const log = (message: string) => logListeners.forEach(listener => listener(message));
+export const log = (message: string) =>
+  logListeners.forEach((listener) => listener(message));

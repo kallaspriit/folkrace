@@ -10,7 +10,7 @@ export class Statistics {
   }
 
   getByName(name: string) {
-    return this.statistics.find(statistic => statistic.options.name === name);
+    return this.statistics.find((statistic) => statistic.options.name === name);
   }
 
   report(name: string, value: number) {

@@ -40,7 +40,7 @@ export class Hub extends React.Component {
           button: ButtonContainer,
           robot: RobotContainer,
           measurements: MeasurementsContainer,
-          ahrs: AhrsContainer,
+          ahrs: AhrsContainer
         ) => {
           // only initialize the connection logic once
           if (this.isInitialized) {
@@ -63,7 +63,7 @@ export class Hub extends React.Component {
           setContainers(containers);
 
           // register as log listener and proxy to log container
-          addLogListener(message => log.addEntry(message));
+          addLogListener((message) => log.addEntry(message));
 
           // set initial transport state
           void status.setTransportState(multiTransport.getState());
@@ -71,14 +71,24 @@ export class Hub extends React.Component {
           // subscribe to transport events
           multiTransport.addListener({
             onStateChanged: (transport, newState, _previousState) => {
-              log.addEntry(`# ${transport.getName()} state changed to ${newState}`);
+              log.addEntry(
+                `# ${transport.getName()} state changed to ${newState}`
+              );
 
               void status.setTransportState(newState);
             },
             onError: (_transport, error) => {
-              log.addEntry(`# transport error occurred${error ? ` (${error.message})` : ""}`);
+              log.addEntry(
+                `# transport error occurred${
+                  error ? ` (${error.message})` : ""
+                }`
+              );
             },
-            onMessageSent: (_transport, message, wasSentSuccessfully: boolean) => {
+            onMessageSent: (
+              _transport,
+              message,
+              wasSentSuccessfully: boolean
+            ) => {
               const [command] = message.split(":");
               const noLogCommands = ["ping", "!ping"];
 
@@ -87,7 +97,9 @@ export class Hub extends React.Component {
                 return;
               }
 
-              log.addEntry(`> ${message}${!wasSentSuccessfully ? " (sending failed)" : ""}`);
+              log.addEntry(
+                `> ${message}${!wasSentSuccessfully ? " (sending failed)" : ""}`
+              );
             },
             onMessageReceived: (_transport, message) => {
               this.handleTransportMessage(message, containers);

@@ -19,8 +19,13 @@ export const config = {
     // allow overriding web-socket options via local storage
     host:
       // process.env.NODE_ENV === "development" &&
-      localStorage.webSocketHost !== undefined ? localStorage.webSocketHost : "127.0.0.1",
-    port: localStorage.webSocketPort !== undefined ? parseInt(localStorage.webSocketPort, 10) : 8000,
+      localStorage.webSocketHost !== undefined
+        ? localStorage.webSocketHost
+        : "127.0.0.1",
+    port:
+      localStorage.webSocketPort !== undefined
+        ? parseInt(localStorage.webSocketPort, 10)
+        : 8000,
     useSSL: false,
     reconnectInterval: 3000,
   },

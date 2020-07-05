@@ -1,4 +1,9 @@
-import { AStarFinder as PathFinder, DiagonalMovement, Grid, Heuristic } from "pathfinding";
+import {
+  AStarFinder as PathFinder,
+  DiagonalMovement,
+  Grid,
+  Heuristic,
+} from "pathfinding";
 
 export interface OccupancyGridOptions {
   cellWidth: number;
@@ -54,7 +59,10 @@ export class OccupancyGrid {
     };
   }
 
-  static generate({ rows, columns, defaultValue }: GenerateOccupancyGridOptions, options: OccupancyGridOptions) {
+  static generate(
+    { rows, columns, defaultValue }: GenerateOccupancyGridOptions,
+    options: OccupancyGridOptions
+  ) {
     const data: OccupancyGridData = [];
     // const data: OccupancyGridData = Array(rows).fill(Array(columns).fill(defaultValue));
 

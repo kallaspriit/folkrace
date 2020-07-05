@@ -15,7 +15,10 @@ import { handleSerialCommand } from "./handleSerialCommand";
 import { handleSpeedCommand } from "./handleSpeedCommand";
 import { handleUsbCommand } from "./handleUsbCommand";
 
-export type CommandHandlerFn = (args: string[], containers: ContainerMap) => void;
+export type CommandHandlerFn = (
+  args: string[],
+  containers: ContainerMap
+) => void;
 
 export interface CommandHandlersMap {
   [x: string]: CommandHandlerFn | undefined;
@@ -39,12 +42,18 @@ export const commandHandlers: CommandHandlersMap = {
 };
 
 // handles parsed web-socket commands
-export function handleCommand(name: string, args: string[], containers: ContainerMap) {
+export function handleCommand(
+  name: string,
+  args: string[],
+  containers: ContainerMap
+) {
   const handler = commandHandlers[name];
 
   // check whether the handler exists
   if (handler === undefined) {
-    console.warn(`missing web-socket command handler for "${name}" (${args.join(", ")})`);
+    console.warn(
+      `missing web-socket command handler for "${name}" (${args.join(", ")})`
+    );
 
     return;
   }

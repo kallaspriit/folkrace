@@ -72,7 +72,7 @@ export class NativeTransport implements Transport {
 
     // setup native to app interface
     window.app = {
-      receive: message => this.onMessageReceived(message),
+      receive: (message) => this.onMessageReceived(message),
     };
 
     // perform handshake to test connection
@@ -85,10 +85,14 @@ export class NativeTransport implements Transport {
   send(message: string) {
     // fail to send if no bridge available
     if (!this.native) {
-      this.log.warn(`sending message "${message}" requested but the native bridge is not available`);
+      this.log.warn(
+        `sending message "${message}" requested but the native bridge is not available`
+      );
 
       // notify of failed message sending attempt
-      this.listeners.forEach(listener => listener.onMessageSent(this, message, false));
+      this.listeners.forEach((listener) =>
+        listener.onMessageSent(this, message, false)
+      );
 
       return false;
     }
@@ -99,12 +103,14 @@ export class NativeTransport implements Transport {
       this.native.receive(message);
 
       // notify of message sent
-      this.listeners.forEach(listener => listener.onMessageSent(this, message, true));
+      this.listeners.forEach((listener) =>
+        listener.onMessageSent(this, message, true)
+      );
 
       return true;
     } catch (error) {
       // notify of error
-      this.listeners.forEach(listener => listener.onError(this, error));
+      this.listeners.forEach((listener) => listener.onError(this, error));
     }
 
     return false;
@@ -123,14 +129,18 @@ export class NativeTransport implements Transport {
     this.state = newState;
 
     // notify the listeners of state change
-    this.listeners.forEach(listener => listener.onStateChanged(this, newState, previousState));
+    this.listeners.forEach((listener) =>
+      listener.onStateChanged(this, newState, previousState)
+    );
   }
 
   private onMessageReceived(message: string) {
     this.log.info(`received: "${message}"`);
 
     // notify the listeners of message received
-    this.listeners.forEach(listener => listener.onMessageReceived(this, message));
+    this.listeners.forEach((listener) =>
+      listener.onMessageReceived(this, message)
+    );
 
     // handle handshake response
     if (message === "!handshake") {

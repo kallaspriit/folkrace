@@ -44,5 +44,5 @@ const AppWrap = styled.div`
   height: 100vh;
   display: flex;
   flex-direction: column;
-  animation: ${props => props.theme.animation.fadeIn} 1000ms;
+  animation: ${(props) => props.theme.animation.fadeIn} 1000ms;
 `;

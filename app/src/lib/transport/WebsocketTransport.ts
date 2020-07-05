@@ -45,18 +45,24 @@ export class WebsocketTransport implements Transport {
   }
 
   async connect() {
-    const url = `${this.options.useSSL ? "wss" : "ws"}://${this.options.host}:${this.options.port}`;
+    const url = `${this.options.useSSL ? "wss" : "ws"}://${this.options.host}:${
+      this.options.port
+    }`;
 
     this.log.info(`connecting to web-socket server at ${url}`);
 
     // update state depending on whether the connection was ever established
-    this.setState(this.wasConnected ? TransportState.RECONNECTING : TransportState.CONNECTING);
+    this.setState(
+      this.wasConnected
+        ? TransportState.RECONNECTING
+        : TransportState.CONNECTING
+    );
 
     // attempt to open web-socket connection
     this.ws = new WebSocket(url);
 
     // handle open event
-    this.ws.onopen = event => {
+    this.ws.onopen = (event) => {
       this.log.info("established web-socket connection");
 
       this.wasConnected = true;
@@ -66,8 +72,10 @@ export class WebsocketTransport implements Transport {
     };
 
     // handle close event
-    this.ws.onclose = event => {
-      const logDetails = `code: ${event.code}, reason: ${event.reason}, was clean: ${event.wasClean ? "yes" : "no"}`;
+    this.ws.onclose = (event) => {
+      const logDetails = `code: ${event.code}, reason: ${
+        event.reason
+      }, was clean: ${event.wasClean ? "yes" : "no"}`;
 
       if (this.wasConnected) {
         this.log.warn(`connection to web-socket was lost (${logDetails})`);
@@ -87,31 +95,37 @@ export class WebsocketTransport implements Transport {
     };
 
     // handle error event
-    this.ws.onerror = _event => {
+    this.ws.onerror = (_event) => {
       this.log.warn("got web-socket error");
 
       // notify the listeners
-      this.listeners.forEach(listener => listener.onError(this));
+      this.listeners.forEach((listener) => listener.onError(this));
     };
 
     // handle message event
-    this.ws.onmessage = event => {
+    this.ws.onmessage = (event) => {
       const message = event.data;
 
       // this.log.info("got message", message);
 
       // notify the listeners of message received
-      this.listeners.forEach(listener => listener.onMessageReceived(this, message));
+      this.listeners.forEach((listener) =>
+        listener.onMessageReceived(this, message)
+      );
     };
   }
 
   send(message: string) {
     // we can only send messages if we're connected
     if (!this.ws || this.state !== TransportState.CONNECTED) {
-      this.log.warn(`sending message "${message}" requested but websocket state is ${this.state}`);
+      this.log.warn(
+        `sending message "${message}" requested but websocket state is ${this.state}`
+      );
 
       // notify of failed message sending attempt
-      this.listeners.forEach(listener => listener.onMessageSent(this, message, false));
+      this.listeners.forEach((listener) =>
+        listener.onMessageSent(this, message, false)
+      );
 
       return false;
     }
@@ -120,7 +134,9 @@ export class WebsocketTransport implements Transport {
     this.ws.send(message);
 
     // notify the listeners
-    this.listeners.forEach(listener => listener.onMessageSent(this, message, true));
+    this.listeners.forEach((listener) =>
+      listener.onMessageSent(this, message, true)
+    );
 
     return true;
   }
@@ -138,6 +154,8 @@ export class WebsocketTransport implements Transport {
     this.state = newState;
 
     // notify the listeners of state change
-    this.listeners.forEach(listener => listener.onStateChanged(this, newState, previousState));
+    this.listeners.forEach((listener) =>
+      listener.onStateChanged(this, newState, previousState)
+    );
   }
 }

@@ -16,7 +16,7 @@ const Wrap = styled.div`
 const Items = styled.ul`
   display: flex;
   flex-direction: row;
-  height: ${props => props.theme.size.menuHeight};
+  height: ${(props) => props.theme.size.menuHeight};
   flex: 1;
   max-width: 600px;
 `;
@@ -39,14 +39,15 @@ const Link = styled(NavLink)`
   width: 100%;
   height: 100%;
   text-decoration: none;
-  color: ${props => darken(props.theme.size.darkerLighterPercentage, props.theme.text.primary)};
+  color: ${(props) =>
+    darken(props.theme.size.darkerLighterPercentage, props.theme.text.primary)};
   background-color: rgba(0, 0, 0, 0);
   transition: background-color 300ms;
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 
   &.active-main-menu-item {
-    background-color: ${props => props.theme.bg.secondary};
-    color: ${props => props.theme.text.primary};
+    background-color: ${(props) => props.theme.bg.secondary};
+    color: ${(props) => props.theme.text.primary};
   }
 `;
 

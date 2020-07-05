@@ -59,7 +59,8 @@ export class Ticker {
     }
 
     const currentTime = Date.now();
-    const dt = (this.lastTickTime ? currentTime - this.lastTickTime : 16) / 1000;
+    const dt =
+      (this.lastTickTime ? currentTime - this.lastTickTime : 16) / 1000;
 
     this.options.tick({
       dt,
@@ -71,7 +72,7 @@ export class Ticker {
   }
 
   private scheduleNextFrame() {
-    this.scheduledAnimationFrame = window.requestAnimationFrame(newTime => {
+    this.scheduledAnimationFrame = window.requestAnimationFrame((newTime) => {
       this.scheduledAnimationFrame = undefined;
 
       if (!this.isRunning) {
