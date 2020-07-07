@@ -21,7 +21,8 @@ export const config = {
       // process.env.NODE_ENV === "development" &&
       localStorage.webSocketHost !== undefined
         ? localStorage.webSocketHost
-        : "127.0.0.1",
+        : // : "127.0.0.1",
+          "192.168.1.133",
     port:
       localStorage.webSocketPort !== undefined
         ? parseInt(localStorage.webSocketPort, 10)

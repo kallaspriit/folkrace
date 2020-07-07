@@ -202,8 +202,16 @@ export class Simulator {
       return;
     }
 
-    const speed = this.gamepad.axes[3] * -1;
-    const omega = this.gamepad.axes[0];
+    const deadzone = 0.1;
+
+    // apply some deadzone to avoid slow movement when not perfectly centered
+    const speedInput =
+      Math.abs(this.gamepad.axes[3]) > deadzone ? this.gamepad.axes[3] : 0;
+    const omegaInput =
+      Math.abs(this.gamepad.axes[0]) > deadzone ? this.gamepad.axes[0] : 0;
+
+    const speed = speedInput * -1;
+    const omega = omegaInput;
 
     this.remoteController.setSpeed(speed);
     this.remoteController.setOmega(omega);
