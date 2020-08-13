@@ -28,7 +28,8 @@ const PinName USB_POWER_SENSE_PIN = p22;
 
 // baud rates configuration
 const int LOG_SERIAL_BAUDRATE = 921600;   // log serial is the built-in usb of the mbed board
-const int MOTOR_SERIAL_BAUDRATE = 460800; // not default, make sure to update in the Ion Studio
+// const int MOTOR_SERIAL_BAUDRATE = 460800; // not default, make sure to update in the Ion Studio
+const int MOTOR_SERIAL_BAUDRATE = 115200; // not default, make sure to update in the Ion Studio
 
 // timing configuration
 const int LOOP_LED_BLINK_INTERVAL_MS = 1000;
@@ -83,7 +84,7 @@ enum Error
 };
 
 // setup serials
-Serial logSerial(LOG_SERIAL_TX_PIN, USBRX, LOG_SERIAL_BAUDRATE);
+Serial logSerial(LOG_SERIAL_TX_PIN, LOG_SERIAL_RX_PIN, LOG_SERIAL_BAUDRATE);
 USBSerial appSerial(USB_VENDOR_ID, USB_PRODUCT_ID, USB_PRODUCT_RELEASE, false);
 
 // setup commanders (handle serial commands)
