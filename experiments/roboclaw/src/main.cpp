@@ -57,12 +57,12 @@ int main()
     }
 
     // update motor speeds
-    motors.SpeedM1M2(MOTOR_CONTROLLER_ADDRESS, currentSpeed, currentSpeed);
+    motors.speedM1M2(MOTOR_CONTROLLER_ADDRESS, currentSpeed, currentSpeed);
 
     // read encoders
     uint32_t encoderM1, encoderM2;
 
-    bool readSuccess = motors.ReadEncoders(MOTOR_CONTROLLER_ADDRESS, encoderM1, encoderM2);
+    bool readSuccess = motors.readEncoders(MOTOR_CONTROLLER_ADDRESS, encoderM1, encoderM2);
 
     // report read failure
     if (!readSuccess)
