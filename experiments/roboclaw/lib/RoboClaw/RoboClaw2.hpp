@@ -1,5 +1,5 @@
-#ifndef ROBOCLAW_H
-#define ROBOCLAW_H
+#ifndef ROBOCLAW2_H
+#define ROBOCLAW2_H
 #include "mbed.h"
 
 #define MAXRETRY 2
@@ -104,11 +104,11 @@ public:
                                                                        currentM2(currentM2) {}
 };
 
-class RoboClaw
+class RoboClaw2
 {
 
 public:
-  RoboClaw(uint8_t adr, int baudrate, PinName rx, PinName tx);
+  RoboClaw2(uint8_t adr, int baudrate, PinName rx, PinName tx);
 
   void forwardM1(int speed);
   void backwardM1(int speed);

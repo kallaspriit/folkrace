@@ -8,15 +8,21 @@
 Commander::Commander(Serial *serial) : serial(serial), ser(serial)
 {
   // listen for receive events (can cause concurrency issues?)
-  serial->attach(callback(this, &Commander::handleSerialRx), Serial::RxIrq);
+  // serial->attach(callback(this, &Commander::handleSerialRx), Serial::RxIrq);
 }
 
 Commander::Commander(USBSerial *serial) : serial(serial), usb(serial)
 {
-  Callback<void()> cb = callback(this, &Commander::handleSerialRx);
+  // Callback<void()> cb = callback(this, &Commander::handleSerialRx);
 
   // listen for receive events (can cause concurrency issues?)
-  serial->attach(cb);
+  // serial->attach(cb);
+}
+
+void Commander::update()
+{
+  // read from serial
+  handleSerialRx();
 }
 
 void Commander::registerCommandHandler(std::string name, CommandHandlerCallback handler)
@@ -24,8 +30,10 @@ void Commander::registerCommandHandler(std::string name, CommandHandlerCallback 
   commandHandlerMap[name] = handler;
 }
 
-void Commander::handleAllQueuedCommands()
+int Commander::handleAllQueuedCommands()
 {
+  int handledCommandCount = 0;
+
   // handle all queued commands
   while (commandQueue.size() > 0)
   {
@@ -37,7 +45,11 @@ void Commander::handleAllQueuedCommands()
 
     // handle the command
     handleCommand(command);
+
+    handledCommandCount++;
   }
+
+  return handledCommandCount;
 }
 
 void Commander::handleSerialRx()
@@ -118,7 +130,8 @@ void Commander::handleCommand(std::string command)
   if (handlerIt != commandHandlerMap.end())
   {
     // log incoming command
-    printf("< %s\n", command.c_str());
+    // TODO: add back?
+    // printf("< %s\n", command.c_str());
 
     // call the command handler if it exists
     handlerIt->second();
