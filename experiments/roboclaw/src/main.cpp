@@ -8,9 +8,10 @@ const uint8_t MOTOR_CONTROLLER_ADDRESS = 128;
 const int MOTOR_SERIAL_BAUDRATE = 460800; // maximum
 const PinName MOTOR_SERIAL_TX_PIN = p13;
 const PinName MOTOR_SERIAL_RX_PIN = p14;
-const uint32_t MOTOR_SERIAL_TIMEOUT_US = 10000;
 
+const int MOTOR_SERIAL_TIMEOUT_US = 10000;
 const int US_IN_SECONDS = 1000000;
+const int LOOP_SLEEP_OVERHEAD_US = 10;
 
 const int TARGET_LOOP_UPDATE_RATE = 100; // hz
 const int TARGET_LOOP_DURATION_US = US_IN_SECONDS / TARGET_LOOP_UPDATE_RATE;
@@ -24,8 +25,6 @@ RoboClaw motors(&motorsSerial, MOTOR_SERIAL_TIMEOUT_US);
 
 Timer reportTimer;
 Timer loopTimer;
-
-int load = 0;
 
 int main()
 {
@@ -65,9 +64,20 @@ int main()
 
     bool readSuccess = motors.ReadEncoders(MOTOR_CONTROLLER_ADDRESS, encoderM1, encoderM2);
 
+    // report read failure
+    if (!readSuccess)
+    {
+      logSerial.putc('!');
+    }
+
+    // get loop time taken in microseconds
+    int loopTimeTakenUs = loopTimer.read_us();
+
     // report state every second
     if (reportTimer.read_ms() >= 1000)
     {
+      // calculate load percentage and fps
+      int load = loopTimeTakenUs * 100 / TARGET_LOOP_DURATION_US;
       int fps = ceil(1.0f / ((float)loopDurationUs / (float)US_IN_SECONDS));
 
       printf("success: %d, e1: %d, e2: %d, loop: %d, load: %d, fps: %d\n", readSuccess, (int)encoderM1, (int)encoderM2, loopDurationUs, load, fps);
@@ -75,16 +85,10 @@ int main()
       reportTimer.reset();
     }
 
-    // get loop time taken in microseconds
-    int loopTimeTakenUs = loopTimer.read_us();
-
-    // calculate load percentage
-    load = loopTimeTakenUs * 100 / TARGET_LOOP_DURATION_US;
-
     // wait if load is under 100%
-    if (loopTimeTakenUs < TARGET_LOOP_DURATION_US)
+    if (loopTimeTakenUs + LOOP_SLEEP_OVERHEAD_US < TARGET_LOOP_DURATION_US)
     {
-      wait_us(TARGET_LOOP_DURATION_US - loopTimeTakenUs);
+      wait_us(TARGET_LOOP_DURATION_US - loopTimeTakenUs - LOOP_SLEEP_OVERHEAD_US);
     }
   }
 }

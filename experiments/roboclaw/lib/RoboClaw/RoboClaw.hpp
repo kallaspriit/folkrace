@@ -1,39 +1,10 @@
 #ifndef ROBOCLAW_H
 #define ROBOCLAW_H
 
-// #include <stdarg.h>
-
-// #include <inttypes.h>
-// #include <Stream.h>
-// #include <HardwareSerial.h>
-// #ifdef __AVR__
-// #include <SoftwareSerial.h>
-// #endif
-
 #include "mbed.h"
 
-/******************************************************************************
-* Definitions
-******************************************************************************/
-
-// #define _RC_VERSION 10 // software version of this library
-// #ifndef GCC_VERSION
-// #define GCC_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
-// #endif
-
-#define _SS_VERSION 16
-
-// class RoboClaw : public Stream
 class RoboClaw
 {
-    uint16_t crc;
-    uint32_t timeout;
-
-    Serial *hserial;
-    // #ifdef __AVR__
-    //     SoftwareSerial *sserial;
-    // #endif
-
     enum
     {
         ERROR_NONE = 0x000000,
@@ -153,21 +124,17 @@ class RoboClaw
         SETPWMMODE = 148,
         GETPWMMODE = 149,
         FLAGBOOTLOADER = 255
-    }; //Only available via USB communications
-public:
-    // public methods
-    RoboClaw(Serial *hserial, uint32_t tout);
-    // #ifdef __AVR__
-    //     RoboClaw(SoftwareSerial *sserial, uint32_t tout);
-    // #endif
+    };
 
+public:
+    RoboClaw(Serial *serial, int tout);
     ~RoboClaw();
 
-    bool ForwardM1(uint8_t address, uint8_t speed);
+    bool forwardM1(uint8_t address, uint8_t speed);
     bool BackwardM1(uint8_t address, uint8_t speed);
     bool SetMinVoltageMainBattery(uint8_t address, uint8_t voltage);
     bool SetMaxVoltageMainBattery(uint8_t address, uint8_t voltage);
-    bool ForwardM2(uint8_t address, uint8_t speed);
+    bool forwardM2(uint8_t address, uint8_t speed);
     bool BackwardM2(uint8_t address, uint8_t speed);
     bool ForwardBackwardM1(uint8_t address, uint8_t speed);
     bool ForwardBackwardM2(uint8_t address, uint8_t speed);
@@ -255,32 +222,28 @@ public:
     bool SetPWMMode(uint8_t address, uint8_t mode);
     bool GetPWMMode(uint8_t address, uint8_t &mode);
 
-    static int16_t library_version() { return _SS_VERSION; }
-
-    virtual int available();
-    // void begin(long speed);
-    // bool isListening();
-    // bool overflow();
-    // int peek();
-    virtual int read();
-    int read(uint32_t timeout);
-    // bool listen();
-    virtual size_t write(uint8_t byte);
-    virtual void flush();
+    int available();
+    int read();
+    int read(int timeout);
+    int write(int byte);
+    void flush();
     void clear();
 
 private:
-    void crc_clear();
-    void crc_update(uint8_t data);
-    uint16_t crc_get();
-    bool write_n(uint8_t byte, ...);
-    bool read_n(uint8_t byte, uint8_t address, uint8_t cmd, ...);
-    uint32_t Read4_1(uint8_t address, uint8_t cmd, uint8_t *status, bool *valid);
-    uint32_t Read4(uint8_t address, uint8_t cmd, bool *valid);
-    uint16_t Read2(uint8_t address, uint8_t cmd, bool *valid);
-    uint8_t Read1(uint8_t address, uint8_t cmd, bool *valid);
+    void clearCrc();
+    void updateCrc(uint8_t data);
+    uint16_t getCrc();
+    bool writeN(uint8_t byte, ...);
+    bool readN(uint8_t byte, uint8_t address, uint8_t cmd, ...);
+    uint32_t read4WithStatus(uint8_t address, uint8_t cmd, uint8_t *status, bool *valid);
+    uint32_t read4(uint8_t address, uint8_t cmd, bool *valid);
+    uint16_t read2(uint8_t address, uint8_t cmd, bool *valid);
+    uint8_t read1(uint8_t address, uint8_t cmd, bool *valid);
 
+    uint16_t crc;
+    Serial *serial;
     Timer readTimer;
+    int timeout;
 };
 
 #endif
