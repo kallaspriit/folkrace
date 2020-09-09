@@ -3,6 +3,7 @@
 
 #include "mbed.h"
 
+// http://downloads.basicmicro.com/docs/roboclaw_user_manual.pdf
 class RoboClaw
 {
     enum
