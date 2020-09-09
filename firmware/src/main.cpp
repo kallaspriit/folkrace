@@ -34,6 +34,7 @@ const int MOTOR_SERIAL_BAUDRATE = 460800; // not default, make sure to update in
 const int LOOP_LED_BLINK_INTERVAL_MS = 1000;
 const int LED_BLINK_DURATION_MS = 10;
 const int BUTTON_DEBOUNCE_US = 100000; // 100ms
+const int REPORT_STATUS_INTERVAL_MS = 1000;
 
 // motor controller configuration
 const uint8_t MOTORS_ADDRESS = 128;
@@ -73,9 +74,13 @@ const int IMU_MAGNETOMETER_ADDRESS = 0x3C;
 const float AHRS_GYRO_ERROR_DEG_S = 1.0f;
 const int AHRS_INITIAL_SAMPLE_FREQUENCY = 100;
 
+// conversion factors
+const int US_IN_SECONDS = 1000000;
+
 // main loop configuration
-const int TARGET_LOOP_FREQUENCY = 100;
-const int TARGET_LOOP_DURATION_US = (1000 / TARGET_LOOP_FREQUENCY) * 1000;
+const int TARGET_LOOP_UPDATE_RATE = 100; // hz
+const int TARGET_LOOP_DURATION_US = US_IN_SECONDS / TARGET_LOOP_UPDATE_RATE;
+const int LOOP_SLEEP_OVERHEAD_US = 10;
 
 // list of possible error states (error led blinks error position number of times)
 enum Error
@@ -104,6 +109,7 @@ MadgwickAHRS ahrs(AHRS_GYRO_ERROR_DEG_S, AHRS_INITIAL_SAMPLE_FREQUENCY);
 
 // setup timers
 Timer loopTimer;
+Timer statusTimer;
 Timer loopLedTimer;
 Timer rearLedUpdateTimer;
 Timer appMessageSentTimer;
@@ -326,13 +332,21 @@ void reportLidarState()
   send("lidar:%d:%d:%.1f:%.1f:%.2f\n", lidar.isRunning() ? 1 : 0, lidar.isValid() ? 1 : 0, lidar.getTargetRpm(), lidar.getCurrentRpm(), lidar.getMotorPwm());
 }
 
-void reportVoltage()
+void reportBatteryVoltage()
 {
   // apparently the reported value is slightly off
-  bool isValid;
-  float voltage = motors.readMainBatteryVoltage(MOTORS_ADDRESS, &isValid) * MAIN_VOLTAGE_CORRECTION_MULTIPLIER;
+  bool readSuccess;
 
-  send("voltage:%.1f:%d\n", voltage, isValid ? 1 : 0);
+  uint16_t voltage = motors.readMainBatteryVoltage(MOTORS_ADDRESS, &readSuccess) * MAIN_VOLTAGE_CORRECTION_MULTIPLIER;
+
+  if (!readSuccess)
+  {
+    logSerial.printf("@ reading battery voltage failed, is the power supply to the motor controller missing?\n");
+
+    return;
+  }
+
+  send("voltage:%d\n", (int)voltage);
 }
 
 void reportCurrent()
@@ -348,7 +362,7 @@ void reportCurrent()
     return;
   }
 
-  send("current:%.2f:%.2f\n", (float)currentM1 / 100.0f, (float)currentM2 / 100.0f);
+  send("current:%d:%d\n", (int)currentM1, (int)currentM2);
 }
 
 // reports all current internal states
@@ -357,7 +371,7 @@ void reportState()
   reportButtonStates();
   reportTargetSpeed();
   reportLidarState();
-  reportVoltage();
+  reportBatteryVoltage();
   reportCurrent();
   reportEncoderValues(true);
 }
@@ -440,7 +454,7 @@ void handleLidarCommand(Commander *commander)
 // handles voltage command, responds with main battery voltage
 void handleVoltageCommand(Commander *commander)
 {
-  reportVoltage();
+  reportBatteryVoltage();
 }
 
 // handles current command, responds with current draws of both motors
@@ -585,6 +599,17 @@ void setupIMU()
   logSerial.printf("done!\n");
 }
 
+void stepCommanders()
+{
+  // read serials
+  logCommander.update();
+  appCommander.update();
+
+  // handle queued commands
+  logCommander.handleAllQueuedCommands();
+  appCommander.handleAllQueuedCommands();
+}
+
 void stepUsbConnectionState()
 {
   // get usb connection state (also checks for usb power as the USBSerial fails to detect disconnect)
@@ -647,12 +672,6 @@ void stepLeftBumper()
 void stepRightBumper()
 {
   stepButton(&rightBumper, "right", &lastRightBumperState);
-}
-
-void stepCommanders()
-{
-  logCommander.handleAllQueuedCommands();
-  appCommander.handleAllQueuedCommands();
 }
 
 void stepEncoderReporter()
@@ -809,31 +828,16 @@ void stepLoopBlinker()
   }
 }
 
-void stepLoopTimer()
-{
-  // read the loop time in microseconds and reset the timer
-  lastLoopTimeUs = loopTimer.read_us();
-
-  int sleepTimeUs = TARGET_LOOP_DURATION_US - lastLoopTimeUs;
-
-  // sleep to attempt to match target loop frequency
-  if (sleepTimeUs > 0)
-  {
-    wait_us(sleepTimeUs);
-  }
-
-  loopTimer.reset();
-}
-
 void setupTimers()
 {
   // start timers
-  loopTimer.start();
   loopLedTimer.start();
   rearLedUpdateTimer.start();
   appMessageSentTimer.start();
   debugTimer.start();
   reportLidarStateTimer.start();
+  loopTimer.start();
+  statusTimer.start();
 }
 
 const int SLOW_OPERATION_THRESHOLD_US = 1000; // 1ms
@@ -855,6 +859,8 @@ void d(const char *name, int slowThreshold = SLOW_OPERATION_THRESHOLD_US)
 
 int main()
 {
+  logSerial.printf("# initializing..");
+
   // setup resources
   setupUsbPowerSensing();
   setupStatusLeds();
@@ -862,17 +868,21 @@ int main()
   setupCommandHandlers();
   setupMotors();
   setupRearLedStrip();
-  setupIMU();
+  // setupIMU();
   setupTimers();
 
-  logSerial.printf("# initialization complete!\n");
+  logSerial.printf(" done!\n");
 
   // run main loop
   while (true)
   {
-    // read serials
-    logCommander.update();
-    appCommander.update();
+    // read the loop time and reset the timer
+    lastLoopTimeUs = loopTimer.read_us();
+    loopTimer.reset();
+
+    s();
+    stepCommanders();
+    d("stepCommanders", 2000);
 
     s();
     stepUsbConnectionState();
@@ -889,10 +899,6 @@ int main()
     s();
     stepRightBumper();
     d("stepLeftBumper");
-
-    s();
-    stepCommanders();
-    d("stepCommanders", 2000);
 
     s();
     stepEncoderReporter();
@@ -914,8 +920,25 @@ int main()
     stepLoopBlinker();
     d("stepLoopBlinker");
 
-    // s();
-    stepLoopTimer();
-    // d("stepLoopTimer");
+    // get loop time taken in microseconds
+    int loopTimeTakenUs = loopTimer.read_us();
+
+    // report status every second
+    if (statusTimer.read_ms() >= REPORT_STATUS_INTERVAL_MS)
+    {
+      // calculate load percentage and fps
+      int load = loopTimeTakenUs * 100 / TARGET_LOOP_DURATION_US;
+      int fps = ceil(1.0f / ((float)lastLoopTimeUs / (float)US_IN_SECONDS));
+
+      send("status:%d:%d\n", load, fps);
+
+      statusTimer.reset();
+    }
+
+    // wait to match target loop frequency
+    if (loopTimeTakenUs + LOOP_SLEEP_OVERHEAD_US < TARGET_LOOP_DURATION_US)
+    {
+      wait_us(TARGET_LOOP_DURATION_US - loopTimeTakenUs - LOOP_SLEEP_OVERHEAD_US);
+    }
   }
 }

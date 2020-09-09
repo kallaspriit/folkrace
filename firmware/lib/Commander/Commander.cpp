@@ -130,8 +130,8 @@ void Commander::handleCommand(std::string command)
   if (handlerIt != commandHandlerMap.end())
   {
     // log incoming command
-    // TODO: add back?
-    // printf("< %s\n", command.c_str());
+    // TODO: remove?
+    printf("< %s\n", command.c_str());
 
     // call the command handler if it exists
     handlerIt->second();
@@ -190,6 +190,7 @@ void Commander::split(const std::string &s, char delim, Out result)
 {
   std::stringstream ss(s);
   std::string item;
+
   while (std::getline(ss, item, delim))
   {
     *(result++) = item;
@@ -199,6 +200,8 @@ void Commander::split(const std::string &s, char delim, Out result)
 std::vector<std::string> Commander::split(const std::string &s, char delim)
 {
   std::vector<std::string> elems;
+
   split(s, delim, std::back_inserter(elems));
+
   return elems;
 }

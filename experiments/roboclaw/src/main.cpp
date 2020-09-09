@@ -3,34 +3,36 @@
 // #include <MotorController.hpp>
 #include <RoboClaw.hpp>
 
+// configuration
 const uint8_t MOTORS_ADDRESS = 128;
-// const int MOTOR_SERIAL_BAUDRATE = 38400; // original
-const int MOTOR_SERIAL_BAUDRATE = 460800; // maximum
+const int MOTOR_SERIAL_BAUDRATE = 460800; // not default
 const PinName MOTOR_SERIAL_TX_PIN = p13;
 const PinName MOTOR_SERIAL_RX_PIN = p14;
-
 const int MOTORS_TIMEOUT_US = 10000;
 const int US_IN_SECONDS = 1000000;
 const int LOOP_SLEEP_OVERHEAD_US = 10;
-
 const int TARGET_LOOP_UPDATE_RATE = 100; // hz
 const int TARGET_LOOP_DURATION_US = US_IN_SECONDS / TARGET_LOOP_UPDATE_RATE;
 
+// serials
 Serial logSerial(USBTX, USBRX, 115200);
 Serial motorsSerial(MOTOR_SERIAL_TX_PIN, MOTOR_SERIAL_RX_PIN, MOTOR_SERIAL_BAUDRATE);
 
+// status led
 DigitalOut loopStatusLed(LED1);
 
+// motor controller
 RoboClaw motors(&motorsSerial, MOTORS_TIMEOUT_US);
 
+// timers
 Timer reportTimer;
 Timer loopTimer;
 
 int main()
 {
   int currentSpeed = 0;
-  int changeSpeed = 500;
-  int range = 1000;
+  int changeSpeed = 4000;
+  int range = 4000;
   int direction = 1;
 
   reportTimer.start();

@@ -42,6 +42,7 @@ export const config = {
     wheelDiameter: 0.039, // meters
     encoderCountsPerRotation: 20, // encoder pulse count per revolution
     gearboxRatio: 25, // 25/1 gearbox ratio
-    speedUpdateInterval: 1000 / 20, // 20Hz
+    // speedUpdateInterval: 1000 / 20, // 20Hz
+    speedUpdateInterval: 1000 / 100, // 100Hz
   },
 };
