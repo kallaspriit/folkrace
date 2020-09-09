@@ -109,7 +109,6 @@ MadgwickAHRS ahrs(AHRS_GYRO_ERROR_DEG_S, AHRS_INITIAL_SAMPLE_FREQUENCY);
 
 // setup timers
 Timer loopTimer;
-Timer statusTimer;
 Timer loopLedTimer;
 Timer rearLedUpdateTimer;
 Timer appMessageSentTimer;
@@ -154,6 +153,9 @@ int targetSpeedM2 = 0;
 
 // keep track of last loop time in microseconds
 int lastLoopTimeUs = 0;
+
+// main thread load in percentage
+int loadPercentage = 100;
 
 // keep track of last loop led state and cycle count
 int lastLoopLedState = 0;
@@ -210,6 +212,14 @@ void sendRaw(const char *message, int length, bool blocking = true)
   if (!isUsbConnected())
   {
     logSerial.printf("@ %s", message);
+
+    return;
+  }
+
+  // make sure app serial is writable
+  if (!appSerial.writable())
+  {
+    logSerial.printf("@ app serial not writable to send %s", message);
 
     return;
   }
@@ -417,8 +427,9 @@ void handleSpeedCommand(Commander *commander)
   // set motor speeds
   setMotorSpeeds(targetSpeedM1, targetSpeedM2);
 
+  // TODO: does this need reporting as the speed came from other side?
   // report new target speeds
-  reportTargetSpeed();
+  // reportTargetSpeed();
 }
 
 // handles rpm:RPM command, starts or stops the lidar setting target RPM
@@ -443,6 +454,8 @@ void handleRpmCommand(Commander *commander)
 
   // report new target rpm
   send("rpm:%d\n", targetRpm);
+
+  reportLidarState();
 }
 
 // handles lidar command, sends back lidar RPM, whether lidar is running and valid, queued command count
@@ -684,7 +697,7 @@ void stepLidar()
   bool isConnected = isUsbConnected();
 
   // report lidar state at an interval
-  if (isConnected && reportLidarStateTimer.read_ms() >= LIDAR_REPORT_STATE_INTERVAL_MS)
+  if (isConnected && lidar.isRunning() && reportLidarStateTimer.read_ms() >= LIDAR_REPORT_STATE_INTERVAL_MS)
   {
     reportLidarState();
 
@@ -791,6 +804,8 @@ void stepLoopBlinker()
   bool shouldReset = timeSinceLastBlink > LOOP_LED_BLINK_INTERVAL_MS + LED_BLINK_DURATION_MS;
   int currentLoopLedState = !shouldReset && timeSinceLastBlink > LOOP_LED_BLINK_INTERVAL_MS ? 1 : 0;
 
+  cycleCountSinceLastLoopBlink++;
+
   // check whether loop led state has changed
   if (currentLoopLedState != lastLoopLedState)
   {
@@ -801,13 +816,14 @@ void stepLoopBlinker()
     // send connection alive beacon message on rising edge
     if (currentLoopLedState == 1 && isUsbConnected())
     {
-      sendAsync("b:%d:%d\n", timeSinceLastBlink, cycleCountSinceLastLoopBlink);
+      // sendAsync("b:%d:%d\n", timeSinceLastBlink, cycleCountSinceLastLoopBlink);
+      send("b:%d:%d:%d\n", timeSinceLastBlink, cycleCountSinceLastLoopBlink, loadPercentage);
     }
 
-    // calculate main loop execution frequency
+    // calculate main loop execution frequency (should be the same as cycleCountSinceLastLoopBlink)
     int loopFrequency = ceil(((float)cycleCountSinceLastLoopBlink / (float)timeSinceLastBlink) * 1000.0f);
 
-    // logSerial.printf("loopFrequency: %d\n", loopFrequency);
+    // logSerial.printf("fps: %d\n", loopFrequency);
 
     // update ahrs sample frequency (matches loop execution frequency)
     ahrs.setSampleFrequency(loopFrequency);
@@ -822,10 +838,6 @@ void stepLoopBlinker()
     loopLedTimer.reset();
     cycleCountSinceLastLoopBlink = 0;
   }
-  else
-  {
-    cycleCountSinceLastLoopBlink++;
-  }
 }
 
 void setupTimers()
@@ -837,7 +849,6 @@ void setupTimers()
   debugTimer.start();
   reportLidarStateTimer.start();
   loopTimer.start();
-  statusTimer.start();
 }
 
 const int SLOW_OPERATION_THRESHOLD_US = 1000; // 1ms
@@ -901,10 +912,6 @@ int main()
     d("stepLeftBumper");
 
     s();
-    stepEncoderReporter();
-    d("stepEncoderReporter", 3000);
-
-    s();
     stepLidar();
     d("stepLidar", 3000);
 
@@ -917,23 +924,17 @@ int main()
     d("stepRearLedStrip");
 
     s();
+    stepEncoderReporter();
+    d("stepEncoderReporter", 3000);
+
+    s();
     stepLoopBlinker();
     d("stepLoopBlinker");
 
     // get loop time taken in microseconds
     int loopTimeTakenUs = loopTimer.read_us();
 
-    // report status every second
-    if (statusTimer.read_ms() >= REPORT_STATUS_INTERVAL_MS)
-    {
-      // calculate load percentage and fps
-      int load = loopTimeTakenUs * 100 / TARGET_LOOP_DURATION_US;
-      int fps = ceil(1.0f / ((float)lastLoopTimeUs / (float)US_IN_SECONDS));
-
-      send("status:%d:%d\n", load, fps);
-
-      statusTimer.reset();
-    }
+    loadPercentage = loopTimeTakenUs * 100 / TARGET_LOOP_DURATION_US;
 
     // wait to match target loop frequency
     if (loopTimeTakenUs + LOOP_SLEEP_OVERHEAD_US < TARGET_LOOP_DURATION_US)

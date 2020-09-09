@@ -42,6 +42,7 @@ export interface State {
   readonly lastResetTime?: Date;
   readonly loopFrequency?: number;
   readonly loopTimeUs?: number;
+  readonly loadPercentage?: number;
 }
 
 export class StatusContainer extends Container<State> {
@@ -100,11 +101,16 @@ export class StatusContainer extends Container<State> {
     });
   }
 
-  setLoopStatistics(loopFrequency: number, loopTimeUs: number) {
+  setLoopStatistics(
+    loopFrequency: number,
+    loopTimeUs: number,
+    loadPercentage: number
+  ) {
     return this.setState({
       lastBeaconTime: new Date(),
       loopFrequency,
       loopTimeUs,
+      loadPercentage,
     });
   }
 

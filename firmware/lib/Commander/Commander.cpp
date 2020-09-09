@@ -19,12 +19,6 @@ Commander::Commander(USBSerial *serial) : serial(serial), usb(serial)
   // serial->attach(cb);
 }
 
-void Commander::update()
-{
-  // read from serial
-  handleSerialRx();
-}
-
 void Commander::registerCommandHandler(std::string name, CommandHandlerCallback handler)
 {
   commandHandlerMap[name] = handler;
@@ -50,6 +44,12 @@ int Commander::handleAllQueuedCommands()
   }
 
   return handledCommandCount;
+}
+
+void Commander::update()
+{
+  // read from serial
+  handleSerialRx();
 }
 
 void Commander::handleSerialRx()
