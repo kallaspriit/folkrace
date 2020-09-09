@@ -2,6 +2,8 @@
 #define ROBOCLAW_H
 #include "mbed.h"
 
+#define MAXRETRY 2
+
 #define ADR 0x80
 #define M1FORWARD 0
 #define M1BACKWARD 1
@@ -144,6 +146,7 @@ private:
   uint32_t read4(uint8_t address, uint8_t cmd, bool *valid);
   uint16_t read2(uint8_t address, uint8_t cmd, bool *valid);
   uint16_t read(int timeoutUs = 2000);
+  // uint16_t read(int timeoutUs = 10000);
 
   Serial serial;
   Timer readTimer;

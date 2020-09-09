@@ -19,6 +19,8 @@ public:
   Commander(Serial *serial);
   Commander(USBSerial *serial);
 
+  void update();
+
   void registerCommandHandler(std::string name, CommandHandlerCallback handler);
   void handleCommand(std::string command);
 
@@ -26,7 +28,7 @@ public:
   std::string getStringArgument(unsigned int index);
   int getIntArgument(unsigned int index);
 
-  void handleAllQueuedCommands();
+  int handleAllQueuedCommands();
 
   Stream *serial = NULL;
   Serial *ser = NULL;

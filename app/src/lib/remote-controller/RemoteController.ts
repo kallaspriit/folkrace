@@ -35,6 +35,29 @@ export class RemoteController {
       () => this.updateMotorSpeeds(),
       this.options.vehicle.speedUpdateInterval
     );
+
+    // fade between min/max speeds
+    let range = 1;
+    let value = 0;
+    let step = 0.01;
+    let direction = 1;
+
+    setInterval(() => {
+      value += step * direction;
+
+      if (value > range) {
+        value = range;
+        direction *= -1;
+      } else if (value < -range) {
+        value = -range;
+        direction *= -1;
+      }
+
+      this.speed = value;
+
+      this.updateMotorSpeeds();
+      // }, this.options.vehicle.speedUpdateInterval);
+    }, 10);
   }
 
   setSpeed(speed: number) {

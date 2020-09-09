@@ -27,9 +27,9 @@ const PinName REAR_LED_STRIP_DATA_PIN = p15;
 const PinName USB_POWER_SENSE_PIN = p22;
 
 // baud rates configuration
-const int LOG_SERIAL_BAUDRATE = 921600;   // log serial is the built-in usb of the mbed board
+const int LOG_SERIAL_BAUDRATE = 115200; // log serial is the built-in usb of the mbed board
 // const int MOTOR_SERIAL_BAUDRATE = 460800; // not default, make sure to update in the Ion Studio
-const int MOTOR_SERIAL_BAUDRATE = 115200; // not default, make sure to update in the Ion Studio
+const int MOTOR_SERIAL_BAUDRATE = 38400;
 
 // timing configuration
 const int LOOP_LED_BLINK_INTERVAL_MS = 1000;
@@ -289,7 +289,7 @@ void reportEncoderValues(bool force = false)
   lastEncoderDeltaM2 = encoderDeltaM2;
 
   // send the encoder values
-  send("e:%d:%d\n", encoderDeltaM1, -encoderDeltaM2);
+  send("e:%d:%d\n", encoderDeltaM1, encoderDeltaM2);
 }
 
 // reports given button state
@@ -383,7 +383,7 @@ void handleSpeedCommand(Commander *commander)
 
   // set motor speeds
   motors.setSpeedM1(targetSpeedM1);
-  motors.setSpeedM2(-targetSpeedM2);
+  motors.setSpeedM2(targetSpeedM2);
 
   // report new target speeds
   reportTargetSpeed();
@@ -850,6 +850,10 @@ int main()
   // run main loop
   while (true)
   {
+    // read serials
+    logCommander.update();
+    appCommander.update();
+
     s();
     stepUsbConnectionState();
     d("stepUsbConnectionState");
