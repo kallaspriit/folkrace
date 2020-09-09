@@ -11,7 +11,6 @@
 
 typedef Callback<void()> CommandHandlerCallback;
 typedef std::map<std::string, CommandHandlerCallback> CommandHandlerMap;
-typedef std::queue<std::string> CommandQueue;
 
 class Commander
 {
@@ -28,14 +27,11 @@ public:
   std::string getStringArgument(unsigned int index);
   int getIntArgument(unsigned int index);
 
-  int handleAllQueuedCommands();
-
   Stream *serial = NULL;
   Serial *ser = NULL;
   USBSerial *usb = NULL;
 
 private:
-  void handleSerialRx();
   bool isReadable();
 
   template <typename Out>
@@ -48,7 +44,6 @@ private:
 
   char commandBuffer[COMMAND_BUFFER_SIZE];
   int commandLength = 0;
-  CommandQueue commandQueue;
   CommandHandlerMap commandHandlerMap;
   std::vector<std::string> tokens;
 };

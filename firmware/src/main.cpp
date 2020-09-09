@@ -614,13 +614,9 @@ void setupIMU()
 
 void stepCommanders()
 {
-  // read serials
+  // update serials (reads input and handles commands)
   logCommander.update();
   appCommander.update();
-
-  // handle queued commands
-  logCommander.handleAllQueuedCommands();
-  appCommander.handleAllQueuedCommands();
 }
 
 void stepUsbConnectionState()

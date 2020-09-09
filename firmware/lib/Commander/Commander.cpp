@@ -7,16 +7,10 @@
 
 Commander::Commander(Serial *serial) : serial(serial), ser(serial)
 {
-  // listen for receive events (can cause concurrency issues?)
-  // serial->attach(callback(this, &Commander::handleSerialRx), Serial::RxIrq);
 }
 
 Commander::Commander(USBSerial *serial) : serial(serial), usb(serial)
 {
-  // Callback<void()> cb = callback(this, &Commander::handleSerialRx);
-
-  // listen for receive events (can cause concurrency issues?)
-  // serial->attach(cb);
 }
 
 void Commander::registerCommandHandler(std::string name, CommandHandlerCallback handler)
@@ -24,35 +18,7 @@ void Commander::registerCommandHandler(std::string name, CommandHandlerCallback 
   commandHandlerMap[name] = handler;
 }
 
-int Commander::handleAllQueuedCommands()
-{
-  int handledCommandCount = 0;
-
-  // handle all queued commands
-  while (commandQueue.size() > 0)
-  {
-    // get the queued command
-    std::string command = commandQueue.front();
-    commandQueue.pop();
-
-    // printf("CONSUME: %s\n", command.c_str());
-
-    // handle the command
-    handleCommand(command);
-
-    handledCommandCount++;
-  }
-
-  return handledCommandCount;
-}
-
 void Commander::update()
-{
-  // read from serial
-  handleSerialRx();
-}
-
-void Commander::handleSerialRx()
 {
   // read all available characters
   while (isReadable())
@@ -67,13 +33,8 @@ void Commander::handleSerialRx()
     {
       // queue the command
       std::string command(commandBuffer, commandLength);
-      commandQueue.push(command);
 
-      // remove commands exceeding max queue length
-      while (commandQueue.size() > MAX_COMMAND_QUEUE_LENGTH)
-      {
-        commandQueue.pop();
-      }
+      handleCommand(command);
 
       // reset the buffer
       commandBuffer[0] = '\0';
