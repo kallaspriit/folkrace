@@ -3,13 +3,13 @@
 // #include <MotorController.hpp>
 #include <RoboClaw.hpp>
 
-const uint8_t MOTOR_CONTROLLER_ADDRESS = 128;
+const uint8_t MOTORS_ADDRESS = 128;
 // const int MOTOR_SERIAL_BAUDRATE = 38400; // original
 const int MOTOR_SERIAL_BAUDRATE = 460800; // maximum
 const PinName MOTOR_SERIAL_TX_PIN = p13;
 const PinName MOTOR_SERIAL_RX_PIN = p14;
 
-const int MOTOR_SERIAL_TIMEOUT_US = 10000;
+const int MOTORS_TIMEOUT_US = 10000;
 const int US_IN_SECONDS = 1000000;
 const int LOOP_SLEEP_OVERHEAD_US = 10;
 
@@ -21,7 +21,7 @@ Serial motorsSerial(MOTOR_SERIAL_TX_PIN, MOTOR_SERIAL_RX_PIN, MOTOR_SERIAL_BAUDR
 
 DigitalOut loopStatusLed(LED1);
 
-RoboClaw motors(&motorsSerial, MOTOR_SERIAL_TIMEOUT_US);
+RoboClaw motors(&motorsSerial, MOTORS_TIMEOUT_US);
 
 Timer reportTimer;
 Timer loopTimer;
@@ -57,12 +57,12 @@ int main()
     }
 
     // update motor speeds
-    motors.speedM1M2(MOTOR_CONTROLLER_ADDRESS, currentSpeed, currentSpeed);
+    motors.speedM1M2(MOTORS_ADDRESS, currentSpeed, currentSpeed);
 
     // read encoders
     uint32_t encoderM1, encoderM2;
 
-    bool readSuccess = motors.readEncoders(MOTOR_CONTROLLER_ADDRESS, encoderM1, encoderM2);
+    bool readSuccess = motors.readEncoders(MOTORS_ADDRESS, encoderM1, encoderM2);
 
     // report read failure
     if (!readSuccess)

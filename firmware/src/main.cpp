@@ -27,17 +27,17 @@ const PinName REAR_LED_STRIP_DATA_PIN = p15;
 const PinName USB_POWER_SENSE_PIN = p22;
 
 // baud rates configuration
-const int LOG_SERIAL_BAUDRATE = 115200; // log serial is the built-in usb of the mbed board
-// const int MOTOR_SERIAL_BAUDRATE = 460800; // not default, make sure to update in the Ion Studio
-const int MOTOR_SERIAL_BAUDRATE = 38400;
+const int LOG_SERIAL_BAUDRATE = 115200;   // log serial is the built-in usb of the mbed board
+const int MOTOR_SERIAL_BAUDRATE = 460800; // not default, make sure to update in the Ion Studio
 
 // timing configuration
 const int LOOP_LED_BLINK_INTERVAL_MS = 1000;
 const int LED_BLINK_DURATION_MS = 10;
 const int BUTTON_DEBOUNCE_US = 100000; // 100ms
 
-// component configuration
-const uint8_t MOTOR_SERIAL_ADDRESS = 128;
+// motor controller configuration
+const uint8_t MOTORS_ADDRESS = 128;
+const int MOTORS_TIMEOUT_US = 10000;
 
 // voltage measurement correction configuration
 const double MAIN_VOLTAGE_CORRECTION_MULTIPLIER = 1.02;
@@ -85,6 +85,7 @@ enum Error
 
 // setup serials
 Serial logSerial(LOG_SERIAL_TX_PIN, LOG_SERIAL_RX_PIN, LOG_SERIAL_BAUDRATE);
+Serial motorsSerial(MOTOR_SERIAL_TX_PIN, MOTOR_SERIAL_RX_PIN, MOTOR_SERIAL_BAUDRATE);
 USBSerial appSerial(USB_VENDOR_ID, USB_PRODUCT_ID, USB_PRODUCT_RELEASE, false);
 
 // setup commanders (handle serial commands)
@@ -92,7 +93,7 @@ Commander logCommander(&logSerial);
 Commander appCommander(&appSerial);
 
 // setup motor controller
-RoboClaw motors(MOTOR_SERIAL_ADDRESS, MOTOR_SERIAL_BAUDRATE, MOTOR_SERIAL_RX_PIN, MOTOR_SERIAL_TX_PIN);
+RoboClaw motors(&motorsSerial, MOTORS_TIMEOUT_US);
 
 // setup lidar
 Lidar lidar(LIDAR_TX_PIN, LIDAR_RX_PIN, LIDAR_PWM_PIN, LIDAR_PID_P, LIDAR_PID_I, LIDAR_PID_D, LIDAR_PID_INTERVAL_MS, LIDAR_STARTUP_PWM);
@@ -127,8 +128,8 @@ DebouncedInterruptIn leftBumper(LEFT_BUMPER_PIN, PullUp, BUTTON_DEBOUNCE_US);
 DebouncedInterruptIn rightBumper(RIGHT_BUMPER_PIN, PullUp, BUTTON_DEBOUNCE_US);
 
 // keep track of encoder values
-int lastEncoderDeltaM1 = 0;
-int lastEncoderDeltaM2 = 0;
+uint32_t lastEncoderDeltaM1 = 0;
+uint32_t lastEncoderDeltaM2 = 0;
 
 // track button state changes (default to unknown)
 int lastStartButtonState = -1;
@@ -258,20 +259,29 @@ void sendAsync(const char *fmt, ...)
   sendRaw(buf, resultLength, false);
 }
 
+// sends new target motor speeds
+bool setMotorSpeeds(int targetSpeedM1, int targetSpeedM2)
+{
+  // set motor speeds
+  bool sendSuccess = motors.speedM1M2(MOTORS_ADDRESS, targetSpeedM1, targetSpeedM2);
+
+  if (!sendSuccess)
+  {
+    logSerial.printf("@ sending motor speeds failed, is the power supply to the motor controller missing?\n");
+  }
+
+  return sendSuccess;
+}
+
 // reports encoder values
 void reportEncoderValues(bool force = false)
 {
-  // variables to store status and validity
-  uint8_t statusM1, statusM2;
-  bool validM1, validM2;
+  uint32_t encoderDeltaM1, encoderDeltaM2;
 
-  // read encoder values
-  // TODO: could we do this asynchronously? takes 1-2ms
-  int encoderDeltaM1 = (int)motors.getEncoderDeltaM1(&statusM1, &validM1);
-  int encoderDeltaM2 = (int)motors.getEncoderDeltaM2(&statusM2, &validM2);
+  bool readSuccess = motors.readEncoders(MOTORS_ADDRESS, encoderDeltaM1, encoderDeltaM2);
 
   // make sure we got valid results
-  if (!validM1 || !validM2)
+  if (!readSuccess)
   {
     logSerial.printf("@ reading motor encoders failed, is the power supply to the motor controller missing?\n");
 
@@ -279,7 +289,7 @@ void reportEncoderValues(bool force = false)
   }
 
   // don't bother sending the update if the speeds have not changed
-  if (!force && abs(encoderDeltaM1 - lastEncoderDeltaM1) == 0 && abs(encoderDeltaM2 - lastEncoderDeltaM2) == 0)
+  if (!force && labs(encoderDeltaM1 - lastEncoderDeltaM1) == 0 && labs(encoderDeltaM2 - lastEncoderDeltaM2) == 0)
   {
     return;
   }
@@ -288,8 +298,8 @@ void reportEncoderValues(bool force = false)
   lastEncoderDeltaM1 = encoderDeltaM1;
   lastEncoderDeltaM2 = encoderDeltaM2;
 
-  // send the encoder values
-  send("e:%d:%d\n", encoderDeltaM1, encoderDeltaM2);
+  // send the encoder values (convert to int to get negative values)
+  send("e:%d:%d\n", (int)encoderDeltaM1, (int)encoderDeltaM2);
 }
 
 // reports given button state
@@ -320,16 +330,25 @@ void reportVoltage()
 {
   // apparently the reported value is slightly off
   bool isValid;
-  float voltage = motors.getMainBatteryVoltage(&isValid) * MAIN_VOLTAGE_CORRECTION_MULTIPLIER;
+  float voltage = motors.readMainBatteryVoltage(MOTORS_ADDRESS, &isValid) * MAIN_VOLTAGE_CORRECTION_MULTIPLIER;
 
   send("voltage:%.1f:%d\n", voltage, isValid ? 1 : 0);
 }
 
 void reportCurrent()
 {
-  CurrentMeasurement currents = motors.getCurrents();
+  int16_t currentM1, currentM2;
 
-  send("current:%.2f:%.2f:%d\n", currents.currentM1, currents.currentM2, currents.isValid ? 1 : 0);
+  bool readSuccess = motors.readCurrents(MOTORS_ADDRESS, currentM1, currentM2);
+
+  if (!readSuccess)
+  {
+    logSerial.printf("@ reading motor currents failed, is the power supply to the motor controller missing?\n");
+
+    return;
+  }
+
+  send("current:%.2f:%.2f\n", (float)currentM1 / 100.0f, (float)currentM2 / 100.0f);
 }
 
 // reports all current internal states
@@ -382,8 +401,7 @@ void handleSpeedCommand(Commander *commander)
   }
 
   // set motor speeds
-  motors.setSpeedM1(targetSpeedM1);
-  motors.setSpeedM2(targetSpeedM2);
+  setMotorSpeeds(targetSpeedM1, targetSpeedM2);
 
   // report new target speeds
   reportTargetSpeed();
@@ -534,9 +552,11 @@ void setupCommandHandlers()
 
 void setupMotors()
 {
-  motors.setSpeedM1(0);
-  motors.setSpeedM2(0);
-  motors.resetEncoders();
+  // stop motors
+  setMotorSpeeds(0, 0);
+
+  // reset encoder values
+  motors.resetEncoders(MOTORS_ADDRESS);
 }
 
 void setupRearLedStrip()
