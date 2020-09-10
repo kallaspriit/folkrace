@@ -128,7 +128,7 @@ class RoboClaw
     };
 
 public:
-    RoboClaw(Serial *serial, int tout);
+    RoboClaw(BufferedSerial *serial, int tout);
     ~RoboClaw();
 
     bool forwardM1(uint8_t address, uint8_t speed);
@@ -242,7 +242,7 @@ private:
     uint8_t read1(uint8_t address, uint8_t cmd, bool *valid);
 
     uint16_t crc;
-    Serial *serial;
+    BufferedSerial *serial;
     Timer readTimer;
     int timeout;
 };

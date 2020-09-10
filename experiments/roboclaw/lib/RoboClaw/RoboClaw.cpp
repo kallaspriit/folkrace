@@ -42,7 +42,7 @@ int RoboClaw::read(int timeout)
 
     while (!serial->readable())
     {
-        int waitedTimeUs = readTimer.read_us();
+        int waitedTimeUs = readTimer.elapsed_time().count();
 
         if (waitedTimeUs >= (int)timeout)
         {

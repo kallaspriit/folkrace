@@ -15,8 +15,8 @@ const int TARGET_LOOP_UPDATE_RATE = 100; // hz
 const int TARGET_LOOP_DURATION_US = US_IN_SECONDS / TARGET_LOOP_UPDATE_RATE;
 
 // serials
-Serial logSerial(USBTX, USBRX, 115200);
-Serial motorsSerial(MOTOR_SERIAL_TX_PIN, MOTOR_SERIAL_RX_PIN, MOTOR_SERIAL_BAUDRATE);
+BufferedSerial logSerial(USBTX, USBRX, 115200);
+BufferedSerial motorsSerial(MOTOR_SERIAL_TX_PIN, MOTOR_SERIAL_RX_PIN, MOTOR_SERIAL_BAUDRATE);
 
 // status led
 DigitalOut loopStatusLed(LED1);
@@ -41,7 +41,7 @@ int main()
   while (1)
   {
     // get loop duration
-    int loopDurationUs = loopTimer.read_us();
+    int loopDurationUs = loopTimer.elapsed_time().count();
     loopTimer.reset();
 
     // blink status led
@@ -69,7 +69,7 @@ int main()
     // report read failure
     if (!readSuccess)
     {
-      logSerial.putc('!');
+      logSerial.printf("reading encoders failed\n");
     }
 
     // get loop time taken in microseconds
