@@ -337,7 +337,8 @@ void reportEncoderValues(bool force = false)
 // reports given button state
 void reportButtonState(string name, int state)
 {
-  send("button:%s:%d\n", name.c_str(), state);
+  // send flipped button state (normally low when pressed)
+  send("button:%s:%d\n", name.c_str(), !state);
 }
 
 void reportButtonStates()

@@ -18,7 +18,7 @@ export const BatteryStatus: React.SFC = () => (
         : "Unknown";
 
       return (
-        <Cell status={batteryStatus} onClick={() => robot.requestVoltage()}>
+        <Cell status={batteryStatus} onClick={() => robot.requestState()}>
           <BatteryIcon />
           <Text primary>Battery</Text>
           <Text>{description}</Text>

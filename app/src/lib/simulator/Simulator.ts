@@ -202,7 +202,7 @@ export class Simulator {
       return;
     }
 
-    const deadzone = 0.1;
+    const deadzone = 0.02;
 
     // apply some deadzone to avoid slow movement when not perfectly centered
     const speedInput =
