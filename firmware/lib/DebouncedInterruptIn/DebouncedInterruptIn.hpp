@@ -6,7 +6,7 @@
 class DebouncedInterruptIn
 {
 public:
-  DebouncedInterruptIn(PinName pin, PinMode mode = PullNone, int debounceDurationUs = 100);
+  DebouncedInterruptIn(PinName pin, PinMode mode = PullNone, int debounceDurationUs = 1000);
 
   int read();
 

@@ -128,6 +128,18 @@ export class StatusContainer extends Container<State> {
     });
   }
 
+  setStatusUnknown() {
+    return this.setState({
+      batteryVoltage: undefined,
+      lastBeaconTime: undefined,
+      lastResetTime: undefined,
+      loopFrequency: undefined,
+      loopTimeUs: undefined,
+      loadPercentage: undefined,
+      isMotorsCommunicationWorking: false,
+    });
+  }
+
   isMotorsCommunicationWorking() {
     return this.state.isMotorsCommunicationWorking === true;
   }

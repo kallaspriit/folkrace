@@ -33,7 +33,7 @@ export async function handleSerialCommand(
     //   requestBatteryVoltageInterval = null;
     // }
 
-    // no serial connection so we can't be sure of battery voltage
-    void status.setBatteryVoltage(undefined);
+    // no serial connection so we can't be sure of status
+    void status.setStatusUnknown();
   }
 }
