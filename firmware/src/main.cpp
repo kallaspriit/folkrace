@@ -85,7 +85,9 @@ const int LOOP_SLEEP_OVERHEAD_US = 10;
 // list of possible error states (error led blinks error position number of times)
 enum Error
 {
-  IMU_NOT_AVAILABLE
+  ERROR_IMU_NOT_AVAILABLE,
+  ERROR_PARTIAL_SEND,
+  ERROR_DIE
 };
 
 // setup serials
@@ -111,9 +113,9 @@ MadgwickAHRS ahrs(AHRS_GYRO_ERROR_DEG_S, AHRS_INITIAL_SAMPLE_FREQUENCY);
 Timer loopTimer;
 Timer loopLedTimer;
 Timer rearLedUpdateTimer;
-Timer appMessageSentTimer;
 Timer debugTimer;
 Timer reportLidarStateTimer;
+Timeout stopMotorsTimeout;
 
 // setup status leds
 DigitalOut loopStatusLed(LED1);
@@ -171,10 +173,43 @@ int cycleCountSinceLastLoopBlink = 0;
 // keep track of the number of read and sent lidar measurements
 int readLidarMeasurementCount = 0;
 
-// enters infinite loop, blinking given error sequence on the error led
-void dieWithError(Error error, const char *message)
+// sets given strip led color
+void setLedColor(int index, unsigned char red, unsigned char green, unsigned char blue, unsigned char brightness = 255)
 {
-  printf("@ %s\n", message);
+  rearLedStrip.SetI(index, brightness);
+  rearLedStrip.SetR(index, red);
+  rearLedStrip.SetG(index, green);
+  rearLedStrip.SetB(index, blue);
+
+  rearLedNeedsUpdate = true;
+}
+
+// enters infinite loop, blinking given error sequence on the error led
+void die(Error error, const char *fmt, ...)
+{
+  // create formatted message
+  va_list args;
+  va_start(args, fmt);
+  vsnprintf(sendBuffer, SEND_BUFFER_SIZE, fmt, args);
+  va_end(args);
+
+  printf("@ [DIE ERROR %d] %s\n", (int)error, sendBuffer);
+
+  // highlight rear led strip with error code
+  for (int i = 0; i < REAR_LED_COUNT; i++)
+  {
+    // leds are indexed from right to left
+    if (REAR_LED_COUNT - i - 1 == (int)error)
+    {
+      setLedColor(i, 255, 0, 0, 255);
+    }
+    else
+    {
+      setLedColor(i, 0, 255, 0, 255);
+    }
+  }
+
+  rearLedController.write(rearLedStrip.getBuf());
 
   // blink error index + 1 number of times
   int blinkCount = (int)error + 1;
@@ -231,23 +266,20 @@ void sendRaw(const char *message, int length)
     return;
   }
 
-  // write either as blocking or non-blocking
-  // appSerial.write((uint8_t *)message, length);
-  appSerial.send((uint8_t *)message, length);
+  // initally try to send as non-blocking
+  uint32_t sentLength;
+  appSerial.send_nb((uint8_t *)message, length, &sentLength);
 
-  // TODO: sending non-blocking would be nicer but have to handle failure to send
-  // uint32_t sentLength;
-  // appSerial.send_nb((uint8_t *)message, length, &sentLength);
-
-  // if ((int)sentLength != length)
-  // {
-  //   printf("@ sent length %d does not match message length %d, attempted to send %s", (int)sentLength, length, message);
-  // }
-  // else if (length > 2 && message[1] != ':')
-  // {
-  //   // only log messages that are not a single character (high speed data)
-  //   printf("> %s", message);
-  // }
+  if (sentLength == 0)
+  {
+    // sending non-blocking failed, try again using blocking call
+    appSerial.send((uint8_t *)message, length);
+  }
+  else if ((int)sentLength != length)
+  {
+    // should not really happen?
+    die(Error::ERROR_PARTIAL_SEND, "sent length %d does not match message length %d, attempted to send %s", (int)sentLength, length, message);
+  }
 
   if (length > 2 && message[1] != ':')
   {
@@ -255,11 +287,10 @@ void sendRaw(const char *message, int length)
     printf("> %s", message);
   }
 
-  // reset the app message sent timer if at least twice the blink duration has passed
-  // TODO: use Timeout instead?
-  if (std::chrono::duration_cast<std::chrono::milliseconds>(appMessageSentTimer.elapsed_time()).count() >= LED_BLINK_DURATION_MS * 2)
+  if (length > 2 && message[1] != ':')
   {
-    appMessageSentTimer.reset();
+    // only log messages that are not a single character (high speed data)
+    printf("> %s", message);
   }
 }
 
@@ -404,17 +435,6 @@ void reportState()
   reportMotorsCommunicationState();
 }
 
-// sets given strip led color
-void setLedColor(int index, unsigned char red, unsigned char green, unsigned char blue, unsigned char brightness = 255)
-{
-  rearLedStrip.SetI(index, brightness);
-  rearLedStrip.SetR(index, red);
-  rearLedStrip.SetG(index, green);
-  rearLedStrip.SetB(index, blue);
-
-  rearLedNeedsUpdate = true;
-}
-
 // returns random integer in given range (including)
 int getRandomInRange(int min, int max)
 {
@@ -528,6 +548,12 @@ void handlePingCommand(Commander *commander)
   send("pong\n");
 }
 
+// handles die command, killing the process
+void handleDieCommand(Commander *commander)
+{
+  die(Error::ERROR_DIE, "die requested");
+}
+
 // handles state request command, responds with all internal states
 void handleStateCommand(Commander *commander)
 {
@@ -565,37 +591,37 @@ void setupCommandHandlers()
   // TODO: implement helper that adds both?
   // registerCommandHandler("speed", handleSpeedCommand);
 
-  // sets target motor speeds (alias as just "s" for less bandwidth)
-  logCommander.registerCommandHandler("s", callback(handleSpeedCommand, &logCommander));
-  appCommander.registerCommandHandler("s", callback(handleSpeedCommand, &appCommander));
+  Commander *commanders[] = {&logCommander, &appCommander};
 
-  // sets target lidar rpm
-  logCommander.registerCommandHandler("rpm", callback(handleRpmCommand, &logCommander));
-  appCommander.registerCommandHandler("rpm", callback(handleRpmCommand, &appCommander));
+  for (Commander *commander : commanders)
+  {
+    // sets target motor speeds (alias as just "s" for less bandwidth)
+    commander->registerCommandHandler("s", callback(handleSpeedCommand, commander));
 
-  // reports lidar state
-  logCommander.registerCommandHandler("lidar", callback(handleLidarCommand, &logCommander));
-  appCommander.registerCommandHandler("lidar", callback(handleLidarCommand, &appCommander));
+    // sets target lidar rpm
+    commander->registerCommandHandler("rpm", callback(handleRpmCommand, commander));
 
-  // reports battery voltage
-  logCommander.registerCommandHandler("voltage", callback(handleVoltageCommand, &logCommander));
-  appCommander.registerCommandHandler("voltage", callback(handleVoltageCommand, &appCommander));
+    // reports lidar state
+    commander->registerCommandHandler("lidar", callback(handleLidarCommand, commander));
 
-  // reports motor currents
-  logCommander.registerCommandHandler("current", callback(handleCurrentCommand, &logCommander));
-  appCommander.registerCommandHandler("current", callback(handleCurrentCommand, &appCommander));
+    // reports battery voltage
+    commander->registerCommandHandler("voltage", callback(handleVoltageCommand, commander));
 
-  // proxy forwards the command to the other commander, useful for remote control etc
-  logCommander.registerCommandHandler("proxy", callback(handleProxyCommand, &logCommander));
-  appCommander.registerCommandHandler("proxy", callback(handleProxyCommand, &appCommander));
+    // reports motor currents
+    commander->registerCommandHandler("current", callback(handleCurrentCommand, commander));
 
-  // proxy forwards the command to the other commander, useful for remote control etc
-  logCommander.registerCommandHandler("ping", callback(handlePingCommand, &logCommander));
-  appCommander.registerCommandHandler("ping", callback(handlePingCommand, &appCommander));
+    // proxy forwards the command to the other commander, useful for remote control etc
+    commander->registerCommandHandler("proxy", callback(handleProxyCommand, commander));
 
-  // reports all internal state information
-  logCommander.registerCommandHandler("state", callback(handleStateCommand, &logCommander));
-  appCommander.registerCommandHandler("state", callback(handleStateCommand, &appCommander));
+    // proxy forwards the command to the other commander, useful for remote control etc
+    commander->registerCommandHandler("ping", callback(handlePingCommand, commander));
+
+    // reports all internal state information
+    commander->registerCommandHandler("state", callback(handleStateCommand, commander));
+
+    // kills the boarad
+    commander->registerCommandHandler("die", callback(handleDieCommand, commander));
+  }
 
   // TODO: implement help handler
 }
@@ -627,7 +653,7 @@ void setupIMU()
   if (!imu.begin())
   {
     // no IMU is available, blink the error led
-    dieWithError(Error::IMU_NOT_AVAILABLE, "communicating with LSM9DS1 IMU failed");
+    die(Error::ERROR_IMU_NOT_AVAILABLE, "communicating with LSM9DS1 IMU failed");
   }
 
   printf("# calibrating IMU.. ");
@@ -665,16 +691,8 @@ void stepUsbConnectionState()
     wasUsbConnected = isConnected;
   }
 
-  if (isConnected && std::chrono::duration_cast<std::chrono::milliseconds>(appMessageSentTimer.elapsed_time()).count() < LED_BLINK_DURATION_MS)
-  {
-    // turn the usb status led off for a brief duration when transmitting data
-    usbStatusLed = 0;
-  }
-  else
-  {
-    // turn the usb status led on when connected
-    usbStatusLed = isConnected ? 1 : 0;
-  }
+  // turn the usb status led on when connected
+  usbStatusLed = isConnected;
 }
 
 void stepButton(DebouncedInterruptIn *button, string name, int *lastState)
@@ -868,7 +886,6 @@ void setupTimers()
   // start timers
   loopLedTimer.start();
   rearLedUpdateTimer.start();
-  appMessageSentTimer.start();
   debugTimer.start();
   reportLidarStateTimer.start();
   loopTimer.start();
