@@ -14,8 +14,8 @@ export const LoopStatus: React.SFC = () => (
       const isStateKnown =
         loopFrequency !== undefined && loadPercentage !== undefined;
       const isValidLoopFrequency =
-        loopFrequency != undefined && Math.abs(100 - loopFrequency) < 10;
-      const isValidLoad = loadPercentage != undefined && loadPercentage < 100;
+        loopFrequency !== undefined && Math.abs(100 - loopFrequency) < 10;
+      const isValidLoad = loadPercentage !== undefined && loadPercentage < 100;
       const isSystemOptimal = isValidLoopFrequency && isValidLoad;
       const cellStatus = isSystemOptimal ? CellStatus.GOOD : CellStatus.WARN;
       const title =

@@ -2,7 +2,7 @@
 
 #include <Callback.h>
 
-DebouncedInterruptIn::DebouncedInterruptIn(PinName pin, PinMode mode, int debounceDurationUs) : interrupt(pin), debounceDurationUs(debounceDurationUs)
+DebouncedInterruptIn::DebouncedInterruptIn(PinName pin, PinMode mode, std::chrono::microseconds debounceDuration) : interrupt(pin), debounceDuration(debounceDuration), isDebouncing(false)
 {
   // set pin mode if special
   if (mode != PullNone)
@@ -12,74 +12,47 @@ DebouncedInterruptIn::DebouncedInterruptIn(PinName pin, PinMode mode, int deboun
 
   // read initial state
   state = interrupt.read();
-  isStable = true;
+  // nextState = state;
 
   // register fall and rise callbacks
   interrupt.fall(callback(this, &DebouncedInterruptIn::handleFall));
   interrupt.rise(callback(this, &DebouncedInterruptIn::handleRise));
-
-  // start the debounce timer
-  timer.start();
 }
 
 void DebouncedInterruptIn::handleFall()
 {
-  int timeSinceLastPressUs = timer.elapsed_time().count();
+  // nextState = 0;
 
-  // only update state if enough time since last request has passed
-  if (state != 1)
+  if (!isDebouncing)
   {
-    return;
-  }
-
-  if (timeSinceLastPressUs > debounceDurationUs)
-  {
-    timer.reset();
-
     state = 0;
-    isStable = true;
+    isDebouncing = true;
   }
-  else
-  {
-    isStable = false;
-  }
+
+  debounceTimeout.attach(callback(this, &DebouncedInterruptIn::clearDebouncing), debounceDuration);
 }
 
 void DebouncedInterruptIn::handleRise()
 {
-  int timeSinceLastPressUs = timer.elapsed_time().count();
+  // nextState = 1;
 
-  // only update state if enough time since last request has passed
-  if (state != 0)
+  if (!isDebouncing)
   {
-    return;
-  }
-
-  if (timeSinceLastPressUs > debounceDurationUs)
-  {
-    timer.reset();
-
     state = 1;
-    isStable = true;
+    isDebouncing = true;
   }
-  else
-  {
-    isStable = false;
-  }
+
+  debounceTimeout.attach(callback(this, &DebouncedInterruptIn::clearDebouncing), debounceDuration);
+}
+
+void DebouncedInterruptIn::clearDebouncing()
+{
+  isDebouncing = false;
+
+  state = interrupt.read();
 }
 
 int DebouncedInterruptIn::read()
 {
-  int stableDurationUs = timer.elapsed_time().count();
-
-  // update state if debounce duration has passed and the button state has changed
-  if (!isStable && stableDurationUs > debounceDurationUs && interrupt.read() != state)
-  {
-    state = interrupt.read();
-
-    timer.reset();
-    isStable = true;
-  }
-
   return state;
 }

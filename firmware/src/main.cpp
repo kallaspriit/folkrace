@@ -33,7 +33,6 @@ const int MOTOR_SERIAL_BAUDRATE = 460800; // not default, make sure to update in
 // timing configuration
 const int LOOP_LED_BLINK_INTERVAL_MS = 1000;
 const int LED_BLINK_DURATION_MS = 10;
-const int BUTTON_DEBOUNCE_US = 100000; // 100ms
 
 const int REPORT_STATUS_INTERVAL_MS = 1000;
 
@@ -129,9 +128,9 @@ WS2812 rearLedController(REAR_LED_STRIP_DATA_PIN, REAR_LED_COUNT, WS2812_ZERO_HI
 PixelArray rearLedStrip(REAR_LED_COUNT);
 
 // setup buttons
-DebouncedInterruptIn startButton(START_SWITCH_PIN, PullUp, BUTTON_DEBOUNCE_US);
-DebouncedInterruptIn leftBumper(LEFT_BUMPER_PIN, PullUp, BUTTON_DEBOUNCE_US);
-DebouncedInterruptIn rightBumper(RIGHT_BUMPER_PIN, PullUp, BUTTON_DEBOUNCE_US);
+DebouncedInterruptIn startButton(START_SWITCH_PIN);
+DebouncedInterruptIn leftBumper(LEFT_BUMPER_PIN);
+DebouncedInterruptIn rightBumper(RIGHT_BUMPER_PIN);
 
 // buffer used to send printf formatted messages
 const int SEND_BUFFER_SIZE = 64;
@@ -236,6 +235,7 @@ void sendRaw(const char *message, int length)
   // appSerial.write((uint8_t *)message, length);
   appSerial.send((uint8_t *)message, length);
 
+  // TODO: sending non-blocking would be nicer but have to handle failure to send
   // uint32_t sentLength;
   // appSerial.send_nb((uint8_t *)message, length, &sentLength);
 
