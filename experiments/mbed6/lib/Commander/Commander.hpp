@@ -2,7 +2,7 @@
 #define COMMANDER_HPP
 
 #include <mbed.h>
-// #include <USBSerial.h>
+#include <USBSerial.h>
 
 #include <string>
 #include <map>
@@ -16,7 +16,7 @@ class Commander
 {
 public:
   Commander(BufferedSerial *bufferedSerial);
-  // Commander(USBSerial *serial);
+  Commander(USBSerial *usbSerial);
 
   void update();
 
@@ -29,12 +29,12 @@ public:
   std::string getStringArgument(unsigned int index);
   int getIntArgument(unsigned int index);
 
-  // Stream *serial = NULL;
   BufferedSerial *bufferedSerial = NULL;
-  // USBSerial *usb = NULL;
+  USBSerial *usbSerial = NULL;
 
 private:
   bool isReadable();
+  ssize_t read(void *buffer, size_t length);
 
   template <typename Out>
   void split(const std::string &s, char delim, Out result);

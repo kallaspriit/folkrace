@@ -9,9 +9,9 @@ Commander::Commander(BufferedSerial *bufferedSerial) : bufferedSerial(bufferedSe
 {
 }
 
-// Commander::Commander(USBSerial *serial) : serial(serial), usb(serial)
-// {
-// }
+Commander::Commander(USBSerial *usbSerial) : usbSerial(usbSerial)
+{
+}
 
 void Commander::registerCommandHandler(std::string name, CommandHandlerCallback handler)
 {
@@ -24,7 +24,7 @@ void Commander::update()
   while (isReadable())
   {
     // read from serial
-    int readLength = bufferedSerial->read(readBuffer, READ_BUFFER_SIZE);
+    int readLength = read(readBuffer, READ_BUFFER_SIZE);
 
     if (readLength == 0)
     {
@@ -74,7 +74,14 @@ int Commander::send(const char *fmt, ...)
   int resultLength = vsnprintf(sendBuffer, SEND_BUFFER_SIZE, fmt, args);
   va_end(args);
 
-  bufferedSerial->write(sendBuffer, resultLength);
+  if (bufferedSerial != NULL)
+  {
+    bufferedSerial->write(sendBuffer, resultLength);
+  }
+  else if (usbSerial != NULL)
+  {
+    usbSerial->send((uint8_t *)sendBuffer, resultLength);
+  }
 
   return resultLength;
 }
@@ -85,8 +92,30 @@ bool Commander::isReadable()
   {
     return bufferedSerial->readable();
   }
+  else if (usbSerial != NULL)
+  {
+    return usbSerial->connected() && usbSerial->readable();
+  }
 
   return false;
+}
+
+ssize_t Commander::read(void *buffer, size_t length)
+{
+  if (bufferedSerial != NULL)
+  {
+    return bufferedSerial->read(buffer, length);
+  }
+  else if (usbSerial != NULL)
+  {
+    uint32_t readLength;
+
+    usbSerial->receive_nb((uint8_t *)buffer, length, &readLength);
+
+    return readLength;
+  }
+
+  return 0;
 }
 
 void Commander::handleCommand(std::string command)
