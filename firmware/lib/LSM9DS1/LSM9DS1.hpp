@@ -1,5 +1,5 @@
-#ifndef LSM9DS1_H
-#define LSM9DS1_H
+#ifndef LSM9DS1_HPP
+#define LSM9DS1_HPP
 
 #include "mbed.h"
 // #include <stdint.h>

@@ -5,10 +5,11 @@
 #include <RoboClaw.hpp>
 #include <Lidar.hpp>
 #include <DebouncedInterruptIn.hpp>
-#include <WS2812.h>
-#include <PixelArray.h>
-#include <LSM9DS1.h>
-#include <MadgwickAHRS.h>
+#include <WS2812.hpp>
+#include <PixelArray.hpp>
+#include <LSM9DS1.hpp>
+#include <MadgwickAHRS.hpp>
+#include <LedAnimator.hpp>
 
 // pin mapping configuration
 const PinName LOG_SERIAL_TX_PIN = USBTX;
@@ -128,6 +129,7 @@ DigitalIn usbPowerSense(USB_POWER_SENSE_PIN);
 // setup rear led strip
 WS2812 rearLedController(REAR_LED_STRIP_DATA_PIN, REAR_LED_COUNT, WS2812_ZERO_HIGH_LENGTH, WS2812_ZERO_LOW_LENGTH, WS2812_ONE_HIGH_LENGTH, WS2812_ONE_LOW_LENGTH);
 PixelArray rearLedStrip(REAR_LED_COUNT);
+LedAnimator ledAnimator(&rearLedStrip, REAR_LED_COUNT);
 
 // setup buttons
 DebouncedInterruptIn startButton(START_SWITCH_PIN);
@@ -818,15 +820,17 @@ void stepIMU()
 void stepRearLedStrip()
 {
   // test leds by setting new random colors at certain interval
-  if (rearLedUpdateTimer.elapsed_time() >= 500ms)
-  {
-    rearLedUpdateTimer.reset();
+  // if (rearLedUpdateTimer.elapsed_time() >= 500ms)
+  // {
+  //   rearLedUpdateTimer.reset();
 
-    for (int i = 0; i < REAR_LED_COUNT; i++)
-    {
-      setLedColor(i, getRandomInRange(0, 255), getRandomInRange(0, 255), getRandomInRange(0, 255), 255);
-    }
-  }
+  //   for (int i = 0; i < REAR_LED_COUNT; i++)
+  //   {
+  //     setLedColor(i, getRandomInRange(0, 255), getRandomInRange(0, 255), getRandomInRange(0, 255), 255);
+  //   }
+  // }
+
+  rearLedNeedsUpdate = ledAnimator.update();
 
   if (!rearLedNeedsUpdate)
   {

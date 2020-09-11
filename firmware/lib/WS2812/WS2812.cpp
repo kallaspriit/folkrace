@@ -1,4 +1,4 @@
-#include "WS2812.h"
+#include "WS2812.hpp"
 
 WS2812::WS2812(PinName pin, int size, int zeroHigh, int zeroLow, int oneHigh, int oneLow) : __gpo(pin)
 {

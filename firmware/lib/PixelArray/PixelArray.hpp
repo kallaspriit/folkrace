@@ -16,8 +16,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PixelArray_H
-#define PixelArray_H
+#ifndef PIXELARRAY_HPP
+#define PIXELARRAY_HPP
 
 #include "mbed.h"
 

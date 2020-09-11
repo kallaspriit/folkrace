@@ -16,8 +16,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef WS2812_H
-#define WS2812_H
+#ifndef WS2812_HPP
+#define WS2812_HPP
 
 #include "mbed.h"
 

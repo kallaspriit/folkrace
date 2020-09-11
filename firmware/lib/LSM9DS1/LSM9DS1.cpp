@@ -1,4 +1,4 @@
-#include "LSM9DS1.h"
+#include "LSM9DS1.hpp"
 #include "LSM9DS1_Registers.h"
 #include "LSM9DS1_Types.h"
 
