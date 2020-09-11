@@ -87,9 +87,6 @@ void Lidar::setTargetRpm(float newTargetRpm)
     // start the lidar if it was not already running
     if (!running)
     {
-      // listen for serial data
-      serial.attach(callback(this, &Lidar::handleSerialRx), Serial::RxIrq);
-
       // start the timers
       runningTimer.start();
 
@@ -107,9 +104,6 @@ void Lidar::setTargetRpm(float newTargetRpm)
     {
       // stop the motor
       setMotorPwm(0);
-
-      // stop listening for serial data
-      serial.attach(NULL, Serial::RxIrq);
 
       // stop timers
       rotationTimer.stop();
@@ -155,21 +149,35 @@ Lidar::Measurement *Lidar::getMeasurement(int number)
   return measurement;
 }
 
-void Lidar::handleSerialRx()
+void Lidar::update()
 {
-  // read next byte
-  uint8_t inByte = serial.getc();
-
-  // execute the state machine
-  switch (state)
+  if (!running)
   {
-  case WAIT_FOR_START_BYTE:
-    handleWaitForStartByte(inByte);
-    break;
+    return;
+  }
 
-  case BUILD_PACKET:
-    handleBuildPacket(inByte);
-    break;
+  int readLength = serial.read(readBuffer, READ_BUFFER_SIZE);
+
+  if (readLength == 0)
+  {
+    return;
+  }
+
+  for (int i = 0; i < readLength; i++)
+  {
+    char receivedChar = readBuffer[i];
+
+    // execute the state machine
+    switch (state)
+    {
+    case WAIT_FOR_START_BYTE:
+      handleWaitForStartByte(receivedChar);
+      break;
+
+    case BUILD_PACKET:
+      handleBuildPacket(receivedChar);
+      break;
+    }
   }
 }
 
@@ -377,7 +385,7 @@ int Lidar::getPacketStartAngle()
 //   // let the pid controller compute new motor pwm
 //   float newMotorPwm = motorPid.compute();
 
-//   // printf("pwm: %f, rpm: %f, sum: %f, count: %d\n", newMotorPwm, currentMotorRpm, motorRpmSum, motorRpmCount);
+//   // printf("# pwm: %f, rpm: %f, sum: %f, count: %d\n", newMotorPwm, currentMotorRpm, motorRpmSum, motorRpmCount);
 
 //   setMotorPwm(newMotorPwm);
 
@@ -392,13 +400,13 @@ int Lidar::getPacketStartAngle()
 void Lidar::handleRotationComplete()
 {
   // let it stabilize for a while at the startup pwm
-  if (runningTimer.read_ms() < 3000)
+  if (runningTimer.elapsed_time() < 3s)
   {
     return;
   }
 
   // start the rotation timer when the first rotation is completed
-  if (rotationTimer.read_ms() == 0)
+  if (rotationTimer.elapsed_time() == 0ms)
   {
     rotationTimer.start();
 
@@ -406,7 +414,7 @@ void Lidar::handleRotationComplete()
   }
 
   // get time taken to complete one full rotation
-  lastRotationDurationMs = rotationTimer.read_ms();
+  lastRotationDurationMs = std::chrono::duration_cast<std::chrono::milliseconds>(rotationTimer.elapsed_time()).count();
 
   // ignore unrealistically short rotation durations
   // if (lastRotationDurationMs < expectedRotationDurationMs / 2)

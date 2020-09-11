@@ -24,7 +24,7 @@ DebouncedInterruptIn::DebouncedInterruptIn(PinName pin, PinMode mode, int deboun
 
 void DebouncedInterruptIn::handleFall()
 {
-  int timeSinceLastPressUs = timer.read_us();
+  int timeSinceLastPressUs = timer.elapsed_time().count();
 
   // only update state if enough time since last request has passed
   if (state != 1)
@@ -47,7 +47,7 @@ void DebouncedInterruptIn::handleFall()
 
 void DebouncedInterruptIn::handleRise()
 {
-  int timeSinceLastPressUs = timer.read_us();
+  int timeSinceLastPressUs = timer.elapsed_time().count();
 
   // only update state if enough time since last request has passed
   if (state != 0)
@@ -70,10 +70,10 @@ void DebouncedInterruptIn::handleRise()
 
 int DebouncedInterruptIn::read()
 {
-  int stableDuration = timer.read_us();
+  int stableDurationUs = timer.elapsed_time().count();
 
   // update state if debounce duration has passed and the button state has changed
-  if (!isStable && stableDuration > debounceDurationUs && interrupt.read() != state)
+  if (!isStable && stableDurationUs > debounceDurationUs && interrupt.read() != state)
   {
     state = interrupt.read();
 

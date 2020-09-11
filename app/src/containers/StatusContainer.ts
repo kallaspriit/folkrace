@@ -43,6 +43,7 @@ export interface State {
   readonly loopFrequency?: number;
   readonly loopTimeUs?: number;
   readonly loadPercentage?: number;
+  readonly isMotorsCommunicationWorking: boolean;
 }
 
 export class StatusContainer extends Container<State> {
@@ -60,6 +61,7 @@ export class StatusContainer extends Container<State> {
       },
     },
     transportState: TransportState.DISCONNECTED,
+    isMotorsCommunicationWorking: false,
   };
 
   setSerialState(type: SerialType, state: SerialState, deviceName?: string) {
@@ -95,6 +97,12 @@ export class StatusContainer extends Container<State> {
     });
   }
 
+  setIsMotorsCommunicationWorking(isMotorsCommunicationWorking: boolean) {
+    return this.setState({
+      isMotorsCommunicationWorking,
+    });
+  }
+
   setOffline() {
     return this.setState({
       remoteIp: undefined,
@@ -118,6 +126,10 @@ export class StatusContainer extends Container<State> {
     return this.setState({
       lastResetTime: new Date(),
     });
+  }
+
+  isMotorsCommunicationWorking() {
+    return this.state.isMotorsCommunicationWorking === true;
   }
 
   getConnectedSerial(): Serial | undefined {

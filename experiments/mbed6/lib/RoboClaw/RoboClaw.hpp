@@ -223,7 +223,7 @@ public:
     bool setPWMMode(uint8_t address, uint8_t mode);
     bool getPWMMode(uint8_t address, uint8_t &mode);
 
-    int16_t read(int timeout);
+    int read(int timeout);
     int write(uint8_t byte);
     void flush();
 

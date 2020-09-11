@@ -224,11 +224,9 @@ public:
     bool getPWMMode(uint8_t address, uint8_t &mode);
 
     int available();
-    int read();
     int read(int timeout);
-    int write(int byte);
+    int write(uint8_t byte);
     void flush();
-    void clear();
 
 private:
     void clearCrc();
@@ -244,6 +242,7 @@ private:
     uint16_t crc;
     BufferedSerial *serial;
     Timer readTimer;
+    int sendCommandLength = 0;
     int timeout;
 };
 

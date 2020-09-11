@@ -5,11 +5,11 @@
 #include <vector>
 #include <iterator>
 
-Commander::Commander(Serial *serial) : serial(serial), ser(serial)
+Commander::Commander(BufferedSerial *bufferedSerial) : bufferedSerial(bufferedSerial)
 {
 }
 
-Commander::Commander(USBSerial *serial) : serial(serial), usb(serial)
+Commander::Commander(USBSerial *usbSerial) : usbSerial(usbSerial)
 {
 }
 
@@ -23,52 +23,99 @@ void Commander::update()
   // read all available characters
   while (isReadable())
   {
-    // get next character
-    char receivedChar = serial->getc();
+    // read from serial
+    int readLength = read(readBuffer, READ_BUFFER_SIZE);
 
-    // printf("RECEIVED %c (%d) [%s] %d\n", receivedChar, receivedChar, commandBuffer, commandQueue.size());
-
-    // consider linefeed as the end of command
-    if (receivedChar == '\n')
+    if (readLength == 0)
     {
-      // queue the command
-      std::string command(commandBuffer, commandLength);
-
-      handleCommand(command);
-
-      // reset the buffer
-      commandBuffer[0] = '\0';
-      commandLength = 0;
+      return;
     }
-    else
+
+    for (int i = 0; i < readLength; i++)
     {
-      // make sure we don't overflow our buffer
-      if (commandLength > MAX_COMMAND_LENGTH - 1)
+      char receivedChar = readBuffer[i];
+
+      // printf("RECEIVED %c (%d) [%s] %d\n", receivedChar, receivedChar, commandBuffer, commandQueue.size());
+
+      // consider linefeed as the end of command
+      if (receivedChar == '\n')
       {
-        serial->printf("@ maximum command length is %d characters, stopping at %s\n", MAX_COMMAND_LENGTH, commandBuffer);
+        // queue the command
+        std::string command(commandBuffer, commandLength);
 
-        return;
+        handleCommand(command);
+
+        // reset the buffer
+        commandBuffer[0] = '\0';
+        commandLength = 0;
       }
+      else
+      {
+        // make sure we don't overflow our buffer
+        if (commandLength > MAX_COMMAND_LENGTH - 1)
+        {
+          printf("@ maximum command length is %d characters, stopping at %s\n", MAX_COMMAND_LENGTH, commandBuffer);
 
-      // append to the command buffer
-      commandBuffer[commandLength++] = receivedChar;
-      commandBuffer[commandLength] = '\0';
+          return;
+        }
+
+        // append to the command buffer
+        commandBuffer[commandLength++] = receivedChar;
+        commandBuffer[commandLength] = '\0';
+      }
     }
   }
 }
 
+int Commander::send(const char *fmt, ...)
+{
+  va_list args;
+  va_start(args, fmt);
+  int resultLength = vsnprintf(sendBuffer, SEND_BUFFER_SIZE, fmt, args);
+  va_end(args);
+
+  if (bufferedSerial != NULL)
+  {
+    bufferedSerial->write(sendBuffer, resultLength);
+  }
+  else if (usbSerial != NULL)
+  {
+    usbSerial->send((uint8_t *)sendBuffer, resultLength);
+  }
+
+  return resultLength;
+}
+
 bool Commander::isReadable()
 {
-  if (ser != NULL)
+  if (bufferedSerial != NULL)
   {
-    return ser->readable();
+    return bufferedSerial->readable();
   }
-  else if (usb != NULL)
+  else if (usbSerial != NULL)
   {
-    return usb->available() > 0;
+    return usbSerial->connected() && usbSerial->readable();
   }
 
   return false;
+}
+
+ssize_t Commander::read(void *buffer, size_t length)
+{
+  if (bufferedSerial != NULL)
+  {
+    return bufferedSerial->read(buffer, length);
+  }
+  else if (usbSerial != NULL)
+  {
+    uint32_t readLength;
+
+    usbSerial->receive_nb((uint8_t *)buffer, length, &readLength);
+
+    return readLength;
+  }
+
+  return 0;
 }
 
 void Commander::handleCommand(std::string command)
@@ -91,8 +138,13 @@ void Commander::handleCommand(std::string command)
   if (handlerIt != commandHandlerMap.end())
   {
     // log incoming command
-    // TODO: remove?
-    printf("< %s\n", command.c_str());
+    // TODO: remove received command logging?
+
+    // only log messages that are not a single character (high speed data)
+    if (command.length() > 2 && command.at(1) != ':')
+    {
+      printf("> %s\n", command.c_str());
+    }
 
     // call the command handler if it exists
     handlerIt->second();
@@ -100,7 +152,7 @@ void Commander::handleCommand(std::string command)
   else
   {
     // log missing command handler
-    serial->printf("@ command \"%s\" not found (%s)\n", name.c_str(), command.c_str());
+    printf("@ command \"%s\" not found (%s)\n", name.c_str(), command.c_str());
   }
 }
 
@@ -117,7 +169,7 @@ std::string Commander::getStringArgument(unsigned int index)
 
   if (index > getArgumentCount() - 1)
   {
-    serial->printf("@ commander argument with index of %d requested but there are only %d arguments\n", index, argumentCount);
+    printf("@ commander argument with index of %d requested but there are only %d arguments\n", index, argumentCount);
 
     return "";
   }
@@ -134,16 +186,7 @@ int Commander::getIntArgument(unsigned int index)
     return 0;
   }
 
-  // try
-  // {
   return std::stoi(arg);
-  // }
-  // catch (...)
-  // {
-  //   serial->printf("@ commander argument with index of %d - \"%s\" could not be converted to integer, returning 0\n", index, arg.c_str());
-
-  //   return 0;
-  // }
 }
 
 template <typename Out>

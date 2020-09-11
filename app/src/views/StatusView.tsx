@@ -7,6 +7,8 @@ import { Log } from "../components/Log";
 import { TransportStatus } from "../components/TransportStatus";
 import { UsbStatus } from "../components/UsbStatus";
 import { View } from "../components/View";
+import { MotorsStatus } from "../components/MotorsStatus";
+import { LoopStatus } from "../components/LoopStatus";
 
 // TODO: add target and real speed (compare %?)
 // TODO: add odometry (visualize path?)
@@ -19,6 +21,8 @@ export const StatusView: React.SFC = () => (
       <TransportStatus />
       <BatteryStatus />
       <LidarStatus />
+      <MotorsStatus />
+      <LoopStatus />
       <Log />
     </Grid>
   </View>

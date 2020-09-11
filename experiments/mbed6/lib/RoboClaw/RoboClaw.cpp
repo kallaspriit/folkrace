@@ -6,6 +6,7 @@
 
 RoboClaw::RoboClaw(BufferedSerial *serial, int timeout) : serial(serial), timeout(timeout)
 {
+    serial->set_blocking(false);
 }
 
 RoboClaw::~RoboClaw()
@@ -14,48 +15,87 @@ RoboClaw::~RoboClaw()
 
 int RoboClaw::write(uint8_t byte)
 {
-    serial->write(&byte, 1);
-}
+    if (!serial->writable())
+    {
+        return 0;
+    }
 
-int RoboClaw::available()
-{
-    return serial->readable();
+    return serial->write(&byte, 1);
 }
 
 void RoboClaw::flush()
 {
+    ssize_t readLength;
     char c;
 
-    while (serial->readable())
+    do
     {
-        serial->read(&c, 1);
-    }
+        readLength = serial->read(&c, 1);
+    } while (readLength > 0);
+
+    // while (serial->readable())
+    // {
+    //     serial->read(&c, 1);
+    // }
 }
 
 int RoboClaw::read(int timeout)
 {
+    int c;
+
     readTimer.reset();
     readTimer.start();
 
-    while (!serial->readable())
+    do
     {
-        int waitedTimeUs = std::chrono::duration_cast<std::chrono::microseconds>(readTimer.elapsed_time()).count();
+        ssize_t readLength = serial->read(&c, 1);
 
-        if (waitedTimeUs >= (int)timeout)
+        // readLength is reported negative (-EAGAIN) if not content is available
+        if (readLength > 0)
+        {
+            readTimer.stop();
+
+            return c;
+        }
+
+        int waitedTimeUs = readTimer.elapsed_time().count();
+
+        // give up if timeout is reached
+        if (waitedTimeUs >= timeout)
         {
             readTimer.stop();
 
             return -1;
         }
-    }
+    } while (true);
 
-    readTimer.stop();
+    // readTimer.reset();
+    // readTimer.start();
 
-    int c;
+    // while (!serial->readable())
+    // {
+    //     int waitedTimeUs = std::chrono::duration_cast<std::chrono::microseconds>(readTimer.elapsed_time()).count();
 
-    serial->read(&c, 1);
+    //     if (waitedTimeUs >= (int)timeout)
+    //     {
+    //         readTimer.stop();
 
-    return c;
+    //         return -1;
+    //     }
+    // }
+
+    // readTimer.stop();
+
+    // int c;
+
+    // int readSize = serial->read(&c, 1);
+
+    // if (readSize == 0)
+    // {
+    //     return -1;
+    // }
+
+    // return c;
 }
 
 void RoboClaw::clearCrc()
@@ -87,6 +127,11 @@ uint16_t RoboClaw::getCrc()
 
 bool RoboClaw::writeN(uint8_t cnt, ...)
 {
+    if (!serial->writable())
+    {
+        return false;
+    }
+
     uint8_t trys = MAXRETRY;
 
     do
@@ -140,6 +185,8 @@ bool RoboClaw::readN(uint8_t cnt, uint8_t address, uint8_t cmd, ...)
 
         data = 0;
 
+        //printf("1");
+
         for (uint8_t index = 0; index < cnt; index++)
         {
             uint32_t *ptr = va_arg(marker, uint32_t *);
@@ -152,6 +199,7 @@ bool RoboClaw::readN(uint8_t cnt, uint8_t address, uint8_t cmd, ...)
             }
             else
             {
+                printf("a");
                 break;
             }
 
@@ -163,6 +211,7 @@ bool RoboClaw::readN(uint8_t cnt, uint8_t address, uint8_t cmd, ...)
             }
             else
             {
+                printf("b");
                 break;
             }
 
@@ -174,6 +223,7 @@ bool RoboClaw::readN(uint8_t cnt, uint8_t address, uint8_t cmd, ...)
             }
             else
             {
+                printf("c");
                 break;
             }
 
@@ -185,6 +235,7 @@ bool RoboClaw::readN(uint8_t cnt, uint8_t address, uint8_t cmd, ...)
             }
             else
             {
+                printf("d");
                 break;
             }
 
@@ -193,24 +244,62 @@ bool RoboClaw::readN(uint8_t cnt, uint8_t address, uint8_t cmd, ...)
 
         va_end(marker);
 
+        // if (data == -1) {
+        //     continue;
+        // }
+
         if (data != -1)
         {
-            uint16_t ccrc;
+            //printf("2");
+
+            uint16_t expectedCrc;
             data = read(timeout);
 
             if (data != -1)
             {
-                ccrc = data << 8;
+                //printf("3");
+
+                expectedCrc = data << 8;
                 data = read(timeout);
 
                 if (data != -1)
                 {
-                    ccrc |= data;
-                    return getCrc() == ccrc;
+                    //printf("4");
+
+                    expectedCrc |= data;
+
+                    uint16_t calculatedCrc = getCrc();
+
+                    bool isCrcValid = calculatedCrc == expectedCrc;
+
+                    if (isCrcValid)
+                    {
+                        //printf("Y\n");
+                    }
+                    else
+                    {
+                        printf("N:%d:%d:%d\n", calculatedCrc, expectedCrc, (int)value);
+                    }
+
+                    return isCrcValid;
+                }
+                else
+                {
+                    printf("g");
                 }
             }
+            else
+            {
+                printf("f");
+            }
+        }
+        else
+        {
+            printf("e");
         }
     } while (trys--);
+
+    //printf("X");
 
     return false;
 }

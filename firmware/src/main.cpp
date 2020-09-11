@@ -34,6 +34,7 @@ const int MOTOR_SERIAL_BAUDRATE = 460800; // not default, make sure to update in
 const int LOOP_LED_BLINK_INTERVAL_MS = 1000;
 const int LED_BLINK_DURATION_MS = 10;
 const int BUTTON_DEBOUNCE_US = 100000; // 100ms
+
 const int REPORT_STATUS_INTERVAL_MS = 1000;
 
 // motor controller configuration
@@ -44,18 +45,18 @@ const int MOTORS_TIMEOUT_US = 10000;
 const double MAIN_VOLTAGE_CORRECTION_MULTIPLIER = 1.02;
 
 // usb serial configuration (same as USBSerial defaults)
-const uint16_t USB_VENDOR_ID = 0x1f00;
-const uint16_t USB_PRODUCT_ID = 0x2012;
-const uint16_t USB_PRODUCT_RELEASE = 0x0001;
+// const uint16_t USB_VENDOR_ID = 0x1f00;
+// const uint16_t USB_PRODUCT_ID = 0x2012;
+// const uint16_t USB_PRODUCT_RELEASE = 0x0001;
 
 // rear led configuration
 const int REAR_LED_COUNT = 8;
 
 // WS2812 led driver timing NOP counts for timing
-const int WS2812_ZERO_HIGH_LENGTH = 3;
-const int WS2812_ZERO_LOW_LENGTH = 11;
-const int WS2812_ONE_HIGH_LENGTH = 10;
-const int WS2812_ONE_LOW_LENGTH = 11;
+const int WS2812_ZERO_HIGH_LENGTH = 0;
+const int WS2812_ZERO_LOW_LENGTH = 5;
+const int WS2812_ONE_HIGH_LENGTH = 5;
+const int WS2812_ONE_LOW_LENGTH = 0;
 
 // lidar configuration
 const float LIDAR_PID_P = 3.0f;
@@ -89,9 +90,9 @@ enum Error
 };
 
 // setup serials
-Serial logSerial(LOG_SERIAL_TX_PIN, LOG_SERIAL_RX_PIN, LOG_SERIAL_BAUDRATE);
-Serial motorsSerial(MOTOR_SERIAL_TX_PIN, MOTOR_SERIAL_RX_PIN, MOTOR_SERIAL_BAUDRATE);
-USBSerial appSerial(USB_VENDOR_ID, USB_PRODUCT_ID, USB_PRODUCT_RELEASE, false);
+BufferedSerial logSerial(LOG_SERIAL_TX_PIN, LOG_SERIAL_RX_PIN, LOG_SERIAL_BAUDRATE);
+BufferedSerial motorsSerial(MOTOR_SERIAL_TX_PIN, MOTOR_SERIAL_RX_PIN, MOTOR_SERIAL_BAUDRATE);
+USBSerial appSerial(false /*, USB_VENDOR_ID, USB_PRODUCT_ID, USB_PRODUCT_RELEASE*/);
 
 // setup commanders (handle serial commands)
 Commander logCommander(&logSerial);
@@ -132,6 +133,10 @@ DebouncedInterruptIn startButton(START_SWITCH_PIN, PullUp, BUTTON_DEBOUNCE_US);
 DebouncedInterruptIn leftBumper(LEFT_BUMPER_PIN, PullUp, BUTTON_DEBOUNCE_US);
 DebouncedInterruptIn rightBumper(RIGHT_BUMPER_PIN, PullUp, BUTTON_DEBOUNCE_US);
 
+// buffer used to send printf formatted messages
+const int SEND_BUFFER_SIZE = 64;
+static char sendBuffer[SEND_BUFFER_SIZE];
+
 // keep track of encoder values
 uint32_t lastEncoderDeltaM1 = 0;
 uint32_t lastEncoderDeltaM2 = 0;
@@ -142,10 +147,13 @@ int lastLeftBumperState = -1;
 int lastRightBumperState = -1;
 
 // track whether the rear led strip requires update
-bool rearLedNeedsUpdate = false;
+bool rearLedNeedsUpdate = true;
 
 // track usb connection state
 bool wasUsbConnected = false;
+
+// track whether talking to the motors board is working
+bool wasMotorsCommunicationWorking = true;
 
 // track target speeds
 int targetSpeedM1 = 0;
@@ -167,7 +175,7 @@ int readLidarMeasurementCount = 0;
 // enters infinite loop, blinking given error sequence on the error led
 void dieWithError(Error error, const char *message)
 {
-  logSerial.printf("@ %s\n", message);
+  printf("@ %s\n", message);
 
   // blink error index + 1 number of times
   int blinkCount = (int)error + 1;
@@ -180,17 +188,17 @@ void dieWithError(Error error, const char *message)
     // blink fast according to error
     for (int i = 0; i < blinkCount; i++)
     {
-      wait(0.1f);
+      ThisThread::sleep_for(100ms);
 
       errorLed = 1;
 
-      wait(0.1f);
+      ThisThread::sleep_for(100ms);
 
       errorLed = 0;
     }
 
     // turn error led off for a while
-    wait(3.0f);
+    ThisThread::sleep_for(3s);
   }
 }
 
@@ -206,12 +214,12 @@ bool isUsbConnected()
 }
 
 // writes app message using either blocking or non-blocking method (consider send instead as it supports printf arguments)
-void sendRaw(const char *message, int length, bool blocking = true)
+void sendRaw(const char *message, int length)
 {
   // don't attempt to send if not connected as writing is blocking
   if (!isUsbConnected())
   {
-    logSerial.printf("@ %s", message);
+    printf("@ %s", message);
 
     return;
   }
@@ -219,29 +227,37 @@ void sendRaw(const char *message, int length, bool blocking = true)
   // make sure app serial is writable
   if (!appSerial.writable())
   {
-    logSerial.printf("@ app serial not writable to send %s", message);
+    printf("@ app serial not writable to send %s", message);
 
     return;
   }
 
   // write either as blocking or non-blocking
-  if (blocking)
-  {
-    appSerial.writeBlock((uint8_t *)message, length);
-  }
-  else
-  {
-    appSerial.writeNB(EPBULK_IN, (uint8_t *)message, length, MAX_PACKET_SIZE_EPBULK);
-  }
+  // appSerial.write((uint8_t *)message, length);
+  appSerial.send((uint8_t *)message, length);
 
-  // only log messages that are not a single character (high speed data)
+  // uint32_t sentLength;
+  // appSerial.send_nb((uint8_t *)message, length, &sentLength);
+
+  // if ((int)sentLength != length)
+  // {
+  //   printf("@ sent length %d does not match message length %d, attempted to send %s", (int)sentLength, length, message);
+  // }
+  // else if (length > 2 && message[1] != ':')
+  // {
+  //   // only log messages that are not a single character (high speed data)
+  //   printf("> %s", message);
+  // }
+
   if (length > 2 && message[1] != ':')
   {
-    logSerial.printf("> %s", message);
+    // only log messages that are not a single character (high speed data)
+    printf("> %s", message);
   }
 
   // reset the app message sent timer if at least twice the blink duration has passed
-  if (appMessageSentTimer.read_ms() >= LED_BLINK_DURATION_MS * 2)
+  // TODO: use Timeout instead?
+  if (std::chrono::duration_cast<std::chrono::milliseconds>(appMessageSentTimer.elapsed_time()).count() >= LED_BLINK_DURATION_MS * 2)
   {
     appMessageSentTimer.reset();
   }
@@ -251,28 +267,31 @@ void sendRaw(const char *message, int length, bool blocking = true)
 void send(const char *fmt, ...)
 {
   // create formatted message
-  char buf[MAX_PACKET_SIZE_EPBULK];
   va_list args;
   va_start(args, fmt);
-  int resultLength = vsnprintf(buf, MAX_PACKET_SIZE_EPBULK, fmt, args);
+  int length = vsnprintf(sendBuffer, SEND_BUFFER_SIZE, fmt, args);
   va_end(args);
 
-  // write as non-blocking
-  sendRaw(buf, resultLength, true);
+  // send
+  sendRaw(sendBuffer, length);
 }
 
-// sends given printf-formatted message to app serial if connected
-void sendAsync(const char *fmt, ...)
+void reportMotorsCommunicationState()
 {
-  // create formatted message
-  char buf[MAX_PACKET_SIZE_EPBULK];
-  va_list args;
-  va_start(args, fmt);
-  int resultLength = vsnprintf(buf, MAX_PACKET_SIZE_EPBULK, fmt, args);
-  va_end(args);
+  send("motors:%d\n", wasMotorsCommunicationWorking);
+}
 
-  // write as non-blocking
-  sendRaw(buf, resultLength, false);
+void handleMotorsCommunicationResult(bool isSuccessful)
+{
+  // skip if communication state has not changed
+  if (isSuccessful == wasMotorsCommunicationWorking)
+  {
+    return;
+  }
+
+  wasMotorsCommunicationWorking = isSuccessful;
+
+  reportMotorsCommunicationState();
 }
 
 // sends new target motor speeds
@@ -281,10 +300,7 @@ bool setMotorSpeeds(int targetSpeedM1, int targetSpeedM2)
   // set motor speeds
   bool sendSuccess = motors.speedM1M2(MOTORS_ADDRESS, targetSpeedM1, targetSpeedM2);
 
-  if (!sendSuccess)
-  {
-    logSerial.printf("@ sending motor speeds failed, is the power supply to the motor controller missing?\n");
-  }
+  handleMotorsCommunicationResult(sendSuccess);
 
   return sendSuccess;
 }
@@ -296,11 +312,11 @@ void reportEncoderValues(bool force = false)
 
   bool readSuccess = motors.readEncoders(MOTORS_ADDRESS, encoderDeltaM1, encoderDeltaM2);
 
+  handleMotorsCommunicationResult(readSuccess);
+
   // make sure we got valid results
   if (!readSuccess)
   {
-    logSerial.printf("@ reading motor encoders failed, is the power supply to the motor controller missing?\n");
-
     return;
   }
 
@@ -349,10 +365,10 @@ void reportBatteryVoltage()
 
   uint16_t voltage = motors.readMainBatteryVoltage(MOTORS_ADDRESS, &readSuccess) * MAIN_VOLTAGE_CORRECTION_MULTIPLIER;
 
+  handleMotorsCommunicationResult(readSuccess);
+
   if (!readSuccess)
   {
-    logSerial.printf("@ reading battery voltage failed, is the power supply to the motor controller missing?\n");
-
     return;
   }
 
@@ -365,10 +381,10 @@ void reportCurrent()
 
   bool readSuccess = motors.readCurrents(MOTORS_ADDRESS, currentM1, currentM2);
 
+  handleMotorsCommunicationResult(readSuccess);
+
   if (!readSuccess)
   {
-    logSerial.printf("@ reading motor currents failed, is the power supply to the motor controller missing?\n");
-
     return;
   }
 
@@ -384,6 +400,7 @@ void reportState()
   reportBatteryVoltage();
   reportCurrent();
   reportEncoderValues(true);
+  reportMotorsCommunicationState();
 }
 
 // sets given strip led color
@@ -521,6 +538,11 @@ void setupUsbPowerSensing()
   usbPowerSense.mode(PullDown);
 }
 
+void setupUsbSerial()
+{
+  appSerial.connect();
+}
+
 void setupStatusLeds()
 {
   // set initial status led states
@@ -583,7 +605,9 @@ void setupMotors()
   setMotorSpeeds(0, 0);
 
   // reset encoder values
-  motors.resetEncoders(MOTORS_ADDRESS);
+  bool writeSuccess = motors.resetEncoders(MOTORS_ADDRESS);
+
+  handleMotorsCommunicationResult(writeSuccess);
 }
 
 void setupRearLedStrip()
@@ -605,11 +629,11 @@ void setupIMU()
     dieWithError(Error::IMU_NOT_AVAILABLE, "communicating with LSM9DS1 IMU failed");
   }
 
-  logSerial.printf("# calibrating IMU.. ");
+  printf("# calibrating IMU.. ");
 
   imu.calibrate();
 
-  logSerial.printf("done!\n");
+  printf("done!\n");
 }
 
 void stepCommanders()
@@ -628,7 +652,7 @@ void stepUsbConnectionState()
   if (isConnected != wasUsbConnected)
   {
     // notify usb connection state change
-    logSerial.printf("# usb %s\n", isConnected ? "connected" : "disconnected");
+    printf("# usb %s\n", isConnected ? "connected" : "disconnected");
 
     // notify app of reset
     if (isConnected)
@@ -640,7 +664,7 @@ void stepUsbConnectionState()
     wasUsbConnected = isConnected;
   }
 
-  if (isConnected && appMessageSentTimer.read_ms() < LED_BLINK_DURATION_MS)
+  if (isConnected && std::chrono::duration_cast<std::chrono::milliseconds>(appMessageSentTimer.elapsed_time()).count() < LED_BLINK_DURATION_MS)
   {
     // turn the usb status led off for a brief duration when transmitting data
     usbStatusLed = 0;
@@ -690,10 +714,12 @@ void stepEncoderReporter()
 
 void stepLidar()
 {
+  lidar.update();
+
   bool isConnected = isUsbConnected();
 
   // report lidar state at an interval
-  if (isConnected && lidar.isRunning() && reportLidarStateTimer.read_ms() >= LIDAR_REPORT_STATE_INTERVAL_MS)
+  if (isConnected && lidar.isRunning() && std::chrono::duration_cast<std::chrono::milliseconds>(reportLidarStateTimer.elapsed_time()).count() >= LIDAR_REPORT_STATE_INTERVAL_MS)
   {
     reportLidarState();
 
@@ -766,21 +792,21 @@ void stepIMU()
   {
     // TODO: send attitude quaternion instead of roll-pitch-yaw
     // sendAsync("i:%f:%f:%f:%f:%f:%f:%f:%f:%f:%f:%f:%f\n", gx, gy, gz, ax, ay, az, mx, my, mz, roll, pitch, yaw);
-    sendAsync("a:%f:%f:%f\n", roll, pitch, yaw);
+    send("a:%f:%f:%f\n", roll, pitch, yaw);
   }
 }
 
 void stepRearLedStrip()
 {
   // test leds by setting new random colors at certain interval
-  if (rearLedUpdateTimer.read_ms() >= 500)
+  if (rearLedUpdateTimer.elapsed_time() >= 500ms)
   {
+    rearLedUpdateTimer.reset();
+
     for (int i = 0; i < REAR_LED_COUNT; i++)
     {
       setLedColor(i, getRandomInRange(0, 255), getRandomInRange(0, 255), getRandomInRange(0, 255), 255);
     }
-
-    rearLedUpdateTimer.reset();
   }
 
   if (!rearLedNeedsUpdate)
@@ -788,7 +814,7 @@ void stepRearLedStrip()
     return;
   }
 
-  // write the update rear led buffer
+  // update real led strip state
   rearLedController.write(rearLedStrip.getBuf());
 
   rearLedNeedsUpdate = false;
@@ -796,9 +822,9 @@ void stepRearLedStrip()
 
 void stepLoopBlinker()
 {
-  int timeSinceLastBlink = loopLedTimer.read_ms();
-  bool shouldReset = timeSinceLastBlink > LOOP_LED_BLINK_INTERVAL_MS + LED_BLINK_DURATION_MS;
-  int currentLoopLedState = !shouldReset && timeSinceLastBlink > LOOP_LED_BLINK_INTERVAL_MS ? 1 : 0;
+  int timeSinceLastBlinkMs = std::chrono::duration_cast<std::chrono::milliseconds>(loopLedTimer.elapsed_time()).count();
+  bool shouldReset = timeSinceLastBlinkMs > LOOP_LED_BLINK_INTERVAL_MS + LED_BLINK_DURATION_MS;
+  int currentLoopLedState = !shouldReset && timeSinceLastBlinkMs > LOOP_LED_BLINK_INTERVAL_MS ? 1 : 0;
 
   cycleCountSinceLastLoopBlink++;
 
@@ -812,20 +838,20 @@ void stepLoopBlinker()
     // send connection alive beacon message on rising edge
     if (currentLoopLedState == 1 && isUsbConnected())
     {
-      // sendAsync("b:%d:%d\n", timeSinceLastBlink, cycleCountSinceLastLoopBlink);
-      send("b:%d:%d:%d\n", timeSinceLastBlink, cycleCountSinceLastLoopBlink, loadPercentage);
+      // sendAsync("b:%d:%d\n", timeSinceLastBlinkMs, cycleCountSinceLastLoopBlink);
+      send("b:%d:%d:%d\n", timeSinceLastBlinkMs, cycleCountSinceLastLoopBlink, loadPercentage);
     }
 
     // calculate main loop execution frequency (should be the same as cycleCountSinceLastLoopBlink)
-    int loopFrequency = ceil(((float)cycleCountSinceLastLoopBlink / (float)timeSinceLastBlink) * 1000.0f);
+    int loopFrequency = ceil(((float)cycleCountSinceLastLoopBlink / (float)timeSinceLastBlinkMs) * 1000.0f);
 
-    // logSerial.printf("fps: %d\n", loopFrequency);
+    // printf("# fps: %d\n", loopFrequency);
 
     // update ahrs sample frequency (matches loop execution frequency)
     ahrs.setSampleFrequency(loopFrequency);
 
     // log IMU attitude
-    // logSerial.printf("# frequency: %d, roll: %f, pitch: %f, yaw: %f\n", loopFrequency, ahrs.getRoll(), ahrs.getPitch(), ahrs.getYaw());
+    // printf("# frequency: %d, roll: %f, pitch: %f, yaw: %f\n", loopFrequency, ahrs.getRoll(), ahrs.getPitch(), ahrs.getYaw());
   }
 
   // reset loop led timer if interval + blink duration has passed
@@ -856,19 +882,18 @@ void s()
 
 void d(const char *name, int slowThreshold = SLOW_OPERATION_THRESHOLD_US)
 {
-  int elapsedUs = debugTimer.read_us();
+  int elapsedUs = debugTimer.elapsed_time().count();
 
   if (elapsedUs >= slowThreshold)
   {
-    logSerial.printf("@ %s took %d us\n", name, elapsedUs);
+    printf("@ %s took %d us\n", name, elapsedUs);
   }
 }
 
 int main()
 {
-  logSerial.printf("# initializing..");
-
   // setup resources
+  setupUsbSerial();
   setupUsbPowerSensing();
   setupStatusLeds();
   setupButtons();
@@ -878,18 +903,18 @@ int main()
   // setupIMU();
   setupTimers();
 
-  logSerial.printf(" done!\n");
+  printf("# initialization complete!\n");
 
   // run main loop
   while (true)
   {
     // read the loop time and reset the timer
-    lastLoopTimeUs = loopTimer.read_us();
+    lastLoopTimeUs = loopTimer.elapsed_time().count();
     loopTimer.reset();
 
     s();
     stepCommanders();
-    d("stepCommanders", 2000);
+    d("stepCommanders", 3000);
 
     s();
     stepUsbConnectionState();
@@ -897,15 +922,15 @@ int main()
 
     s();
     stepStartButton();
-    d("stepStartButton");
+    d("stepStartButton", 2000);
 
     s();
     stepLeftBumper();
-    d("stepLeftBumper");
+    d("stepLeftBumper", 2000);
 
     s();
     stepRightBumper();
-    d("stepLeftBumper");
+    d("stepRightBumper", 2000);
 
     s();
     stepLidar();
@@ -928,7 +953,7 @@ int main()
     d("stepLoopBlinker");
 
     // get loop time taken in microseconds
-    int loopTimeTakenUs = loopTimer.read_us();
+    int loopTimeTakenUs = loopTimer.elapsed_time().count();
 
     loadPercentage = loopTimeTakenUs * 100 / TARGET_LOOP_DURATION_US;
 

@@ -4,65 +4,70 @@
 #define SetDWORDval(arg) (uint8_t)(((uint32_t)arg) >> 24), (uint8_t)(((uint32_t)arg) >> 16), (uint8_t)(((uint32_t)arg) >> 8), (uint8_t)arg
 #define SetWORDval(arg) (uint8_t)(((uint16_t)arg) >> 8), (uint8_t)arg
 
-RoboClaw::RoboClaw(Serial *serial, int timeout) : serial(serial), timeout(timeout)
+RoboClaw::RoboClaw(BufferedSerial *serial, int timeout) : serial(serial), timeout(timeout)
 {
+    serial->set_blocking(false);
 }
 
 RoboClaw::~RoboClaw()
 {
 }
 
-int RoboClaw::write(int byte)
+int RoboClaw::write(uint8_t byte)
 {
-    return serial->putc(byte);
-}
+    if (!serial->writable())
+    {
+        return 0;
+    }
 
-int RoboClaw::read()
-{
-    return serial->getc();
-}
-
-int RoboClaw::available()
-{
-    return serial->readable();
+    return serial->write(&byte, 1);
 }
 
 void RoboClaw::flush()
 {
-    while (serial->readable())
+    ssize_t readLength;
+    char c;
+
+    do
     {
-        serial->getc();
-    }
+        readLength = serial->read(&c, 1);
+    } while (readLength > 0);
+
+    // while (serial->readable())
+    // {
+    //     serial->read(&c, 1);
+    // }
 }
 
-int RoboClaw::read(int timeout)
+int16_t RoboClaw::read(int timeout)
 {
+    int16_t c;
+
     readTimer.reset();
     readTimer.start();
 
-    while (!serial->readable())
+    do
     {
-        int waitedTimeUs = readTimer.read_us();
+        ssize_t readLength = serial->read(&c, 1);
 
-        if (waitedTimeUs >= (int)timeout)
+        // readLength is reported negative (-EAGAIN) if not content is available
+        if (readLength > 0)
+        {
+            readTimer.stop();
+
+            return c;
+        }
+
+        int waitedTimeUs = readTimer.elapsed_time().count();
+
+        // give up if timeout is reached
+        if (waitedTimeUs >= timeout)
         {
             readTimer.stop();
 
             return -1;
         }
-    }
-
-    readTimer.stop();
-
-    return serial->getc();
-}
-
-void RoboClaw::clear()
-{
-    while (serial->readable())
-    {
-        serial->getc();
-    }
+    } while (true);
 }
 
 void RoboClaw::clearCrc()
@@ -94,6 +99,11 @@ uint16_t RoboClaw::getCrc()
 
 bool RoboClaw::writeN(uint8_t cnt, ...)
 {
+    if (!serial->writable())
+    {
+        return false;
+    }
+
     uint8_t trys = MAXRETRY;
 
     do
@@ -159,6 +169,7 @@ bool RoboClaw::readN(uint8_t cnt, uint8_t address, uint8_t cmd, ...)
             }
             else
             {
+                // printf("a");
                 break;
             }
 
@@ -170,6 +181,7 @@ bool RoboClaw::readN(uint8_t cnt, uint8_t address, uint8_t cmd, ...)
             }
             else
             {
+                // printf("b");
                 break;
             }
 
@@ -181,6 +193,7 @@ bool RoboClaw::readN(uint8_t cnt, uint8_t address, uint8_t cmd, ...)
             }
             else
             {
+                // printf("c");
                 break;
             }
 
@@ -192,6 +205,7 @@ bool RoboClaw::readN(uint8_t cnt, uint8_t address, uint8_t cmd, ...)
             }
             else
             {
+                // printf("d");
                 break;
             }
 
@@ -202,22 +216,46 @@ bool RoboClaw::readN(uint8_t cnt, uint8_t address, uint8_t cmd, ...)
 
         if (data != -1)
         {
-            uint16_t ccrc;
+            uint16_t expectedCrc;
             data = read(timeout);
 
             if (data != -1)
             {
-                ccrc = data << 8;
+                expectedCrc = data << 8;
                 data = read(timeout);
 
                 if (data != -1)
                 {
-                    ccrc |= data;
-                    return getCrc() == ccrc;
+                    expectedCrc |= data;
+
+                    uint16_t calculatedCrc = getCrc();
+
+                    bool isCrcValid = calculatedCrc == expectedCrc;
+
+                    // if (!isCrcValid)
+                    // {
+                    //     printf("N:%d:%d:%d\n", calculatedCrc, expectedCrc, (int)value);
+                    // }
+
+                    return isCrcValid;
                 }
+                // else
+                // {
+                //     printf("g");
+                // }
             }
+            // else
+            // {
+            //     printf("f");
+            // }
         }
+        // else
+        // {
+        //     printf("e");
+        // }
     } while (trys--);
+
+    //printf("X");
 
     return false;
 }

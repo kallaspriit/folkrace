@@ -65,3 +65,11 @@ export const ClearIcon: React.SFC = (props) => (
 export const LidarIcon: React.SFC = (props) => (
   <Icon {...props} url="icons/lidar.svg" width={32} height={32} />
 );
+
+export const MotorIcon: React.SFC = (props) => (
+  <Icon {...props} url="icons/motor.svg" width={32} height={32} />
+);
+
+export const LoopIcon: React.SFC = (props) => (
+  <Icon {...props} url="icons/loop.svg" width={32} height={32} />
+);

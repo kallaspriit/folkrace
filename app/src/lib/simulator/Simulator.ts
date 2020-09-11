@@ -63,7 +63,7 @@ export class Simulator {
 
     // setup gamepad
     this.gamepadManager = new GamepadManager({
-      defaultDeadzone: 0.01,
+      // defaultDeadzone: 0.01,
       log: console,
       onConnect: (gamepad) => {
         console.log("GOT GAMEPAD", gamepad, this.gamepadManager.gamepads);

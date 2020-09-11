@@ -8,17 +8,27 @@
 #include "USBSerial.h"
 
 #include <Commander.hpp>
+#include <RoboClaw.hpp>
 
 #include <sstream>
 #include <vector>
 
+const uint8_t MOTORS_ADDRESS = 128;
+const int MOTORS_TIMEOUT_US = 10000;
+const int MOTOR_SERIAL_BAUDRATE = 460800; // not default
+const PinName MOTOR_SERIAL_TX_PIN = p13;
+const PinName MOTOR_SERIAL_RX_PIN = p14;
+
 static BufferedSerial logSerial(USBTX, USBRX, 115200);
+static BufferedSerial motorsSerial(MOTOR_SERIAL_TX_PIN, MOTOR_SERIAL_RX_PIN, MOTOR_SERIAL_BAUDRATE);
 
 // static USBCDC appSerial(false);
 static USBSerial appSerial(false);
 
 static Commander logCommander(&logSerial);
 static Commander appCommander(&appSerial);
+
+static RoboClaw motors(&motorsSerial, MOTORS_TIMEOUT_US);
 
 // static Commander *commanders[] = {&logCommander, &appCommander};
 
@@ -30,18 +40,18 @@ static Timer performanceTimer;
 static Timer statusTimer;
 static Ticker statusLedTicker;
 
-const int MAX_SERIAL_MESSAGE_LENGTH = 64;
-static char sendBuffer[MAX_SERIAL_MESSAGE_LENGTH];
+const int SEND_BUFFER_SIZE = 64;
+static char sendBuffer[SEND_BUFFER_SIZE];
 
 // const char *constantMessage = "@\n";
 
 // void send(const char *fmt, ...)
 // {
 //   // create formatted message
-//   // char sendBuffer[MAX_SERIAL_MESSAGE_LENGTH];
+//   // char sendBuffer[SEND_BUFFER_SIZE];
 //   va_list args;
 //   va_start(args, fmt);
-//   int resultLength = vsnprintf(sendBuffer, MAX_SERIAL_MESSAGE_LENGTH, fmt, args);
+//   int resultLength = vsnprintf(sendBuffer, SEND_BUFFER_SIZE, fmt, args);
 //   va_end(args);
 
 //   logSerial.write(sendBuffer, resultLength);
@@ -50,10 +60,10 @@ static char sendBuffer[MAX_SERIAL_MESSAGE_LENGTH];
 // void send2(const char *fmt, ...)
 // {
 //   // create formatted message
-//   char sendBuffer2[MAX_SERIAL_MESSAGE_LENGTH];
+//   char sendBuffer2[SEND_BUFFER_SIZE];
 //   va_list args;
 //   va_start(args, fmt);
-//   int resultLength = vsnprintf(sendBuffer2, MAX_SERIAL_MESSAGE_LENGTH, fmt, args);
+//   int resultLength = vsnprintf(sendBuffer2, SEND_BUFFER_SIZE, fmt, args);
 //   va_end(args);
 
 //   logSerial.write(sendBuffer2, resultLength);
@@ -64,7 +74,7 @@ int send(const char *fmt, ...)
 {
   va_list args;
   va_start(args, fmt);
-  int messageLength = vsnprintf(sendBuffer, MAX_SERIAL_MESSAGE_LENGTH, fmt, args);
+  int messageLength = vsnprintf(sendBuffer, SEND_BUFFER_SIZE, fmt, args);
   va_end(args);
 
   // if (appSerial.ready() && appSerial.connected() && appSerial.configured())
@@ -147,7 +157,10 @@ int main()
 
   appSerial.connect();
 
-  int counter = 0;
+  // don't want reads to block
+  // motorsSerial.set_blocking(false);
+
+  // int counter = 0;
 
   while (true)
   {
@@ -171,7 +184,27 @@ int main()
       //   appSerial.connect();
       // }
 
-      send("hello:%d\n", counter++);
+      uint32_t encoderM1, encoderM2;
+
+      bool readSuccess = motors.readEncoders(MOTORS_ADDRESS, encoderM1, encoderM2);
+
+      if (readSuccess)
+      {
+        printf("e:%d:%d\n", encoderM1, encoderM2);
+      }
+      else
+      {
+        printf("@ reading encoders failed\n");
+      }
+
+      // printf("! hey\n");
+
+      bool setSpeedSuccess = motors.speedM1M2(MOTORS_ADDRESS, 1000, 1000);
+
+      if (!setSpeedSuccess)
+      {
+        printf("@ setting motors speed failed\n");
+      }
 
       //   performanceTimer.reset();
       //   printf("%d\n", counter++);

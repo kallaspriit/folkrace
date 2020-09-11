@@ -36,28 +36,27 @@ export class RemoteController {
       this.options.vehicle.speedUpdateInterval
     );
 
-    // fade between min/max speeds
-    let range = 1;
-    let value = 0;
-    let step = 0.01;
-    let direction = 1;
+    // experiments that fades between min/max speeds for testing communication
+    // let range = 1;
+    // let value = 0;
+    // let step = 0.01;
+    // let direction = 1;
 
-    setInterval(() => {
-      value += step * direction;
+    // setInterval(() => {
+    //   value += step * direction;
 
-      if (value > range) {
-        value = range;
-        direction *= -1;
-      } else if (value < -range) {
-        value = -range;
-        direction *= -1;
-      }
+    //   if (value > range) {
+    //     value = range;
+    //     direction *= -1;
+    //   } else if (value < -range) {
+    //     value = -range;
+    //     direction *= -1;
+    //   }
 
-      this.speed = value;
+    //   this.speed = value;
 
-      this.updateMotorSpeeds();
-      // }, this.options.vehicle.speedUpdateInterval);
-    }, 10);
+    //   this.updateMotorSpeeds();
+    // }, this.options.vehicle.speedUpdateInterval);
   }
 
   setSpeed(speed: number) {

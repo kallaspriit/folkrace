@@ -14,6 +14,7 @@ import { handleResetCommand } from "./handleResetCommand";
 import { handleSerialCommand } from "./handleSerialCommand";
 import { handleSpeedCommand } from "./handleSpeedCommand";
 import { handleUsbCommand } from "./handleUsbCommand";
+import { handleMotorsCommand } from "./handleMotorsCommand";
 
 export type CommandHandlerFn = (
   args: string[],
@@ -34,6 +35,7 @@ export const commandHandlers: CommandHandlersMap = {
   current: handleCurrentCommand,
   lidar: handleLidarStateCommand,
   pong: handlePongCommand,
+  motors: handleMotorsCommand,
   e: handleEncoderCommand,
   b: handleBeaconCommand,
   l: handleLidarMeasurementCommand,

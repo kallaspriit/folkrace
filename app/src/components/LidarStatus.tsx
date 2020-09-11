@@ -30,7 +30,7 @@ export const LidarStatus: React.SFC = () => (
 );
 
 function getLidarStatus(lidar: LidarContainer) {
-  let status = CellStatus.BAD;
+  let status = CellStatus.WARN;
   let description = "Stopped";
 
   if (lidar.state.isValid) {

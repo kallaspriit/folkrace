@@ -24,16 +24,21 @@ public:
 
   bool isRunning();
   bool isValid();
+  void update();
 
   void start(float targetRpm = 300.0f);
   void stop();
+
   void setTargetRpm(float targetRpm);
   float getTargetRpm() { return targetRpm; }
   float getCurrentRpm();
 
   float getMotorPwm();
 
-  int getRunningDurationMs() { return runningTimer.read_ms(); }
+  int getRunningDurationMs()
+  {
+    return std::chrono::duration_cast<std::chrono::milliseconds>(runningTimer.elapsed_time()).count();
+  }
 
   int getTotalMeasurementCount() { return receivedMeasurementCount; }
   int getInvalidMeasurementCount() { return invalidMeasurementCount; }
@@ -45,13 +50,13 @@ public:
 
   // 360 measurements per rotation, running at 300 RPM (5Hz) that's 1800 measurements per second
   static const int MEASUREMENT_BUFFER_SIZE = 180; // enough for 100ms (10 FPS)
+  static const int READ_BUFFER_SIZE = 128;
 
 private:
   // motor speed is controlled internally by the PID controller
   void setMotorPwm(float duty);
 
   // packet parsing utilities
-  void handleSerialRx();
   void handleWaitForStartByte(uint8_t inByte);
   void handleBuildPacket(uint8_t inByte);
   void handleRotationComplete();
@@ -63,7 +68,7 @@ private:
   bool isPacketValid();
 
   // dependencies
-  Serial serial;
+  BufferedSerial serial;
   PwmOut motorPwm;
   Measurement measurements[MEASUREMENT_BUFFER_SIZE]; // circular measurements buffer
   PID motorPid;
@@ -123,6 +128,7 @@ private:
   State state = WAIT_FOR_START_BYTE;
   int packetByteIndex = 0;
   int packet[PACKET_LENGTH];
+  char readBuffer[READ_BUFFER_SIZE];
   uint8_t packetInvalidFlag[N_DATA_QUADS] = {0, 0, 0, 0};
   uint16_t packetDistance[N_DATA_QUADS] = {0, 0, 0, 0};
   uint16_t packetSignalStrength[N_DATA_QUADS] = {0, 0, 0, 0};
