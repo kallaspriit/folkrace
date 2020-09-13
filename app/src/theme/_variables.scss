@@ -19,17 +19,19 @@
 */
 
 // text colors
-$color-text-primary: #777777;
-$color-text-darker: #303133;
-$color-text-lighter: #bbb9b6;
-$color-text-secondary: #ffffff;
+$color-text-primary: #FFFFFF;
+$color-text-secondary: #C2CCCC;
+$color-text-tertiary: #858578;
+
+// TODO: what to do with these?
+$color-text-lighter:$color-text-secondary;
+$color-text-darker: $color-text-tertiary;
 
 // generic background colors
-$color-bg-primary: #ffffff;
-$color-bg-secondary: #404144;
-$color-bg-tertiary: #84b9e2;
+$color-bg-primary:#1E1E1E;
+$color-bg-secondary: #252526;
+$color-bg-tertiary: #333333;
 $color-bg-disabled: change-color($color-bg-secondary, $alpha: 0.4);
-$color-bg-light: #f8f8f8;
 
 // debug colors
 $color-debug-1: rgba(255, 0, 0, 0.1);

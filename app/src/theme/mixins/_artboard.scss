@@ -2,9 +2,9 @@
 
 // configuration
 $artboard-grid-px: $reference-grid !default;
-$artboard-grid-color: rgba(0, 0, 0, 0.05) !default;
+$artboard-grid-color: rgba(255, 255, 255, 0.01) !default;
 $artboard-divider-interval: 10 !default;
-$artboard-divider-color: rgba(0, 0, 0, 0.1) !default;
+$artboard-divider-color: rgba(255, 255, 255, 0.05) !default;
 
 // private
 @function line-background-image($degrees, $size, $color) {

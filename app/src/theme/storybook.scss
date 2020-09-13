@@ -3,5 +3,5 @@
 body {
   @include artboard();
 
-  background-color: #dddddd;
+  background-color: $color-bg-primary;
 }

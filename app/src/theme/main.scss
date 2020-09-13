@@ -35,9 +35,10 @@ html, body, #root {
 
 // configure default font
 body {
-  color: $color-text-primary;
   font-size: $font-size-medium;
   font-family: $font-main;
+  color: $color-text-primary;
+  background-color: $color-bg-primary;
 }
 
 // make buttons use pointer cursor
