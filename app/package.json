@@ -19,7 +19,8 @@
     "react-scripts": "3.4.3",
     "recoil": "0.0.10",
     "ts-log": "^2.1.4",
-    "typescript": "^3.7.5"
+    "typescript": "^3.7.5",
+    "use-sound": "^1.0.2"
   },
   "scripts": {
     "start": "react-scripts start",

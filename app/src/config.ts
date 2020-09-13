@@ -12,8 +12,9 @@ export const config = {
   },
   rules: {
     battery: {
-      low: 15.0,
+      low: 14.9,
       critical: 13.5,
+      alarmInterval: 5000,
     },
   },
   vehicle: {
@@ -22,7 +23,6 @@ export const config = {
     wheelDiameter: 0.039, // meters
     encoderCountsPerRotation: 20, // encoder pulse count per revolution
     gearboxRatio: 25, // 25/1 gearbox ratio
-    // speedUpdateInterval: 1000 / 20, // 20Hz
     speedUpdateInterval: 1000 / 100, // 100Hz
   },
 };
