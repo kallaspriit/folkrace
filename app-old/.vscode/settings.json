@@ -1,0 +1,17 @@
+{
+  "cSpell.words": [
+    "Ahrs",
+    "Debounced",
+    "Odometry",
+    "Unmount",
+    "deadzone",
+    "folkbot",
+    "gamepadconnected",
+    "gamepaddisconnected",
+    "monospace",
+    "nipplejs",
+    "pathfinding",
+    "typestrict"
+  ],
+  "typescript.tsdk": "node_modules\\typescript\\lib"
+}

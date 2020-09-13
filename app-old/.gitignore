@@ -1,16 +1,13 @@
+# See https://help.github.com/ignore-files/ for more about ignoring files.
+
 # dependencies
 /node_modules
-/.pnp
-.pnp.js
 
 # testing
 /coverage
 
 # production
 /build
-
-# storybook build
-/storybook-static
 
 # misc
 .DS_Store
@@ -19,15 +16,6 @@
 .env.test.local
 .env.production.local
 
-# package lock file
-package-lock.json
-
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
-# developer files
-/private
-
-# after effects autosaves
-**/*auto-save*.aep
