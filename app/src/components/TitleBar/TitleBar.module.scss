@@ -1,0 +1,49 @@
+@import "../../theme/variables";
+@import "../../theme/functions/grid";
+
+.title-bar {
+  position: relative;
+  padding: 0 grid(3);
+  height: grid(12);
+  background: $color-bg-secondary;
+
+  &--transparent {
+    background: rgba(250, 183, 143, 0);
+  }
+
+  &--secondary {
+    background: $color-bg-primary;
+  }
+
+  &--fixed {
+    position: fixed;
+    top: 0;
+    left: 0;
+
+// makes titlebar always top of the content
+    z-index: $z-index-top;
+    width: 100%;
+  }
+
+  &--border {
+    border-bottom: 1px solid $color-bg-tertiary;
+  }
+}
+
+.back-button {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 0 grid(4);
+  height: 100%;
+
+  svg {
+    fill: $color-text-secondary;
+  }
+
+  &--primary {
+    svg {
+      fill: $color-text-primary;
+    }
+  }
+}

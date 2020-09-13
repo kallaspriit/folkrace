@@ -18,6 +18,7 @@
     "react-router-dom": "^5.2.0",
     "react-scripts": "3.4.3",
     "recoil": "0.0.10",
+    "ts-log": "^2.1.4",
     "typescript": "^3.7.5"
   },
   "scripts": {

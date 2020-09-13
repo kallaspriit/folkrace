@@ -1,0 +1,39 @@
+@import "../../theme/variables";
+@import "../../theme/functions/grid";
+
+.list-item {
+  padding: grid(2) $layout-view-padding;
+  border-top: 1px solid $color-bg-tertiary;
+
+  &--no-border {
+    border-top: none;
+  }
+
+  &--compact {
+    padding: grid(2) $layout-view-padding / 2;
+  }
+
+  &:last-child {
+    border-bottom: 1px solid $color-bg-tertiary;
+  }
+}
+
+.leading-icon {
+  margin-right: grid(3);
+  width: grid(9);
+  height: grid(6);
+
+  &--auto-size {
+    width: unset;
+    height: unset;
+  }
+}
+
+.trailing-icon {
+  margin-left: auto;
+
+  & > svg {
+    width: grid(5);
+    height: grid(5);
+  }
+}
