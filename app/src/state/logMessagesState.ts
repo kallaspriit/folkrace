@@ -4,6 +4,7 @@ export enum LogMessageType {
   RECEIVE = "RECEIVE",
   SEND = "SEND",
   INFO = "INFO",
+  WARN = "WARN",
   ERROR = "ERROR",
 }
 

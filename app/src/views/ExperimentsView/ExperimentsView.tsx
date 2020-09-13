@@ -4,6 +4,7 @@ import { PageList, Page } from "../../components/PageList/PageList";
 import { ExperimentsViewParams, EXPERIMENTS_VIEW_PATH } from "../../routes";
 import { buildPath } from "../../services/buildPath";
 import { LogExperiment } from "./LogExperiment";
+import { StateExperiment } from "./StateExperiment";
 import { TransportExperiment } from "./TransportExperiment";
 
 const pages: Page[] = [
@@ -16,6 +17,11 @@ const pages: Page[] = [
     name: "log",
     title: "Log experiment",
     page: <LogExperiment />,
+  },
+  {
+    name: "state",
+    title: "State experiment",
+    page: <StateExperiment />,
   },
 ];
 

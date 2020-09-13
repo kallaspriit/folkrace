@@ -1,25 +1,16 @@
 import { useRecoilState } from "recoil";
 import { multiTransport } from "../services/multiTransport";
-import { logMessagesState, LogMessageType } from "../state/logMessagesState";
+import { LogMessageType } from "../state/logMessagesState";
 import { transportStateState } from "../state/transportStateState";
+import { useHandleCommand } from "./useHandleCommand";
+import { useLog } from "./useLog";
 import { useTransportListener } from "./useTransportListener";
 
 // listens for events from multi-transport and forwards it to state
 export function useStateRouter() {
   const [transportState, setTransportState] = useRecoilState(transportStateState);
-  const [logMessages, setLogMessages] = useRecoilState(logMessagesState);
-
-  // adds log message to log messages state
-  const log = (type: LogMessageType, message: string, transportName?: string) => {
-    setLogMessages([
-      ...logMessages,
-      {
-        type,
-        message,
-        transportName,
-      },
-    ]);
-  };
+  const log = useLog();
+  const handleCommand = useHandleCommand();
 
   const currentTransportState = multiTransport.getState();
 
@@ -59,13 +50,16 @@ export function useStateRouter() {
 
     // called when transport message is received
     onMessageReceived: (transport, message) => {
-      const [command] = message.split(":");
+      const [command, ...args] = message.split(":");
       const noLogCommands = ["e", "b", "l"];
 
       // don't blacklisted messages
       if (!noLogCommands.includes(command)) {
         log(LogMessageType.RECEIVE, message, transport.getName());
       }
+
+      // handle the command
+      handleCommand(command, args);
     },
   });
 }

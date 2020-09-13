@@ -34,6 +34,7 @@ const int MOTOR_SERIAL_BAUDRATE = 460800; // not default, make sure to update in
 // timing configuration
 const int LOOP_LED_BLINK_INTERVAL_MS = 1000;
 const int LED_BLINK_DURATION_MS = 10;
+const std::chrono::milliseconds REPORT_BATTERY_VOLTAGE_INTERVAL = 1s;
 
 const int REPORT_STATUS_INTERVAL_MS = 1000;
 
@@ -116,6 +117,7 @@ Timer loopLedTimer;
 Timer rearLedUpdateTimer;
 Timer debugTimer;
 Timer reportLidarStateTimer;
+Timer reportBatteryVoltageTimer;
 Timeout stopMotorsTimeout;
 
 // setup status leds
@@ -148,6 +150,9 @@ uint32_t lastEncoderDeltaM2 = 0;
 int lastStartButtonState = -1;
 int lastLeftBumperState = -1;
 int lastRightBumperState = -1;
+
+// last reported voltage (as tenths of actual voltage)
+int lastReportedBatteryVoltage = -1;
 
 // track whether the rear led strip requires update
 bool rearLedNeedsUpdate = true;
@@ -283,15 +288,9 @@ void sendRaw(const char *message, int length)
     die(Error::ERROR_PARTIAL_SEND, "sent length %d does not match message length %d, attempted to send %s", (int)sentLength, length, message);
   }
 
+  // only log messages that are not a single character (high speed data)
   if (length > 2 && message[1] != ':')
   {
-    // only log messages that are not a single character (high speed data)
-    printf("> %s", message);
-  }
-
-  if (length > 2 && message[1] != ':')
-  {
-    // only log messages that are not a single character (high speed data)
     printf("> %s", message);
   }
 }
@@ -336,6 +335,22 @@ bool setMotorSpeeds(int targetSpeedM1, int targetSpeedM2)
   handleMotorsCommunicationResult(sendSuccess);
 
   return sendSuccess;
+}
+
+int getBatteryVoltage()
+{
+  bool readSuccess;
+
+  uint16_t voltage = motors.readMainBatteryVoltage(MOTORS_ADDRESS, &readSuccess) * MAIN_VOLTAGE_CORRECTION_MULTIPLIER;
+
+  handleMotorsCommunicationResult(readSuccess);
+
+  if (!readSuccess)
+  {
+    return -1;
+  }
+
+  return (int)voltage;
 }
 
 // reports encoder values
@@ -392,21 +407,25 @@ void reportLidarState()
   send("lidar:%d:%d:%.1f:%.1f:%.2f\n", lidar.isRunning() ? 1 : 0, lidar.isValid() ? 1 : 0, lidar.getTargetRpm(), lidar.getCurrentRpm(), lidar.getMotorPwm());
 }
 
-void reportBatteryVoltage()
+void reportBatteryVoltage(bool force = false)
 {
-  // apparently the reported value is slightly off
-  bool readSuccess;
+  int batteryVoltage = getBatteryVoltage();
 
-  uint16_t voltage = motors.readMainBatteryVoltage(MOTORS_ADDRESS, &readSuccess) * MAIN_VOLTAGE_CORRECTION_MULTIPLIER;
-
-  handleMotorsCommunicationResult(readSuccess);
-
-  if (!readSuccess)
+  if (batteryVoltage == -1)
   {
     return;
   }
 
-  send("voltage:%d\n", (int)voltage);
+  // don't report same voltage as last time
+  if (batteryVoltage == lastReportedBatteryVoltage && !force)
+  {
+    return;
+  }
+
+  // store last reported battery voltage
+  lastReportedBatteryVoltage = batteryVoltage;
+
+  send("voltage:%d\n", batteryVoltage);
 }
 
 void reportCurrent()
@@ -431,9 +450,9 @@ void reportState()
   reportButtonStates();
   reportTargetSpeed();
   reportLidarState();
-  reportBatteryVoltage();
   reportCurrent();
   reportEncoderValues(true);
+  reportBatteryVoltage(true);
   reportMotorsCommunicationState();
 }
 
@@ -733,6 +752,19 @@ void stepEncoderReporter()
   reportEncoderValues();
 }
 
+void stepBatteryVoltageReporter()
+{
+  if (reportBatteryVoltageTimer.elapsed_time() < REPORT_BATTERY_VOLTAGE_INTERVAL)
+  {
+    return;
+  }
+
+  reportBatteryVoltageTimer.reset();
+
+  // the voltage is only reported if has changed from previous report
+  reportBatteryVoltage();
+}
+
 void stepLidar()
 {
   lidar.update();
@@ -892,6 +924,7 @@ void setupTimers()
   rearLedUpdateTimer.start();
   debugTimer.start();
   reportLidarStateTimer.start();
+  reportBatteryVoltageTimer.start();
   loopTimer.start();
 }
 
@@ -969,6 +1002,10 @@ int main()
     s();
     stepEncoderReporter();
     d("stepEncoderReporter", 3000);
+
+    s();
+    stepBatteryVoltageReporter();
+    d("stepBatteryVoltageReporter", 3000);
 
     s();
     stepLoopBlinker();
