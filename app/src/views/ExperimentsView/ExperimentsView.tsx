@@ -3,6 +3,7 @@ import { useHistory } from "react-router-dom";
 import { PageList, Page } from "../../components/PageList/PageList";
 import { ExperimentsViewParams, EXPERIMENTS_VIEW_PATH } from "../../routes";
 import { buildPath } from "../../services/buildPath";
+import { LogExperiment } from "./LogExperiment";
 import { TransportExperiment } from "./TransportExperiment";
 
 const pages: Page[] = [
@@ -10,6 +11,11 @@ const pages: Page[] = [
     name: "transport",
     title: "Transport experiment",
     page: <TransportExperiment />,
+  },
+  {
+    name: "log",
+    title: "Log experiment",
+    page: <LogExperiment />,
   },
 ];
 

@@ -140,5 +140,11 @@
     "prefix": ["state", "useState"],
     "body": "const [${1}, set${1/(.*)/${1:/capitalize}/}] = useState(${2:false});",
     "description": "Generate useState statement"
+  },
+  "useRecoilState": {
+    "scope": "typescript,typescriptreact",
+    "prefix": ["recoil", "useRecoilState"],
+    "body": "const [${1}, set${1/(.*)/${1:/capitalize}/}] = useRecoilState(${2:false});",
+    "description": "Generate useRecoilState statement"
   }
 }

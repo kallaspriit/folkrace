@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
 import { ButtonGroup, ButtonGroupButton } from "../../components/ButtonGroup/ButtonGroup";
 import { Column } from "../../components/Column/Column";
@@ -6,10 +6,10 @@ import { ListItem, List } from "../../components/List/List";
 import { P } from "../../components/Paragraph/Paragraph";
 import { TitleBar } from "../../components/TitleBar/TitleBar";
 import { View } from "../../components/View/View";
-import { TransportListener, TransportState } from "../../lib/transport";
+import { useTransportListener } from "../../hooks/useTransportListener";
+import { TransportState } from "../../lib/transport";
 import { ExperimentsViewParams, EXPERIMENTS_VIEW_PATH } from "../../routes";
 import { buildUrl } from "../../services/buildUrl";
-import { multiTransport } from "../../services/multiTransport";
 import { robot } from "../../services/robot";
 
 export const TransportExperiment: React.FC = () => {
@@ -92,16 +92,3 @@ export const TransportExperiment: React.FC = () => {
     </View>
   );
 };
-
-function useTransportListener(listener: TransportListener) {
-  useEffect(() => {
-    multiTransport.addListener(listener);
-
-    // attempt to establish connection
-    void multiTransport.connect();
-
-    return () => {
-      multiTransport.removeListener(listener);
-    };
-  });
-}
