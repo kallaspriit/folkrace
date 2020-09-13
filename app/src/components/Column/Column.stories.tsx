@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { useInterval } from "../../hooks/useInterval";
 import { Container } from "../Container/Container";
 import { Row } from "../Row/Row";
-import { View } from "../View/View";
 import { Column } from "./Column";
 
 export default {

@@ -17,6 +17,7 @@ export interface Transport {
   isAvailable(): boolean;
   getState(): TransportState;
   addListener(listener: TransportListener): void;
+  removeListener(listener: TransportListener): void;
   connect(): Promise<void>;
   send(message: string): boolean;
 }

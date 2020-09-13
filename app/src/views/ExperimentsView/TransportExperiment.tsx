@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
 import { ButtonGroup, ButtonGroupButton } from "../../components/ButtonGroup/ButtonGroup";
 import { Column } from "../../components/Column/Column";
-import { ListItem, List, ListTitle } from "../../components/List/List";
+import { ListItem, List } from "../../components/List/List";
 import { P } from "../../components/Paragraph/Paragraph";
 import { TitleBar } from "../../components/TitleBar/TitleBar";
 import { View } from "../../components/View/View";
@@ -16,40 +16,42 @@ export const TransportExperiment: React.FC = () => {
   const history = useHistory();
   const [connectionState, setConnectionState] = useState(TransportState.DISCONNECTED);
   const [connectionError, setConnectionError] = useState<string>();
-  const [sentMessages, setSentMessages] = useState<string[]>([]);
-  const [receivedMessages, setReceivedMessages] = useState<string[]>([]);
+  const [logMessages, setLogMessages] = useState<string[]>([]);
+
+  const log = (message: string) => {
+    setLogMessages([...logMessages, message]);
+  };
 
   useTransportListener({
     onStateChanged: (transport, newState, _previousState) => {
-      console.log(`# ${transport.getName()} state changed to ${newState}`);
-
       setConnectionState(newState);
+
+      log(`# ${transport.getName()} state changed to ${newState}`);
 
       // void status.setTransportState(newState);
     },
     onError: (_transport, error) => {
-      console.log(`# transport error occurred${error ? ` (${error.message})` : ""}`);
+      log(`@ transport error occurred${error ? ` (${error.message})` : ""}`);
 
       setConnectionError(error?.message);
     },
     onMessageSent: (transport, message, wasSentSuccessfully: boolean) => {
-      setSentMessages([...sentMessages, `${transport.getName()} > ${message} `]);
-
       const [command] = message.split(":");
-      const noLogCommands = ["ping", "!ping"];
+      const noLogCommands: string[] = [];
 
-      // don't log single-character recurring commands ("s" for speed etc)
-      if (command.length === 1 || noLogCommands.includes(command)) {
-        return;
+      // don't blacklisted messages
+      if (!noLogCommands.includes(command)) {
+        log(`[${transport.getName()}] > ${message}${!wasSentSuccessfully ? " (sending failed)" : ""}`);
       }
-
-      console.log(`> ${message}${!wasSentSuccessfully ? " (sending failed)" : ""}`);
     },
     onMessageReceived: (transport, message) => {
-      setReceivedMessages([...receivedMessages, `[${transport.getName()}] < ${message}`]);
+      const [command] = message.split(":");
+      const noLogCommands = ["e", "b", "l"];
 
-      // console.log("onMessageReceived", message);
-      // this.handleTransportMessage(message, containers);
+      // don't blacklisted messages
+      if (!noLogCommands.includes(command)) {
+        log(`[${transport.getName()}] < ${message}`);
+      }
     },
   });
 
@@ -69,14 +71,7 @@ export const TransportExperiment: React.FC = () => {
           </ListItem>
         </List>
         <Column expanded padded compact autoscroll>
-          {receivedMessages.map((message, index) => (
-            <P small key={index}>
-              {message}
-            </P>
-          ))}
-        </Column>
-        <Column expanded padded compact autoscroll>
-          {sentMessages.map((message, index) => (
+          {logMessages.map((message, index) => (
             <P small key={index}>
               {message}
             </P>

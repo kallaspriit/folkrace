@@ -52,7 +52,7 @@ export class MultiTransport implements Transport {
   }
 
   removeListener(listener: TransportListener) {
-    const listenerIndex = this.listeners.findIndex((existingListener) => existingListener === listener);
+    const listenerIndex = this.listeners.findIndex((existingListener) => listener === existingListener);
 
     if (listenerIndex === -1) {
       return false;

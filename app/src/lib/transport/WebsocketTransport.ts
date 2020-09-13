@@ -44,6 +44,18 @@ export class WebsocketTransport implements Transport {
     this.listeners.push(listener);
   }
 
+  removeListener(listener: TransportListener) {
+    const listenerIndex = this.listeners.findIndex((existingListener) => listener === existingListener);
+
+    if (listenerIndex === -1) {
+      return false;
+    }
+
+    this.listeners.splice(listenerIndex, 1);
+
+    return true;
+  }
+
   async connect() {
     const url = `${this.options.useSSL ? "wss" : "ws"}://${this.options.host}:${this.options.port}`;
 

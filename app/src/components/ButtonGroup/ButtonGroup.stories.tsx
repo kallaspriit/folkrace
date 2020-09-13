@@ -1,6 +1,6 @@
 import { action } from "@storybook/addon-actions";
 import React from "react";
-import { ReactComponent as GiftCardIcon } from "../../theme/icons/gift-card-icon.svg";
+import { ReactComponent as SettingsIcon } from "../../theme/icons/settings.svg";
 import { ButtonGroup, ButtonGroupButton } from "./ButtonGroup";
 
 export default {
@@ -59,7 +59,7 @@ export const WithRoundedCorners = () => (
 
 export const WithLeadingIcon = () => (
   <ButtonGroup small equalWidth rounded>
-    <ButtonGroupButton leading={<GiftCardIcon />}>First</ButtonGroupButton>
+    <ButtonGroupButton leading={<SettingsIcon />}>First</ButtonGroupButton>
     <ButtonGroupButton secondary>Second and ai am very long </ButtonGroupButton>
   </ButtonGroup>
 );
