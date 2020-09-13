@@ -1,0 +1,15 @@
+@import "../../theme/variables";
+@import "../../theme/functions/grid";
+@import "../../theme/functions/screen";
+
+.error-view {
+  padding: grid(6);
+}
+
+.message {
+  color: rgb(206, 17, 38);
+}
+
+.animation {
+  height: screen(300);
+}

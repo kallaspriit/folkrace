@@ -1,0 +1,33 @@
+@import "../../theme/variables";
+@import "../../theme/functions/grid";
+
+.debug {
+  overflow: hidden;
+  flex-shrink: 0;
+  margin: grid(1) 0;
+  border-radius: grid(1);
+  background-color: #ffffff;
+  white-space: pre;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  .title {
+    padding: $font-size-tiny / 2;
+    background-color: #333333;
+    color: #ffffff;
+    font-weight: bold;
+    font-size: $font-size-tiny;
+    font-family: $font-alternate;
+  }
+
+  .content {
+    overflow: auto;
+    padding: $font-size-tiny / 2;
+    background-color: #eeeeee;
+    color: #333333;
+    font-size: $font-size-tiny;
+    font-family: "Courier New", Courier, monospace;
+  }
+}

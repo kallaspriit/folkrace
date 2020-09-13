@@ -1,0 +1,47 @@
+@import "../variables";
+
+// configuration
+$artboard-grid-px: $reference-grid !default;
+$artboard-grid-color: rgba(0, 0, 0, 0.05) !default;
+$artboard-divider-interval: 10 !default;
+$artboard-divider-color: rgba(0, 0, 0, 0.1) !default;
+
+// private
+@function line-background-image($degrees, $size, $color) {
+  $line-start: $size - 1;
+  $line-end: $size;
+  @return repeating-linear-gradient($degrees, transparent, transparent $line-start, $line-start, $color $line-end);
+}
+
+@function horizontal-line-background-image($size, $color) {
+  @return line-background-image(0deg, $size, $color);
+}
+
+@function vertical-line-background-image($size, $color) {
+  @return line-background-image(-90deg, $size, $color);
+}
+
+@function grid-background-images($size, $color) {
+  @return horizontal-line-background-image($size, $color), vertical-line-background-image($size, $color);
+}
+
+// public
+@mixin artboard(
+  $grid-px: $artboard-grid-px,
+  $grid-color: $artboard-grid-color,
+  $divider-interval: $artboard-divider-interval,
+  $divider-color: $artboard-divider-color
+) {
+  // blocks
+  $grid-background-images: grid-background-images($grid-px, $grid-color);
+
+// dividers
+  $divider-px: $grid-px * $divider-interval;
+  $divider-background-images: grid-background-images($divider-px, $divider-color);
+
+// blocks & dividers
+  $background-images: join($divider-background-images, $grid-background-images);
+
+  background-image: $background-images;
+  background-size: $divider-px $divider-px;
+}

@@ -1,0 +1,181 @@
+@import "../../theme/variables";
+@import "../../theme/functions/grid";
+
+// normal button size
+$size-small-height: 6;
+$size-medium-height: 9;
+$size-large-height: 16;
+$size-small-font: $font-size-medium;
+$size-medium-font: $font-size-large;
+$size-large-font: $font-size-large;
+
+// the button element contains wrap because button can't be a proper flex container by itself
+// https://stackoverflow.com/questions/35464067/flex-grid-layouts-not-working-on-button-or-fieldset-elements
+.block-button {
+  display: block;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  outline: none;
+  border: none;
+  background: none;
+
+  user-select: none;
+
+  &--inline {
+    width: unset;
+  }
+}
+
+.wrap {
+  padding: 0 grid(9) 0 grid(9);
+  width: 100%;
+  height: grid($size-medium-height);
+  border-radius: grid($size-medium-height / 2);
+  background-color: $color-bg-secondary;
+  color: $color-text-secondary;
+  font-size: $size-medium-font;
+  cursor: pointer;
+  transition: background-color $animation-speed-medium ease-in-out;
+  pointer-events: all;
+
+  // main content wrap (some top padding is needed to center the Overpass font vertically)
+  .content {
+    position: relative;
+  }
+
+  .children {
+    opacity: 1;
+    transition: opacity $animation-speed-medium ease-in-out;
+  }
+
+  // loader icon
+  .loading-wrap {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity $animation-speed-medium ease-in-out;
+  }
+
+  // set svg icon default fill
+  svg {
+    fill: $color-text-secondary;
+  }
+
+  // add less padding to inline button
+  &--inline {
+    padding: 0 grid($size-medium-height / 2) 0 grid($size-medium-height / 2);
+  }
+
+  // secondary button color
+  &--secondary {
+    background-color: $color-bg-primary;
+    color: $color-text-darker;
+
+    // set svg icon fill
+    svg {
+      fill: $color-text-darker;
+    }
+  }
+
+  // tertiary button color
+  &--tertiary {
+    background-color: $color-bg-tertiary;
+    color: $color-text-secondary;
+
+    // set svg icon fill
+    svg {
+      fill: $color-text-secondary;
+    }
+  }
+
+  // quaternary button color
+  &--quaternary {
+    border: screen(2) solid $color-bg-light;
+    background-color: $color-bg-primary;
+    color: $color-text-darker;
+
+    // set svg icon fill
+    svg {
+      fill: $color-text-darker;
+    }
+  }
+
+  // disabled state
+  &--disabled {
+    background-color: $color-bg-disabled;
+    cursor: default;
+  }
+
+  // show loading indicator (don't change size)
+  &--loading {
+    .children {
+      opacity: 0;
+    }
+
+    .loading-wrap {
+      opacity: 1;
+    }
+  }
+
+  // reduce left padding for leading
+  &--with-leading {
+    padding-left: grid(3);
+  }
+
+  // reduce right padding for leading
+  &--with-trailing {
+    padding-right: grid(3);
+  }
+
+  // wrap of leading/trailing icon
+  .icon {
+    width: 1em;
+    height: 1em;
+
+    &--leading {
+      margin-right: grid(2);
+    }
+
+    &--trailing {
+      margin-left: grid(2);
+    }
+
+    // make children use all available space
+    > * {
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  // alternate sizes
+  &--size-small {
+    padding: 0 grid($size-small-height / 2) 0 grid($size-small-height / 2);
+    height: grid($size-small-height);
+    border-radius: grid($size-small-height / 2);
+    font-size: $size-small-font;
+  }
+  &--size-large {
+    padding: 0 grid($size-large-height / 2) 0 grid($size-large-height / 2);
+    height: grid($size-large-height);
+    border-radius: grid($size-large-height / 2);
+    font-size: $size-large-font;
+
+    .icon {
+      width: grid(6);
+      height: grid(6);
+
+      &--leading {
+        margin-right: grid(4);
+      }
+
+      &--trailing {
+        margin-left: grid(4);
+      }
+    }
+  }
+}

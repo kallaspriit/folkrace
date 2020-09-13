@@ -1,0 +1,31 @@
+.stack {
+  position: relative;
+
+  // no rerefence is used, stack is parent size by default
+  &--no-reference {
+    width: 100%;
+    height: 100%;
+
+    // make children use absolute positioning and take up all the possible room
+    > * {
+      // important because some elements (Flickity etc) would choose to override this but only works with absolute
+      position: absolute !important;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+    }
+  }
+
+  // first child is displayed as is, others on top
+  &--reference-first-child {
+    // make all children except the first one use absolute positioning
+    > :nth-child(n + 2) {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+    }
+  }
+}

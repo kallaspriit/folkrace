@@ -1,0 +1,6 @@
+@import "../variables";
+@import "../keyframes/shake";
+
+@mixin shake() {
+  animation: shake $animation-speed-slow ease-in-out;
+}

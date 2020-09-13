@@ -1,0 +1,11 @@
+@import "../../theme/functions/grid";
+
+.version {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 1;
+  padding: grid(0.5);
+  color: #cccccc;
+  font-size: grid(1.5);
+}

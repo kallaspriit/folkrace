@@ -1,0 +1,56 @@
+@import "normalize";
+@import "variables";
+@import "constants";
+@import "./functions/strip-unit";
+
+// use border-box sizing by default
+*,
+*:before,
+*:after {
+  box-sizing: border-box;
+
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+}
+
+// 1rem equals reference grid size (8px), all other sizes are based on that
+html {
+  // increases base rem size proportionally until reference size is reached
+  font-size: unquote(
+  "min(100vw / #{strip-unit($reference-size)} * #{strip-unit($reference-grid)}, #{$reference-grid})"
+  );
+
+  // use viewport height as reference when landscape
+  // use aspect ratio instead of `@media (orientation: landscape)` to avoid switching to landscape mode on keyboard open
+  @media screen and (min-aspect-ratio: 13/9) {
+    font-size: unquote(
+    "min(100vh / #{strip-unit($reference-size)} * #{strip-unit($reference-grid)}, #{$reference-grid})"
+    );
+  }
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}
+
+// configure default font
+body {
+  color: $color-text-primary;
+  font-size: $font-size-medium;
+  font-family: $font-main;
+}
+
+// make buttons use pointer cursor
+button {
+  cursor: pointer;
+}
+
+a {
+  color: $color-text-primary;
+  text-decoration: underline;
+}
+
+// global class added to body by useDisableScrolling hook
+.not-scrollable {
+  overflow: hidden;
+}

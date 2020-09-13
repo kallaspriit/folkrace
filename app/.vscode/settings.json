@@ -1,6 +1,10 @@
 {
+  "editor.snippetSuggestions": "bottom",
+  "typescript.tsdk": "node_modules/typescript/lib",
   "editor.formatOnSave": true,
+  "csscomb.formatOnSave": true,
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
-  }
+    "source.fixAll": true
+  },
+  "editor.tabSize": 2
 }

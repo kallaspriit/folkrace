@@ -1,0 +1,7 @@
+@import "./mixins/artboard";
+
+body {
+  @include artboard();
+
+  background-color: #dddddd;
+}

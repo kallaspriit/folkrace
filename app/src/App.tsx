@@ -1,21 +1,27 @@
 import React from "react";
-import logo from "./logo.svg";
-import "./App.css";
+import { Route, Switch, Redirect } from "react-router";
+import { BrowserRouter as Router } from "react-router-dom";
+import { Version } from "./components/Version/Version";
+import { DASHBOARD_VIEW_PATH } from "./routes";
+import { buildUrl } from "./services/buildUrl";
+import { DashboardView } from "./views/DashboardView/DashboardView";
+import { NotFoundView } from "./views/NotFoundView/NotFoundView";
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a className="App-link" href="https://reactjs.org" target="_blank" rel="noopener noreferrer">
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
-
-export default App;
+export const App: React.FC = () => (
+  <>
+    <Router>
+      <Switch>
+        <Route exact path="/">
+          <Redirect to={buildUrl(DASHBOARD_VIEW_PATH)} />
+        </Route>
+        <Route path={DASHBOARD_VIEW_PATH}>
+          <DashboardView />
+        </Route>
+        <Route>
+          <NotFoundView />
+        </Route>
+      </Switch>
+    </Router>
+    <Version />
+  </>
+);

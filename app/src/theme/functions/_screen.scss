@@ -1,0 +1,6 @@
+@import "../constants";
+@import "./strip-unit";
+
+@function screen($size) {
+  @return strip-unit($size) / strip-unit($reference-grid) * 1rem;
+}

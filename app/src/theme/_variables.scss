@@ -1,0 +1,65 @@
+@import "./functions/strip-unit";
+@import "./functions/screen";
+@import "./functions/grid";
+
+/*
+ Reference grid(n) lookup table:
+ -  1: 8
+ -  2: 16
+ -  3: 24
+ -  4: 32
+ -  5: 40
+ -  6: 48
+ -  7: 56
+ -  8: 64
+ -  9: 72
+ - 10: 80
+ - 11: 88
+ - 12: 96
+*/
+
+// text colors
+$color-text-primary: #777777;
+$color-text-darker: #303133;
+$color-text-lighter: #bbb9b6;
+$color-text-secondary: #ffffff;
+
+// generic background colors
+$color-bg-primary: #ffffff;
+$color-bg-secondary: #404144;
+$color-bg-tertiary: #84b9e2;
+$color-bg-disabled: change-color($color-bg-secondary, $alpha: 0.4);
+$color-bg-light: #f8f8f8;
+
+// debug colors
+$color-debug-1: rgba(255, 0, 0, 0.1);
+$color-debug-2: rgba(0, 255, 0, 0.1);
+$color-debug-3: rgba(0, 0, 255, 0.1);
+
+// font families
+$font-main: "Roboto", sans-serif;;
+$font-alternate: "Source Sans Pro", sans-serif;
+$font-monospace: "Roboto Mono", monospace;;
+
+// font sizes
+$font-size-tiny: screen(16px);
+$font-size-small: screen(20px);
+$font-size-medium: screen(26px);
+$font-size-large: screen(33px);
+$font-size-extra-large: screen(40px);
+
+// layout
+$layout-view-padding: grid(6);
+$layout-limited-width: 800px;
+
+// animations
+$animation-speed-fast: 150ms;
+$animation-speed-medium: 300ms;
+$animation-speed-slow: 500ms;
+
+// border radiuses
+$radius-infinite: 1000px;
+$radius-medium: grid(1);
+
+// z-indexes
+$z-index-top: 100;
