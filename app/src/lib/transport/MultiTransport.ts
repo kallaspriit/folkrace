@@ -51,6 +51,18 @@ export class MultiTransport implements Transport {
     this.listeners.push(listener);
   }
 
+  removeListener(listener: TransportListener) {
+    const listenerIndex = this.listeners.findIndex((existingListener) => existingListener === listener);
+
+    if (listenerIndex === -1) {
+      return false;
+    }
+
+    this.listeners.splice(listenerIndex, 1);
+
+    return true;
+  }
+
   async connect() {
     // call connect on all disconnected transports
     const promises = this.transports.map((transport) => {

@@ -93,6 +93,18 @@
     padding: $layout-view-padding 0;
   }
 
+  &--padded-compact {
+    padding: $layout-view-padding / 2;
+  }
+
+  &--padded-horizontal-compact {
+    padding: 0 $layout-view-padding / 2;
+  }
+
+  &--padded-vertical-compact {
+    padding: $layout-view-padding / 2 0;
+  }
+
   &--limited {
     flex-grow: 1;
     flex-shrink: 1;

@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
+import { useInterval } from "../../hooks/useInterval";
 import { Container } from "../Container/Container";
 import { Row } from "../Row/Row";
+import { View } from "../View/View";
 import { Column } from "./Column";
 
 export default {
@@ -75,3 +77,17 @@ export const InRow = () => (
     </Column>
   </Row>
 );
+
+export const WithAutoscroll = () => {
+  const [items, setItems] = useState<string[]>([]);
+
+  useInterval(() => setItems([...items, new Date().toISOString()]), 1000);
+
+  return (
+    <Column autoscroll debug style={{ height: "20rem" }}>
+      {items.map((item, index) => (
+        <Container key={index}>{item}</Container>
+      ))}
+    </Column>
+  );
+};

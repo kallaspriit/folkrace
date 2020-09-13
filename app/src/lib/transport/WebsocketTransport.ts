@@ -56,7 +56,7 @@ export class WebsocketTransport implements Transport {
     this.ws = new WebSocket(url);
 
     // handle open event
-    this.ws.onopen = (event) => {
+    this.ws.onopen = (_event) => {
       this.log.info("established web-socket connection");
 
       this.wasConnected = true;

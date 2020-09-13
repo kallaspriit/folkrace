@@ -1,0 +1,74 @@
+@import "../../theme/variables";
+@import "../../theme/functions/grid";
+
+.button-group {
+  // z-index to show shadow on top of previous content
+  z-index: 1;
+  box-shadow: 0 0 grid(1) rgba(0, 0, 0, 0.5);
+
+  .button-group-button {
+    flex: 1 1 auto;
+    padding: 0 grid(3);
+    height: grid(12);
+    background-color: $color-bg-primary;
+    color: $color-text-darker;
+    cursor: pointer;
+    border-left: 1px solid #000;
+
+    user-select: none;
+
+    &--transparent {
+      border-top: 1px solid $color-bg-primary;
+      background-color: transparent;
+      color: $color-text-secondary;
+    }
+
+    &--secondary {
+      background: $color-bg-secondary;
+      color: $color-text-secondary;
+      border-left: 1px solid $color-bg-primary;
+    }
+
+    &--tertiary {
+      background: linear-gradient(180deg, #fbabee 0%, #f2b1cd 100%);
+      color: $color-text-secondary;
+    }
+
+    &--quaternary {
+      color: $color-text-tertiary;
+    }
+
+    &:first-child {
+      border-left: transparent;
+    }
+  }
+
+  &--small {
+    .button-group-button {
+      height: grid(6);
+    }
+  }
+
+  &--equal-width {
+    .button-group-button {
+      flex-basis: 50%;
+    }
+  }
+
+  &--rounded {
+    border-radius: $radius-infinite;
+    box-shadow: none;
+  }
+}
+
+.leading-icon {
+  margin-right: grid(2);
+  width: 1em;
+  height: 1em;
+
+  // make children use all available space
+  > * {
+    width: 100%;
+    height: 100%;
+  }
+}
