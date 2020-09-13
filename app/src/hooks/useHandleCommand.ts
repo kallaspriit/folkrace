@@ -1,3 +1,5 @@
+import { useMemo } from "react";
+import { useHandleBeaconCommand } from "../handlers/useHandleBeaconCommand";
 import { useHandleVoltageCommand } from "../handlers/useHandleVoltageCommand";
 import { LogMessageType } from "../state/logMessagesState";
 import { useLog } from "./useLog";
@@ -6,11 +8,17 @@ type CommandHandlerFn = (args: string[]) => void;
 
 export function useHandleCommand() {
   const handleVoltageCommand = useHandleVoltageCommand();
+  const handleBeaconCommand = useHandleBeaconCommand();
   const log = useLog();
 
-  const handlerMap: Record<string, CommandHandlerFn | undefined> = {
-    voltage: handleVoltageCommand,
-  };
+  // map of command names to handlers
+  const handlerMap: Record<string, CommandHandlerFn | undefined> = useMemo(
+    () => ({
+      voltage: handleVoltageCommand,
+      b: handleBeaconCommand,
+    }),
+    [handleBeaconCommand, handleVoltageCommand],
+  );
 
   return (command: string, args: string[]) => {
     const handler = handlerMap[command];

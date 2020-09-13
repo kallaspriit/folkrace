@@ -1,6 +1,5 @@
 import { action } from "@storybook/addon-actions";
 import React from "react";
-import { IconButton } from "../IconButton/IconButton";
 import { TitleBar } from "./TitleBar";
 
 export default {

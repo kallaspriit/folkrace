@@ -890,15 +890,14 @@ void stepLoopBlinker()
     loopStatusLed = currentLoopLedState;
     lastLoopLedState = currentLoopLedState;
 
+    // calculate main loop execution frequency (should be the same as cycleCountSinceLastLoopBlink)
+    int loopFrequency = ceil(((float)cycleCountSinceLastLoopBlink / (float)timeSinceLastBlinkMs) * 1000.0f);
+
     // send connection alive beacon message on rising edge
     if (currentLoopLedState == 1 && isUsbConnected())
     {
-      // sendAsync("b:%d:%d\n", timeSinceLastBlinkMs, cycleCountSinceLastLoopBlink);
-      send("b:%d:%d:%d\n", timeSinceLastBlinkMs, cycleCountSinceLastLoopBlink, loadPercentage);
+      send("b:%d:%d\n", loopFrequency, loadPercentage);
     }
-
-    // calculate main loop execution frequency (should be the same as cycleCountSinceLastLoopBlink)
-    int loopFrequency = ceil(((float)cycleCountSinceLastLoopBlink / (float)timeSinceLastBlinkMs) * 1000.0f);
 
     // printf("# fps: %d\n", loopFrequency);
 

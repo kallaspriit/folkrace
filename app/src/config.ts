@@ -13,7 +13,7 @@ export const config = {
   rules: {
     battery: {
       low: 14.9,
-      critical: 13.5,
+      critical: 13.9,
       alarmInterval: 5000,
     },
   },
