@@ -6,7 +6,6 @@ import { Column } from "../../components/Column/Column";
 import { List, ListItem } from "../../components/List/List";
 import { TitleBar } from "../../components/TitleBar/TitleBar";
 import { View } from "../../components/View/View";
-import { useLog } from "../../hooks/useLog";
 import { ExperimentsViewParams, EXPERIMENTS_VIEW_PATH } from "../../routes";
 import { buildUrl } from "../../services/buildUrl";
 import { robot } from "../../services/robot";

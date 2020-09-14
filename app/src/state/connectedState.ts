@@ -8,7 +8,7 @@ export const connectedState = selector<boolean>({
     const lastBeaconTime = get(lastBeaconTimeState);
 
     // subscibe to timer to resolve this state at interval
-    const _timer = get(timerState);
+    void get(timerState);
 
     if (!lastBeaconTime) {
       return false;
