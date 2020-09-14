@@ -10,17 +10,28 @@ import { useLog } from "../../hooks/useLog";
 import { ExperimentsViewParams, EXPERIMENTS_VIEW_PATH } from "../../routes";
 import { buildUrl } from "../../services/buildUrl";
 import { robot } from "../../services/robot";
+import { activeTransportNameState } from "../../state/activeTransportNameState";
 import { attitudeState } from "../../state/attitudeState";
 import { buttonsState } from "../../state/buttonsState";
+import { connectedState } from "../../state/connectedState";
 import { currentsState } from "../../state/currentsState";
 import { encodersState } from "../../state/encodersState";
+import { lastBeaconTimeState } from "../../state/lastBeaconTimeState";
 import { loadState } from "../../state/loadState";
 import { logMessagesState } from "../../state/logMessagesState";
 import { loopFrequencyState } from "../../state/loopFrequencyState";
+import { timerState } from "../../state/timerState";
+import { transportStateState } from "../../state/transportStateState";
 import { voltageState } from "../../state/voltageState";
 
 export const StateExperiment: React.FC = () => {
   const history = useHistory();
+
+  const transportState = useRecoilValue(transportStateState);
+  const activeTransportName = useRecoilValue(activeTransportNameState);
+  const isConnected = useRecoilValue(connectedState);
+  const lastBeaconTime = useRecoilValue(lastBeaconTimeState);
+  const timer = useRecoilValue(timerState);
   const logMessages = useRecoilValue(logMessagesState);
   const voltage = useRecoilValue(voltageState);
   const load = useRecoilValue(loadState);
@@ -41,6 +52,21 @@ export const StateExperiment: React.FC = () => {
       />
       <Column expanded scrollable>
         <List>
+          <ListItem compact trailing={transportState}>
+            Transport state
+          </ListItem>
+          <ListItem compact trailing={activeTransportName ?? "n/a"}>
+            Active transport name
+          </ListItem>
+          <ListItem compact trailing={isConnected ? "YES" : "NO"}>
+            Firmware connected
+          </ListItem>
+          <ListItem compact trailing={new Date(timer).toLocaleTimeString()}>
+            Timer
+          </ListItem>
+          <ListItem compact trailing={lastBeaconTime ? lastBeaconTime.toLocaleTimeString() : "n/a"}>
+            Last beacon time
+          </ListItem>
           <ListItem
             compact
             trailing={voltage ? logMessages.length : "n/a"}

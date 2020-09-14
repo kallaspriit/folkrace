@@ -1,14 +1,19 @@
 import { useRecoilState } from "recoil";
 import { multiTransport } from "../services/multiTransport";
+import { activeTransportNameState } from "../state/activeTransportNameState";
 import { LogMessageType } from "../state/logMessagesState";
+import { timerState } from "../state/timerState";
 import { transportStateState } from "../state/transportStateState";
 import { useHandleCommand } from "./useHandleCommand";
+import { useInterval } from "./useInterval";
 import { useLog } from "./useLog";
 import { useTransportListener } from "./useTransportListener";
 
 // listens for events from multi-transport and forwards it to state
 export function useStateRouter() {
   const [transportState, setTransportState] = useRecoilState(transportStateState);
+  const [, setActiveTransportName] = useRecoilState(activeTransportNameState);
+  const [, setTimer] = useRecoilState(timerState);
   const log = useLog();
   const handleCommand = useHandleCommand();
 
@@ -19,11 +24,17 @@ export function useStateRouter() {
     setTransportState(currentTransportState);
   }
 
+  // update timer every second (useful to check something at interval)
+  useInterval(() => {
+    setTimer(Date.now());
+  }, 1000);
+
   // adds new multi-transport listeners and forwards the events to state
   useTransportListener({
     // called when active transport state changes
     onStateChanged: (transport, newState, _previousState) => {
       setTransportState(newState);
+      setActiveTransportName(transport.getName());
 
       log(LogMessageType.INFO, `# ${transport.getName()} state changed to ${newState}`);
     },
