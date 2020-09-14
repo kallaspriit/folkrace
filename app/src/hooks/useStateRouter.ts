@@ -3,7 +3,7 @@ import { multiTransport } from "../services/multiTransport";
 import { activeTransportNameState } from "../state/activeTransportNameState";
 import { LogMessageType } from "../state/logMessagesState";
 import { timerState } from "../state/timerState";
-import { transportStateState } from "../state/transportStateState";
+import { transportStatusState } from "../state/transportStatusState";
 import { useHandleCommand } from "./useHandleCommand";
 import { useInterval } from "./useInterval";
 import { useLog } from "./useLog";
@@ -11,7 +11,7 @@ import { useTransportListener } from "./useTransportListener";
 
 // listens for events from multi-transport and forwards it to state
 export function useStateRouter() {
-  const [transportState, setTransportState] = useRecoilState(transportStateState);
+  const [transportState, setTransportState] = useRecoilState(transportStatusState);
   const [, setActiveTransportName] = useRecoilState(activeTransportNameState);
   const [, setTimer] = useRecoilState(timerState);
   const log = useLog();

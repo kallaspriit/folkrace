@@ -52,7 +52,7 @@ export const ListItem: React.FC<ListItemProps> = ({
     )}
     <Container>{children}</Container>
     <Container className={styles["trailing-icon"]}>
-      {!trailing ? !removeTrailing && <ForwardArrowIcon /> : trailing}
+      {trailing === undefined ? !removeTrailing && <ForwardArrowIcon /> : trailing}
     </Container>
   </Row>
 );

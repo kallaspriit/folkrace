@@ -20,15 +20,17 @@ import { lastBeaconTimeState } from "../../state/lastBeaconTimeState";
 import { loadState } from "../../state/loadState";
 import { logMessagesState } from "../../state/logMessagesState";
 import { loopFrequencyState } from "../../state/loopFrequencyState";
+import { serialStatusState } from "../../state/serialStatusState";
 import { timerState } from "../../state/timerState";
-import { transportStateState } from "../../state/transportStateState";
+import { transportStatusState } from "../../state/transportStatusState";
 import { voltageState } from "../../state/voltageState";
 
 export const StateExperiment: React.FC = () => {
   const history = useHistory();
 
-  const transportState = useRecoilValue(transportStateState);
+  const transportStatus = useRecoilValue(transportStatusState);
   const activeTransportName = useRecoilValue(activeTransportNameState);
+  const serialStatus = useRecoilValue(serialStatusState);
   const isConnected = useRecoilValue(connectedState);
   const lastBeaconTime = useRecoilValue(lastBeaconTimeState);
   const timer = useRecoilValue(timerState);
@@ -52,12 +54,16 @@ export const StateExperiment: React.FC = () => {
       />
       <Column expanded scrollable>
         <List>
-          <ListItem compact trailing={transportState}>
-            Transport state
+          <ListItem compact trailing={transportStatus}>
+            Transport status
+          </ListItem>
+          <ListItem compact trailing={serialStatus}>
+            Serial status
           </ListItem>
           <ListItem compact trailing={activeTransportName ?? "n/a"}>
             Active transport name
           </ListItem>
+
           <ListItem compact trailing={isConnected ? "YES" : "NO"}>
             Firmware connected
           </ListItem>
