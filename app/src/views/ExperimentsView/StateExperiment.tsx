@@ -13,6 +13,7 @@ import { robot } from "../../services/robot";
 import { attitudeState } from "../../state/attitudeState";
 import { buttonsState } from "../../state/buttonsState";
 import { currentsState } from "../../state/currentsState";
+import { encodersState } from "../../state/encodersState";
 import { loadState } from "../../state/loadState";
 import { logMessagesState } from "../../state/logMessagesState";
 import { loopFrequencyState } from "../../state/loopFrequencyState";
@@ -27,6 +28,7 @@ export const StateExperiment: React.FC = () => {
   const attitude = useRecoilValue(attitudeState);
   const buttons = useRecoilValue(buttonsState);
   const currents = useRecoilValue(currentsState);
+  const encoders = useRecoilValue(encodersState);
 
   // request initial state
   useEffect(() => robot.requestState(), []);
@@ -39,7 +41,15 @@ export const StateExperiment: React.FC = () => {
       />
       <Column expanded scrollable>
         <List>
-          <ListItem compact trailing={voltage ? logMessages.length : "n/a"}>
+          <ListItem
+            compact
+            trailing={voltage ? logMessages.length : "n/a"}
+            onClick={() =>
+              history.replace(
+                buildUrl<ExperimentsViewParams>(EXPERIMENTS_VIEW_PATH, { page: "log" }),
+              )
+            }
+          >
             Log message count
           </ListItem>
           <ListItem compact trailing={voltage ? `${voltage.toFixed(1)}V` : "n/a"}>
@@ -74,6 +84,12 @@ export const StateExperiment: React.FC = () => {
           </ListItem>
           <ListItem compact trailing={`${currents.right.toFixed(2)}A`} onClick={() => robot.requestCurrent()}>
             Right motor current
+          </ListItem>
+          <ListItem compact trailing={encoders.left}>
+            Left encoder
+          </ListItem>
+          <ListItem compact trailing={encoders.right}>
+            Right encoder
           </ListItem>
         </List>
       </Column>

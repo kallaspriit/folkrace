@@ -9,7 +9,7 @@ export function useHandleCurrentCommand() {
   return (args: string[]) => {
     assertArgumentCount(args, 2);
 
-    // current is reported in 10ths of volts
+    // current is reported in 100ths of amps
     const left = parseInt(args[0], 10) / 100.0;
     const right = parseInt(args[1], 10) / 100.0;
 

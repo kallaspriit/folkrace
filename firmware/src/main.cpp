@@ -428,6 +428,7 @@ void reportBatteryVoltage(bool force = false)
   send("voltage:%d\n", batteryVoltage);
 }
 
+// TODO: report automatically at some interval?
 void reportCurrent()
 {
   int16_t currentM1, currentM2;
