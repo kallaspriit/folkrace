@@ -7,7 +7,7 @@ export function useHandleBeaconCommand() {
   const [, setLoad] = useRecoilState(loadState);
   const [, setLoopFrequency] = useRecoilState(loopFrequencyState);
 
-  // for example "b:100:12" meanining 100Hz update rate at 12% load
+  // for example "b:100:12" means 100Hz update rate at 12% load
   return (args: string[]) => {
     assertArgumentCount(args, 2);
 

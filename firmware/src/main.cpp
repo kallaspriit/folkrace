@@ -668,7 +668,7 @@ void setupRearLedStrip()
   }
 }
 
-void setupIMU()
+void setupImu()
 {
   // attempt to initialize
   if (!imu.begin())
@@ -679,6 +679,7 @@ void setupIMU()
 
   printf("# calibrating IMU.. ");
 
+  // TODO: also needs a way to calibrate the compass
   imu.calibrate();
 
   printf("done!\n");
@@ -810,7 +811,7 @@ void stepLidar()
   } while (true);
 }
 
-void stepIMU()
+void stepImu()
 {
   // read IMU values
   imu.readMag();
@@ -843,9 +844,10 @@ void stepIMU()
   // report the readings and attitude information
   if (isUsbConnected())
   {
-    // TODO: send attitude quaternion instead of roll-pitch-yaw
+    // TODO: send attitude quaternion instead of roll-pitch-yaw?
+    // TODO: send IMU reading and calculate AHRS on the app side to reduce CPU load
     // sendAsync("i:%f:%f:%f:%f:%f:%f:%f:%f:%f:%f:%f:%f\n", gx, gy, gz, ax, ay, az, mx, my, mz, roll, pitch, yaw);
-    send("a:%f:%f:%f\n", roll, pitch, yaw);
+    send("a:%d:%d:%d\n", (int)round(roll * 100.0f), (int)round(pitch * 100.0f), (int)round(yaw * 100.0f));
   }
 }
 
@@ -883,6 +885,7 @@ void stepLoopBlinker()
 
   cycleCountSinceLastLoopBlink++;
 
+  // TODO: messy logic, rewrite
   // check whether loop led state has changed
   if (currentLoopLedState != lastLoopLedState)
   {
@@ -954,7 +957,7 @@ int main()
   setupCommandHandlers();
   setupMotors();
   setupRearLedStrip();
-  // setupIMU();
+  setupImu();
   setupTimers();
 
   printf("# initialization complete!\n");
@@ -990,9 +993,9 @@ int main()
     stepLidar();
     d("stepLidar", 3000);
 
-    // s();
-    // stepIMU();
-    // d("stepIMU", 4000);
+    s();
+    stepImu();
+    d("stepImu", 4000);
 
     s();
     stepRearLedStrip();
