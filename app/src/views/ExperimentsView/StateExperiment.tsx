@@ -10,6 +10,7 @@ import { ExperimentsViewParams, EXPERIMENTS_VIEW_PATH } from "../../routes";
 import { buildUrl } from "../../services/buildUrl";
 import { robot } from "../../services/robot";
 import { attitudeState } from "../../state/attitudeState";
+import { buttonsState } from "../../state/buttonsState";
 import { loadState } from "../../state/loadState";
 import { loopFrequencyState } from "../../state/loopFrequencyState";
 import { voltageState } from "../../state/voltageState";
@@ -20,6 +21,7 @@ export const StateExperiment: React.FC = () => {
   const load = useRecoilValue(loadState);
   const loopFrequency = useRecoilValue(loopFrequencyState);
   const attitude = useRecoilValue(attitudeState);
+  const buttons = useRecoilValue(buttonsState);
 
   // request initial state
   useEffect(() => robot.requestState(), []);
@@ -49,6 +51,15 @@ export const StateExperiment: React.FC = () => {
           </ListItem>
           <ListItem compact trailing={attitude ? `${attitude.yaw.toFixed(2)}°` : "n/a"}>
             Attitude yaw
+          </ListItem>
+          <ListItem compact trailing={buttons.left ? "pressed" : "released"}>
+            Left button
+          </ListItem>
+          <ListItem compact trailing={buttons.right ? "pressed" : "released"}>
+            Right button
+          </ListItem>
+          <ListItem compact trailing={buttons.start ? "pressed" : "released"}>
+            Start button
           </ListItem>
         </List>
       </Column>
