@@ -22,6 +22,10 @@ export class Robot {
     this.send("voltage");
   }
 
+  requestCurrent() {
+    this.send("current");
+  }
+
   requestState() {
     this.send("state");
   }

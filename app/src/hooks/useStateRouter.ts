@@ -51,7 +51,7 @@ export function useStateRouter() {
     // called when transport message is received
     onMessageReceived: (transport, message) => {
       const [command, ...args] = message.split(":");
-      const noLogCommands = ["e", "b", "l"];
+      const noLogCommands = ["e", "b", "l", "a"];
 
       // don't blacklisted messages
       if (!noLogCommands.includes(command)) {

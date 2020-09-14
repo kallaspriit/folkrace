@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useHandleAttitudeCommand } from "../handlers/useHandleAttitudeCommand";
 import { useHandleBeaconCommand } from "../handlers/useHandleBeaconCommand";
 import { useHandleButtonCommand } from "../handlers/useHandleButtonCommand";
+import { useHandleCurrentCommand } from "../handlers/useHandleCurrentCommand";
 import { useHandleVoltageCommand } from "../handlers/useHandleVoltageCommand";
 import { LogMessageType } from "../state/logMessagesState";
 import { useLog } from "./useLog";
@@ -13,6 +14,7 @@ export function useHandleCommand() {
   const handleAttitudeCommand = useHandleAttitudeCommand();
   const handleVoltageCommand = useHandleVoltageCommand();
   const handleButtonCommand = useHandleButtonCommand();
+  const handleCurrentCommand = useHandleCurrentCommand();
   const log = useLog();
 
   // map of command names to handlers
@@ -22,8 +24,9 @@ export function useHandleCommand() {
       a: handleAttitudeCommand,
       voltage: handleVoltageCommand,
       button: handleButtonCommand,
+      current: handleCurrentCommand,
     }),
-    [handleAttitudeCommand, handleBeaconCommand, handleButtonCommand, handleVoltageCommand],
+    [handleAttitudeCommand, handleBeaconCommand, handleButtonCommand, handleCurrentCommand, handleVoltageCommand],
   );
 
   return (command: string, args: string[]) => {
