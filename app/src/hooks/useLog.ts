@@ -14,5 +14,7 @@ export function useLog() {
         transportName,
       },
     ]);
+
+    console.log(type, message, transportName);
   };
 }

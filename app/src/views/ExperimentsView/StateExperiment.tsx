@@ -10,15 +10,16 @@ import { ExperimentsViewParams, EXPERIMENTS_VIEW_PATH } from "../../routes";
 import { buildUrl } from "../../services/buildUrl";
 import { robot } from "../../services/robot";
 import { activeTransportNameState } from "../../state/activeTransportNameState";
+import { aliveState } from "../../state/aliveState";
 import { attitudeState } from "../../state/attitudeState";
 import { buttonsState } from "../../state/buttonsState";
-import { connectedState } from "../../state/connectedState";
 import { currentsState } from "../../state/currentsState";
 import { encodersState } from "../../state/encodersState";
-import { lastBeaconTimeState } from "../../state/lastBeaconTimeState";
+import { lastHeartbeatTimeState } from "../../state/lastHeartbeatTimeState";
 import { loadState } from "../../state/loadState";
 import { logMessagesState } from "../../state/logMessagesState";
 import { loopFrequencyState } from "../../state/loopFrequencyState";
+import { motorsConnectedState } from "../../state/motorsConnectedState";
 import { serialStatusState } from "../../state/serialStatusState";
 import { timerState } from "../../state/timerState";
 import { transportStatusState } from "../../state/transportStatusState";
@@ -30,8 +31,9 @@ export const StateExperiment: React.FC = () => {
   const transportStatus = useRecoilValue(transportStatusState);
   const activeTransportName = useRecoilValue(activeTransportNameState);
   const serialStatus = useRecoilValue(serialStatusState);
-  const isConnected = useRecoilValue(connectedState);
-  const lastBeaconTime = useRecoilValue(lastBeaconTimeState);
+  const isAlive = useRecoilValue(aliveState);
+  const areMotorsConnected = useRecoilValue(motorsConnectedState);
+  const lastHeartbeatTime = useRecoilValue(lastHeartbeatTimeState);
   const timer = useRecoilValue(timerState);
   const logMessages = useRecoilValue(logMessagesState);
   const voltage = useRecoilValue(voltageState);
@@ -53,24 +55,26 @@ export const StateExperiment: React.FC = () => {
       />
       <Column expanded scrollable>
         <List>
+          <ListItem compact trailing={activeTransportName ?? "n/a"}>
+            Active transport name
+          </ListItem>
           <ListItem compact trailing={transportStatus}>
             Transport status
           </ListItem>
           <ListItem compact trailing={serialStatus}>
-            Serial status
+            USB serial status
           </ListItem>
-          <ListItem compact trailing={activeTransportName ?? "n/a"}>
-            Active transport name
-          </ListItem>
-
-          <ListItem compact trailing={isConnected ? "YES" : "NO"}>
+          <ListItem compact trailing={isAlive ? "YES" : "NO"}>
             Firmware connected
+          </ListItem>
+          <ListItem compact trailing={areMotorsConnected ? "YES" : "NO"}>
+            Motors connected
           </ListItem>
           <ListItem compact trailing={new Date(timer).toLocaleTimeString()}>
             Timer
           </ListItem>
-          <ListItem compact trailing={lastBeaconTime ? lastBeaconTime.toLocaleTimeString() : "n/a"}>
-            Last beacon time
+          <ListItem compact trailing={lastHeartbeatTime ? lastHeartbeatTime.toLocaleTimeString() : "n/a"}>
+            Last heartbeat time
           </ListItem>
           <ListItem
             compact

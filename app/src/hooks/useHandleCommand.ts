@@ -1,9 +1,10 @@
 import { useMemo } from "react";
 import { useHandleAttitudeCommand } from "../handlers/useHandleAttitudeCommand";
-import { useHandleBeaconCommand } from "../handlers/useHandleBeaconCommand";
 import { useHandleButtonCommand } from "../handlers/useHandleButtonCommand";
 import { useHandleCurrentCommand } from "../handlers/useHandleCurrentCommand";
 import { useHandleEncoderCommand } from "../handlers/useHandleEncoderCommand";
+import { useHandleHeartbeatCommand } from "../handlers/useHandleHeartbeatCommand";
+import { useHandleMotorsCommand } from "../handlers/useHandleMotorsCommand";
 import { useHandleSerialStatusCommand } from "../handlers/useHandleSerialCommand";
 import { useHandleVoltageCommand } from "../handlers/useHandleVoltageCommand";
 import { LogMessageType } from "../state/logMessagesState";
@@ -15,33 +16,36 @@ export function useHandleCommand() {
   const log = useLog();
 
   // command handlers
-  const handleBeaconCommand = useHandleBeaconCommand();
+  const handleHeartbeatCommand = useHandleHeartbeatCommand();
   const handleAttitudeCommand = useHandleAttitudeCommand();
   const handleEncoderCommand = useHandleEncoderCommand();
+  const handleCurrentCommand = useHandleCurrentCommand();
   const handleVoltageCommand = useHandleVoltageCommand();
   const handleButtonCommand = useHandleButtonCommand();
-  const handleCurrentCommand = useHandleCurrentCommand();
   const handleSerialStatusCommand = useHandleSerialStatusCommand();
+  const handleMotorsCommand = useHandleMotorsCommand();
 
   // map of command names to handlers
   const handlerMap: Record<string, CommandHandlerFn | undefined> = useMemo(
     () => ({
-      b: handleBeaconCommand,
+      h: handleHeartbeatCommand,
       a: handleAttitudeCommand,
       e: handleEncoderCommand,
-      voltage: handleVoltageCommand,
-      button: handleButtonCommand,
-      current: handleCurrentCommand,
+      c: handleCurrentCommand,
+      v: handleVoltageCommand,
+      b: handleButtonCommand,
       serial: handleSerialStatusCommand,
+      motors: handleMotorsCommand,
     }),
     [
-      handleBeaconCommand,
+      handleHeartbeatCommand,
       handleAttitudeCommand,
       handleEncoderCommand,
+      handleCurrentCommand,
       handleVoltageCommand,
       handleButtonCommand,
-      handleCurrentCommand,
       handleSerialStatusCommand,
+      handleMotorsCommand,
     ],
   );
 

@@ -385,7 +385,7 @@ int Lidar::getPacketStartAngle()
 //   // let the pid controller compute new motor pwm
 //   float newMotorPwm = motorPid.compute();
 
-//   // printf("# pwm: %f, rpm: %f, sum: %f, count: %d\n", newMotorPwm, currentMotorRpm, motorRpmSum, motorRpmCount);
+//   // printf("! pwm: %f, rpm: %f, sum: %f, count: %d\n", newMotorPwm, currentMotorRpm, motorRpmSum, motorRpmCount);
 
 //   setMotorPwm(newMotorPwm);
 

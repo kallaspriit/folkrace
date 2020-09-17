@@ -288,7 +288,7 @@ float PID::compute()
   //Perform the PID calculation.
   controllerOutput_ = scaledBias + Kc_ * (error + (tauR_ * accError_) - (tauD_ * dMeas));
 
-  // printf("# error: %f, acc: %f, P: %f, I: %f, D: %f, O: %f\n", error, accError_, Kc_ * error, tauR_ * accError_, -tauD_ * dMeas, controllerOutput_);
+  // printf("! error: %f, acc: %f, P: %f, I: %f, D: %f, O: %f\n", error, accError_, Kc_ * error, tauR_ * accError_, -tauD_ * dMeas, controllerOutput_);
 
   //Make sure the computed output is within output constraints.
   if (controllerOutput_ < 0.0)

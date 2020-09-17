@@ -11,9 +11,13 @@ export function useHandleSerialStatusCommand() {
   return (args: string[]) => {
     assertArgumentCount(args, 2);
 
-    // currently only support usb type so ignore for now
-    // const serialType = args[0] as SerialType;
+    const serialType = args[0] as SerialType;
     const serialStatus = args[1] as SerialStatus;
+
+    // only support usb serial
+    if (serialType !== "usb") {
+      return;
+    }
 
     setSerialStatus(serialStatus);
   };

@@ -32,23 +32,18 @@ const int LOG_SERIAL_BAUDRATE = 115200;   // log serial is the built-in usb of t
 const int MOTOR_SERIAL_BAUDRATE = 460800; // not default, make sure to update in the Ion Studio
 
 // timing configuration
-const int LOOP_LED_BLINK_INTERVAL_MS = 1000;
+const int HEARTBEAT_INTERVAL_MS = 1000;
 const int LED_BLINK_DURATION_MS = 10;
-const std::chrono::milliseconds REPORT_BATTERY_VOLTAGE_INTERVAL = 1s;
-
+const int REPORT_BATTERY_VOLTAGE_INTERVAL_MS = 1000;
 const int REPORT_STATUS_INTERVAL_MS = 1000;
+const int LIDAR_REPORT_STATE_INTERVAL_MS = 1000;
 
 // motor controller configuration
-const uint8_t MOTORS_ADDRESS = 128;
-const int MOTORS_TIMEOUT_US = 10000;
+const uint8_t MOTOR_CONTROLLER_ADDRESS = 128;
+const int MOTOR_CONTROLLER_TIMEOUT_US = 10000;
 
 // voltage measurement correction configuration
 const double MAIN_VOLTAGE_CORRECTION_MULTIPLIER = 1.02;
-
-// usb serial configuration (same as USBSerial defaults)
-// const uint16_t USB_VENDOR_ID = 0x1f00;
-// const uint16_t USB_PRODUCT_ID = 0x2012;
-// const uint16_t USB_PRODUCT_RELEASE = 0x0001;
 
 // rear led configuration
 const int REAR_LED_COUNT = 8;
@@ -66,23 +61,22 @@ const float LIDAR_PID_D = 0.0f;
 const float LIDAR_STARTUP_PWM = 0.35f;                                    // startup pwm, should be close to real at target rpm
 const float LIDAR_TARGET_RPM = 300.0f;                                    // 5Hz
 const float LIDAR_PID_INTERVAL_MS = 1000.0f / (LIDAR_TARGET_RPM / 60.0f); // 200ms at 300rpm (5Hz)
-const int LIDAR_REPORT_STATE_INTERVAL_MS = 1000;                          // how often to report the lidar state
 
 // IMU configuration
 const int IMU_ACCELEROMETER_GYRO_ADDRESS = 0xD6;
 const int IMU_MAGNETOMETER_ADDRESS = 0x3C;
 
-// AHRS configuration
-const float AHRS_GYRO_ERROR_DEG_S = 1.0f;
-const int AHRS_INITIAL_SAMPLE_FREQUENCY = 100;
-
 // conversion factors
 const int US_IN_SECONDS = 1000000;
 
 // main loop configuration
-const int TARGET_LOOP_UPDATE_RATE = 100; // hz
+const int TARGET_LOOP_UPDATE_RATE = 60; // hz
 const int TARGET_LOOP_DURATION_US = US_IN_SECONDS / TARGET_LOOP_UPDATE_RATE;
 const int LOOP_SLEEP_OVERHEAD_US = 10;
+
+// AHRS configuration
+const float AHRS_GYRO_ERROR_DEG_S = 1.0f;
+const int AHRS_INITIAL_SAMPLE_FREQUENCY = TARGET_LOOP_UPDATE_RATE;
 
 // list of possible error states (error led blinks error position number of times)
 enum Error
@@ -102,7 +96,7 @@ Commander logCommander(&logSerial);
 Commander appCommander(&appSerial);
 
 // setup motor controller
-RoboClaw motors(&motorsSerial, MOTORS_TIMEOUT_US);
+RoboClaw motors(&motorsSerial, MOTOR_CONTROLLER_TIMEOUT_US);
 
 // setup lidar
 Lidar lidar(LIDAR_TX_PIN, LIDAR_RX_PIN, LIDAR_PWM_PIN, LIDAR_PID_P, LIDAR_PID_I, LIDAR_PID_D, LIDAR_PID_INTERVAL_MS, LIDAR_STARTUP_PWM);
@@ -113,9 +107,9 @@ MadgwickAHRS ahrs(AHRS_GYRO_ERROR_DEG_S, AHRS_INITIAL_SAMPLE_FREQUENCY);
 
 // setup timers
 Timer loopTimer;
-Timer loopLedTimer;
-Timer rearLedUpdateTimer;
-Timer debugTimer;
+Timer reportHeartbeatTimer;
+Timer updateRearLedTimer;
+Timer performanceTimer;
 Timer reportLidarStateTimer;
 Timer reportBatteryVoltageTimer;
 Timeout stopMotorsTimeout;
@@ -174,8 +168,7 @@ int lastLoopTimeUs = 0;
 int loadPercentage = 100;
 
 // keep track of last loop led state and cycle count
-int lastLoopLedState = 0;
-int cycleCountSinceLastLoopBlink = 0;
+int cycleCountSinceLastHeartbeat = 0;
 
 // keep track of the number of read and sent lidar measurements
 int readLidarMeasurementCount = 0;
@@ -330,7 +323,7 @@ void handleMotorsCommunicationResult(bool isSuccessful)
 bool setMotorSpeeds(int targetSpeedM1, int targetSpeedM2)
 {
   // set motor speeds
-  bool sendSuccess = motors.speedM1M2(MOTORS_ADDRESS, targetSpeedM1, targetSpeedM2);
+  bool sendSuccess = motors.speedM1M2(MOTOR_CONTROLLER_ADDRESS, targetSpeedM1, targetSpeedM2);
 
   handleMotorsCommunicationResult(sendSuccess);
 
@@ -341,7 +334,7 @@ int getBatteryVoltage()
 {
   bool readSuccess;
 
-  uint16_t voltage = motors.readMainBatteryVoltage(MOTORS_ADDRESS, &readSuccess) * MAIN_VOLTAGE_CORRECTION_MULTIPLIER;
+  uint16_t voltage = motors.readMainBatteryVoltage(MOTOR_CONTROLLER_ADDRESS, &readSuccess) * MAIN_VOLTAGE_CORRECTION_MULTIPLIER;
 
   handleMotorsCommunicationResult(readSuccess);
 
@@ -358,7 +351,7 @@ void reportEncoderValues(bool force = false)
 {
   uint32_t encoderDeltaM1, encoderDeltaM2;
 
-  bool readSuccess = motors.readEncoders(MOTORS_ADDRESS, encoderDeltaM1, encoderDeltaM2);
+  bool readSuccess = motors.readEncoders(MOTOR_CONTROLLER_ADDRESS, encoderDeltaM1, encoderDeltaM2);
 
   handleMotorsCommunicationResult(readSuccess);
 
@@ -386,7 +379,7 @@ void reportEncoderValues(bool force = false)
 void reportButtonState(string name, int state)
 {
   // send flipped button state (normally low when pressed)
-  send("button:%s:%d\n", name.c_str(), !state);
+  send("b:%s:%d\n", name.c_str(), !state);
 }
 
 void reportButtonStates()
@@ -404,7 +397,7 @@ void reportTargetSpeed()
 void reportLidarState()
 {
   // TODO: add invalid, weak, out of order, rotation count
-  send("lidar:%d:%d:%.1f:%.1f:%.2f\n", lidar.isRunning() ? 1 : 0, lidar.isValid() ? 1 : 0, lidar.getTargetRpm(), lidar.getCurrentRpm(), lidar.getMotorPwm());
+  send("l:%d:%d:%d:%d:%d\n", lidar.isRunning() ? 1 : 0, lidar.isValid() ? 1 : 0, (int)ceil(lidar.getTargetRpm() * 10.0f), (int)ceil(lidar.getCurrentRpm() * 10.0f), (int)ceil(lidar.getMotorPwm() * 100.0f));
 }
 
 void reportBatteryVoltage(bool force = false)
@@ -425,7 +418,7 @@ void reportBatteryVoltage(bool force = false)
   // store last reported battery voltage
   lastReportedBatteryVoltage = batteryVoltage;
 
-  send("voltage:%d\n", batteryVoltage);
+  send("v:%d\n", batteryVoltage);
 }
 
 // TODO: report automatically at some interval?
@@ -433,7 +426,7 @@ void reportCurrent()
 {
   int16_t currentM1, currentM2;
 
-  bool readSuccess = motors.readCurrents(MOTORS_ADDRESS, currentM1, currentM2);
+  bool readSuccess = motors.readCurrents(MOTOR_CONTROLLER_ADDRESS, currentM1, currentM2);
 
   handleMotorsCommunicationResult(readSuccess);
 
@@ -442,7 +435,7 @@ void reportCurrent()
     return;
   }
 
-  send("current:%d:%d\n", (int)currentM1, (int)currentM2);
+  send("c:%d:%d\n", (int)currentM1, (int)currentM2);
 }
 
 // reports all current internal states
@@ -461,6 +454,38 @@ void reportState()
 int getRandomInRange(int min, int max)
 {
   return min + rand() / (RAND_MAX / (max - min + 1) + 1);
+}
+
+// handles help command, responds with guide how to use the firmware functions
+void handleHelpCommand(Commander *commander)
+{
+  printf("\n");
+  printf("! Supported commands:\n");
+  printf("! - s:SPEED_LEFT:SPEED_RIGHT   - sets left and right motor speeds (for example s:1000:-500)\n");
+  printf("! - rpm:RPM                          - sets target lidar RPM (for example rpm:300)\n");
+  printf("! - lidar                            - requests for lidar state\n");
+  printf("! - voltage                          - requests for current main battery voltage\n");
+  printf("! - current                          - requests for current motor currents\n");
+  printf("! - state                            - requests for current state, reports various information\n");
+  printf("! - proxy                            - forwards given message to other commander, useful for remote control etc\n");
+  printf("! - ping                             - responds with 'pong', useful for measuring connection latency\n");
+  printf("! - die                              - kills the board after stopping motors\n");
+  printf("\n");
+  printf("! Possible responses / messages:\n");
+  printf("! - motors:IS_WORKING                - is connection to the motor controller working (1 if working, 0 for not working)\n");
+  printf("! - rpm:TARGET_RPM                   - lidar target rpm\n");
+  printf("! - pong                             - response to ping\n");
+  printf("! - reset                            - usb connection state changed\n");
+  printf("! - e:LEFT:RIGHT                     - motor encoders absolute position for left and right motors\n");
+  printf("! - b:NAME:IS_PRESSED                - whether given button is pressed (1) or release (0)\n");
+  printf("! - s:SPEED_LEFT:SPEED_RIGHT         - target speed for left and right motors\n");
+  printf("! - s:SPEED_LEFT:SPEED_RIGHT         - target speed for left and right motors\n");
+  printf("! - v:VOLTAGE                        - main battery voltage in tenths of volts (162 means 16.2V etc)\n");
+  printf("! - c:CURRENT_LEFT:CURRENT_RIGHT     - motors currents in hundreths of amps (1253 means 12.53A etc)\n");
+  printf("! - a:ROLL:PITCH_YAW                 - ahrs attitude in degrees\n");
+  printf("! - h:LOOP_FREQUENCY:LOAD_PERCENTAGE - heartbeat with measured loop frequency and main thread load\n");
+  printf("! - l:IS_RUNNING:IS_VALID:TARGET_RPM:CURRENT_RPM:MOTOR_PWN - lidar state\n");
+  printf("\n");
 }
 
 // handles speed:A:B command where A and B are the target speeds for motor 1 and 2
@@ -487,9 +512,8 @@ void handleSpeedCommand(Commander *commander)
   // set motor speeds
   setMotorSpeeds(targetSpeedM1, targetSpeedM2);
 
-  // TODO: does this need reporting as the speed came from other side?
   // report new target speeds
-  // reportTargetSpeed();
+  reportTargetSpeed();
 }
 
 // handles rpm:RPM command, starts or stops the lidar setting target RPM
@@ -558,7 +582,7 @@ void handleProxyCommand(Commander *commander)
   Commander *otherCommander = commander == &logCommander ? &appCommander : &logCommander;
 
   // log forward attempt
-  send("# proxying \"%s\" to %s commander\n", command.c_str(), commander == &logCommander ? "robot" : "pc");
+  send("! proxying \"%s\" to %s commander\n", command.c_str(), commander == &logCommander ? "robot" : "pc");
 
   // forward the command to the other serial
   otherCommander->handleCommand(command);
@@ -573,6 +597,9 @@ void handlePingCommand(Commander *commander)
 // handles die command, killing the process
 void handleDieCommand(Commander *commander)
 {
+  // stop the motors
+  setMotorSpeeds(0, 0);
+
   die(Error::ERROR_DIE, "die requested");
 }
 
@@ -617,35 +644,36 @@ void setupCommandHandlers()
 
   for (Commander *commander : commanders)
   {
-    // sets target motor speeds (alias as just "s" for less bandwidth)
+    // handles request to kill the board
+    commander->registerCommandHandler("help", callback(handleHelpCommand, commander));
+
+    // sets left motor speed to A and right speed to B (for example s:1000:-500)
     commander->registerCommandHandler("s", callback(handleSpeedCommand, commander));
 
-    // sets target lidar rpm
+    // sets target lidar RPM to A rotations per minute (for example rpm:300)
     commander->registerCommandHandler("rpm", callback(handleRpmCommand, commander));
 
-    // reports lidar state
+    // requests for lidar state
     commander->registerCommandHandler("lidar", callback(handleLidarCommand, commander));
 
-    // reports battery voltage
+    // requests for current main battery voltage
     commander->registerCommandHandler("voltage", callback(handleVoltageCommand, commander));
 
-    // reports motor currents
+    // requests for current motor currents
     commander->registerCommandHandler("current", callback(handleCurrentCommand, commander));
 
-    // proxy forwards the command to the other commander, useful for remote control etc
-    commander->registerCommandHandler("proxy", callback(handleProxyCommand, commander));
-
-    // proxy forwards the command to the other commander, useful for remote control etc
-    commander->registerCommandHandler("ping", callback(handlePingCommand, commander));
-
-    // reports all internal state information
+    // requests for current state, reports various information
     commander->registerCommandHandler("state", callback(handleStateCommand, commander));
 
-    // kills the boarad
+    // forwards given message to other commander, useful for remote control etc
+    commander->registerCommandHandler("proxy", callback(handleProxyCommand, commander));
+
+    // responds with 'pong', useful for measuring connection latency
+    commander->registerCommandHandler("ping", callback(handlePingCommand, commander));
+
+    // kills the board after stopping motors
     commander->registerCommandHandler("die", callback(handleDieCommand, commander));
   }
-
-  // TODO: implement help handler
 }
 
 void setupMotors()
@@ -654,7 +682,7 @@ void setupMotors()
   setMotorSpeeds(0, 0);
 
   // reset encoder values
-  bool writeSuccess = motors.resetEncoders(MOTORS_ADDRESS);
+  bool writeSuccess = motors.resetEncoders(MOTOR_CONTROLLER_ADDRESS);
 
   handleMotorsCommunicationResult(writeSuccess);
 }
@@ -678,7 +706,7 @@ void setupImu()
     die(Error::ERROR_IMU_NOT_AVAILABLE, "communicating with LSM9DS1 IMU failed");
   }
 
-  printf("# calibrating IMU.. ");
+  printf("! calibrating IMU.. ");
 
   // TODO: also needs a way to calibrate the compass
   imu.calibrate();
@@ -702,7 +730,7 @@ void stepUsbConnectionState()
   if (isConnected != wasUsbConnected)
   {
     // notify usb connection state change
-    printf("# usb %s\n", isConnected ? "connected" : "disconnected");
+    printf("! usb %s\n", isConnected ? "connected" : "disconnected");
 
     // notify app of reset
     if (isConnected)
@@ -756,7 +784,7 @@ void stepEncoderReporter()
 
 void stepBatteryVoltageReporter()
 {
-  if (reportBatteryVoltageTimer.elapsed_time() < REPORT_BATTERY_VOLTAGE_INTERVAL)
+  if (std::chrono::duration_cast<std::chrono::milliseconds>(reportBatteryVoltageTimer.elapsed_time()).count() < REPORT_BATTERY_VOLTAGE_INTERVAL_MS)
   {
     return;
   }
@@ -847,26 +875,16 @@ void stepImu()
   {
     // TODO: send attitude quaternion instead of roll-pitch-yaw?
     // TODO: send IMU reading and calculate AHRS on the app side to reduce CPU load
-    // sendAsync("i:%f:%f:%f:%f:%f:%f:%f:%f:%f:%f:%f:%f\n", gx, gy, gz, ax, ay, az, mx, my, mz, roll, pitch, yaw);
     send("a:%d:%d:%d\n", (int)round(roll * 100.0f), (int)round(pitch * 100.0f), (int)round(yaw * 100.0f));
   }
 }
 
 void stepRearLedStrip()
 {
-  // test leds by setting new random colors at certain interval
-  // if (rearLedUpdateTimer.elapsed_time() >= 500ms)
-  // {
-  //   rearLedUpdateTimer.reset();
-
-  //   for (int i = 0; i < REAR_LED_COUNT; i++)
-  //   {
-  //     setLedColor(i, getRandomInRange(0, 255), getRandomInRange(0, 255), getRandomInRange(0, 255), 255);
-  //   }
-  // }
-
+  // update animator
   rearLedNeedsUpdate = ledAnimator.update();
 
+  // skip if nothing changed
   if (!rearLedNeedsUpdate)
   {
     return;
@@ -878,54 +896,40 @@ void stepRearLedStrip()
   rearLedNeedsUpdate = false;
 }
 
-void stepLoopBlinker()
+void stepHeartbeat()
 {
-  int timeSinceLastBlinkMs = std::chrono::duration_cast<std::chrono::milliseconds>(loopLedTimer.elapsed_time()).count();
-  bool shouldReset = timeSinceLastBlinkMs > LOOP_LED_BLINK_INTERVAL_MS + LED_BLINK_DURATION_MS;
-  int currentLoopLedState = !shouldReset && timeSinceLastBlinkMs > LOOP_LED_BLINK_INTERVAL_MS ? 1 : 0;
+  int timeSinceLastHeartbeatMs = std::chrono::duration_cast<std::chrono::milliseconds>(reportHeartbeatTimer.elapsed_time()).count();
 
-  cycleCountSinceLastLoopBlink++;
+  cycleCountSinceLastHeartbeat++;
 
-  // TODO: messy logic, rewrite
-  // check whether loop led state has changed
-  if (currentLoopLedState != lastLoopLedState)
+  if (timeSinceLastHeartbeatMs < HEARTBEAT_INTERVAL_MS)
   {
-    // set new loop led state and update last state
-    loopStatusLed = currentLoopLedState;
-    lastLoopLedState = currentLoopLedState;
-
-    // calculate main loop execution frequency (should be the same as cycleCountSinceLastLoopBlink)
-    int loopFrequency = ceil(((float)cycleCountSinceLastLoopBlink / (float)timeSinceLastBlinkMs) * 1000.0f);
-
-    // send connection alive beacon message on rising edge
-    if (currentLoopLedState == 1 && isUsbConnected())
-    {
-      send("b:%d:%d\n", loopFrequency, loadPercentage);
-    }
-
-    // printf("# fps: %d\n", loopFrequency);
-
-    // update ahrs sample frequency (matches loop execution frequency)
-    ahrs.setSampleFrequency(loopFrequency);
-
-    // log IMU attitude
-    // printf("# frequency: %d, roll: %f, pitch: %f, yaw: %f\n", loopFrequency, ahrs.getRoll(), ahrs.getPitch(), ahrs.getYaw());
+    return;
   }
 
-  // reset loop led timer if interval + blink duration has passed
-  if (shouldReset)
-  {
-    loopLedTimer.reset();
-    cycleCountSinceLastLoopBlink = 0;
-  }
+  // toggle loop status led
+  loopStatusLed = !loopStatusLed;
+
+  // calculate main loop execution frequency (should be the same as cycleCountSinceLastHeartbeat)
+  int loopFrequency = ceil(((float)cycleCountSinceLastHeartbeat / (float)timeSinceLastHeartbeatMs) * 1000.0f);
+
+  // send connection alive heartbeat message
+
+  send("h:%d:%d\n", loopFrequency, loadPercentage);
+
+  // update ahrs sample frequency (matches loop execution frequency)
+  ahrs.setSampleFrequency(loopFrequency);
+
+  reportHeartbeatTimer.reset();
+  cycleCountSinceLastHeartbeat = 0;
 }
 
 void setupTimers()
 {
   // start timers
-  loopLedTimer.start();
-  rearLedUpdateTimer.start();
-  debugTimer.start();
+  updateRearLedTimer.start();
+  performanceTimer.start();
+  reportHeartbeatTimer.start();
   reportLidarStateTimer.start();
   reportBatteryVoltageTimer.start();
   loopTimer.start();
@@ -935,12 +939,12 @@ const int SLOW_OPERATION_THRESHOLD_US = 1000; // 1ms
 
 void s()
 {
-  debugTimer.reset();
+  performanceTimer.reset();
 }
 
 void d(const char *name, int slowThreshold = SLOW_OPERATION_THRESHOLD_US)
 {
-  int elapsedUs = debugTimer.elapsed_time().count();
+  int elapsedUs = performanceTimer.elapsed_time().count();
 
   if (elapsedUs >= slowThreshold)
   {
@@ -961,7 +965,7 @@ int main()
   setupImu();
   setupTimers();
 
-  printf("# initialization complete!\n");
+  printf("! initialization complete!\n");
 
   // run main loop
   while (true)
@@ -994,9 +998,9 @@ int main()
     stepLidar();
     d("stepLidar", 3000);
 
-    s();
-    stepImu();
-    d("stepImu", 4000);
+    // s();
+    // stepImu();
+    // d("stepImu", 4000);
 
     s();
     stepRearLedStrip();
@@ -1011,8 +1015,8 @@ int main()
     d("stepBatteryVoltageReporter", 3000);
 
     s();
-    stepLoopBlinker();
-    d("stepLoopBlinker");
+    stepHeartbeat();
+    d("stepHeartbeat");
 
     // get loop time taken in microseconds
     int loopTimeTakenUs = loopTimer.elapsed_time().count();

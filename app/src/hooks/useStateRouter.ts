@@ -9,6 +9,9 @@ import { useInterval } from "./useInterval";
 import { useLog } from "./useLog";
 import { useTransportListener } from "./useTransportListener";
 
+// const messageQueue: string[] = [];
+// const noLogCommands = ["e", "b", "l", "a"];
+
 // listens for events from multi-transport and forwards it to state
 export function useStateRouter() {
   const [transportState, setTransportState] = useRecoilState(transportStatusState);
@@ -28,6 +31,34 @@ export function useStateRouter() {
   useInterval(() => {
     setTimer(Date.now());
   }, 1000);
+
+  // handle all queued messages in animation frame
+  // const handleQueuedMessages = useCallback(() => {
+  //   while (messageQueue.length > 0) {
+  //     const message = messageQueue.shift();
+
+  //     if (!message) {
+  //       return;
+  //     }
+
+  //     const [command, ...args] = message.split(":");
+
+  //     // log message if command is not blacklisted
+  //     if (!noLogCommands.includes(command)) {
+  //       log(LogMessageType.RECEIVE, message);
+  //     }
+
+  //     // handle the command
+  //     handleCommand(command, args);
+  //   }
+
+  //   // requestAnimationFrame(() => {
+  //   //   handleQueuedMessages();
+  //   // });
+  // }, [handleCommand, log]);
+
+  // // start handling queued messages
+  // useInterval(handleQueuedMessages, 16);
 
   // adds new multi-transport listeners and forwards the events to state
   useTransportListener({
@@ -61,8 +92,11 @@ export function useStateRouter() {
 
     // called when transport message is received
     onMessageReceived: (transport, message) => {
+      // queue the message
+      // messageQueue.push(message);
+
       const [command, ...args] = message.split(":");
-      const noLogCommands = ["e", "b", "l", "a"];
+      const noLogCommands = ["e", "h", "l", "a"];
 
       // don't blacklisted messages
       if (!noLogCommands.includes(command)) {
