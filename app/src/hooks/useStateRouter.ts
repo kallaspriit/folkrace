@@ -96,10 +96,10 @@ export function useStateRouter() {
       // messageQueue.push(message);
 
       const [command, ...args] = message.split(":");
-      const noLogCommands = ["e", "h", "l", "a"];
+      const noLogCommands: string[] = [];
 
       // don't blacklisted messages
-      if (!noLogCommands.includes(command)) {
+      if (command.length > 1 && !noLogCommands.includes(command)) {
         log(LogMessageType.RECEIVE, message, transport.getName());
       }
 

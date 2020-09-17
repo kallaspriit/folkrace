@@ -16,6 +16,7 @@ import { buttonsState } from "../../state/buttonsState";
 import { currentsState } from "../../state/currentsState";
 import { encodersState } from "../../state/encodersState";
 import { lastHeartbeatTimeState } from "../../state/lastHeartbeatTimeState";
+import { lidarStatusState } from "../../state/lidarStatusState";
 import { loadState } from "../../state/loadState";
 import { logMessagesState } from "../../state/logMessagesState";
 import { loopFrequencyState } from "../../state/loopFrequencyState";
@@ -47,6 +48,7 @@ export const StateExperiment: React.FC = () => {
   const currents = useRecoilValue(currentsState);
   const targetSpeeds = useRecoilValue(targetSpeedsState);
   const encoders = useRecoilValue(encodersState);
+  const lidarStatus = useRecoilValue(lidarStatusState);
 
   // request initial state
   useEffect(() => robot.requestState(), []);
@@ -138,6 +140,21 @@ export const StateExperiment: React.FC = () => {
           </ListItem>
           <ListItem compact trailing={encoders.right}>
             Right encoder
+          </ListItem>
+          <ListItem compact trailing={lidarStatus ? (lidarStatus.isRunning ? "YES" : "NO") : "n/a"}>
+            Lidar running
+          </ListItem>
+          <ListItem compact trailing={lidarStatus ? (lidarStatus.isValid ? "YES" : "NO") : "n/a"}>
+            Lidar valid
+          </ListItem>
+          <ListItem compact trailing={lidarStatus ? lidarStatus.targetRpm : "n/a"}>
+            Lidar target RPM
+          </ListItem>
+          <ListItem compact trailing={lidarStatus ? lidarStatus.currentRpm : "n/a"}>
+            Lidar current RPM
+          </ListItem>
+          <ListItem compact trailing={lidarStatus ? `${lidarStatus.motorPwm}%` : "n/a"}>
+            Lidar PWM duty cycle
           </ListItem>
         </List>
       </Column>

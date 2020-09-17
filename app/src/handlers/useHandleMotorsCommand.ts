@@ -2,8 +2,6 @@ import { useRecoilState } from "recoil";
 import { assertArgumentCount } from "../services/assertArgumentCount";
 import { motorsConnectedState } from "../state/motorsConnectedState";
 
-type SerialType = "usb" | "bluetooth";
-
 export function useHandleMotorsCommand() {
   const [, setMotorsConnected] = useRecoilState(motorsConnectedState);
 

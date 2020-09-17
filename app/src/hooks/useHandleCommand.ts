@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useHandleIpCommand } from "../handlers/handleIpCommand";
+import { useHandleLidarCommand } from "../handlers/handleLidarCommand";
 import { useHandleSpeedCommand } from "../handlers/handleSpeedCommand";
 import { useHandleAttitudeCommand } from "../handlers/useHandleAttitudeCommand";
 import { useHandleButtonCommand } from "../handlers/useHandleButtonCommand";
@@ -25,6 +26,7 @@ export function useHandleCommand() {
   const handleVoltageCommand = useHandleVoltageCommand();
   const handleButtonCommand = useHandleButtonCommand();
   const handleSpeedCommand = useHandleSpeedCommand();
+  const handleLidarCommand = useHandleLidarCommand();
   const handleSerialStatusCommand = useHandleSerialStatusCommand();
   const handleMotorsCommand = useHandleMotorsCommand();
   const handleIpCommand = useHandleIpCommand();
@@ -39,9 +41,13 @@ export function useHandleCommand() {
       v: handleVoltageCommand,
       b: handleButtonCommand,
       s: handleSpeedCommand,
+      l: handleLidarCommand,
       serial: handleSerialStatusCommand,
       motors: handleMotorsCommand,
       ip: handleIpCommand,
+      // TODO: implement "usb:7936:8210:CDC DEVICE"
+      // TODO: implement "rpm:300"
+      // TODO: implement "reset"
     }),
     [
       handleHeartbeatCommand,
@@ -51,6 +57,7 @@ export function useHandleCommand() {
       handleVoltageCommand,
       handleButtonCommand,
       handleSpeedCommand,
+      handleLidarCommand,
       handleSerialStatusCommand,
       handleMotorsCommand,
       handleIpCommand,
