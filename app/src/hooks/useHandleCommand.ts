@@ -1,4 +1,6 @@
 import { useMemo } from "react";
+import { useHandleIpCommand } from "../handlers/handleIpCommand";
+import { useHandleSpeedCommand } from "../handlers/handleSpeedCommand";
 import { useHandleAttitudeCommand } from "../handlers/useHandleAttitudeCommand";
 import { useHandleButtonCommand } from "../handlers/useHandleButtonCommand";
 import { useHandleCurrentCommand } from "../handlers/useHandleCurrentCommand";
@@ -22,8 +24,10 @@ export function useHandleCommand() {
   const handleCurrentCommand = useHandleCurrentCommand();
   const handleVoltageCommand = useHandleVoltageCommand();
   const handleButtonCommand = useHandleButtonCommand();
+  const handleSpeedCommand = useHandleSpeedCommand();
   const handleSerialStatusCommand = useHandleSerialStatusCommand();
   const handleMotorsCommand = useHandleMotorsCommand();
+  const handleIpCommand = useHandleIpCommand();
 
   // map of command names to handlers
   const handlerMap: Record<string, CommandHandlerFn | undefined> = useMemo(
@@ -34,8 +38,10 @@ export function useHandleCommand() {
       c: handleCurrentCommand,
       v: handleVoltageCommand,
       b: handleButtonCommand,
+      s: handleSpeedCommand,
       serial: handleSerialStatusCommand,
       motors: handleMotorsCommand,
+      ip: handleIpCommand,
     }),
     [
       handleHeartbeatCommand,
@@ -44,8 +50,10 @@ export function useHandleCommand() {
       handleCurrentCommand,
       handleVoltageCommand,
       handleButtonCommand,
+      handleSpeedCommand,
       handleSerialStatusCommand,
       handleMotorsCommand,
+      handleIpCommand,
     ],
   );
 

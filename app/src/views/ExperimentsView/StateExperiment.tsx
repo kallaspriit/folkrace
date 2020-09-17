@@ -21,6 +21,8 @@ import { logMessagesState } from "../../state/logMessagesState";
 import { loopFrequencyState } from "../../state/loopFrequencyState";
 import { motorsConnectedState } from "../../state/motorsConnectedState";
 import { serialStatusState } from "../../state/serialStatusState";
+import { serverIpState } from "../../state/serverIpState";
+import { targetSpeedsState } from "../../state/targetSpeedsState";
 import { timerState } from "../../state/timerState";
 import { transportStatusState } from "../../state/transportStatusState";
 import { voltageState } from "../../state/voltageState";
@@ -30,6 +32,7 @@ export const StateExperiment: React.FC = () => {
 
   const transportStatus = useRecoilValue(transportStatusState);
   const activeTransportName = useRecoilValue(activeTransportNameState);
+  const serverIp = useRecoilValue(serverIpState);
   const serialStatus = useRecoilValue(serialStatusState);
   const isAlive = useRecoilValue(aliveState);
   const areMotorsConnected = useRecoilValue(motorsConnectedState);
@@ -42,6 +45,7 @@ export const StateExperiment: React.FC = () => {
   const attitude = useRecoilValue(attitudeState);
   const buttons = useRecoilValue(buttonsState);
   const currents = useRecoilValue(currentsState);
+  const targetSpeeds = useRecoilValue(targetSpeedsState);
   const encoders = useRecoilValue(encodersState);
 
   // request initial state
@@ -57,6 +61,9 @@ export const StateExperiment: React.FC = () => {
         <List>
           <ListItem compact trailing={activeTransportName ?? "n/a"}>
             Active transport name
+          </ListItem>
+          <ListItem compact trailing={serverIp ?? "n/a"}>
+            Server ip
           </ListItem>
           <ListItem compact trailing={transportStatus}>
             Transport status
@@ -119,6 +126,12 @@ export const StateExperiment: React.FC = () => {
           </ListItem>
           <ListItem compact trailing={`${currents.right.toFixed(2)}A`} onClick={() => robot.requestCurrent()}>
             Right motor current
+          </ListItem>
+          <ListItem compact trailing={targetSpeeds.left}>
+            Left motor target speed
+          </ListItem>
+          <ListItem compact trailing={targetSpeeds.right}>
+            Right motor target speed
           </ListItem>
           <ListItem compact trailing={encoders.left}>
             Left encoder
