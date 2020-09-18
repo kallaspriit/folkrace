@@ -36,8 +36,8 @@ export const StateExperiment: React.FC = () => {
   const serverIp = useRecoilValue(serverIpState);
   const transportStatus = useRecoilValue(transportStatusState);
   const serialStatus = useRecoilValue(serialStatusState);
+  // TODO: generates warning "index.js:1 Warning: Cannot update a component (`Batcher`) while rendering a different component.."
   const isAlive = useRecoilValue(aliveState);
-  // const isAlive = false;
   const areMotorsConnected = useRecoilValue(motorsConnectedState);
   const timer = useRecoilValue(timerState);
   const lastHeartbeatTime = useRecoilValue(lastHeartbeatTimeState);

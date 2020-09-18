@@ -1,0 +1,8 @@
+@import "../../theme/functions/grid";
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: grid(1);
+  padding: grid(1);
+}

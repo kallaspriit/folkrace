@@ -20,9 +20,13 @@ $background: $color-bg-secondary;
   padding: grid(3) 0;
   width: $height;
   height: $height;
-  color: $color-text-secondary;
+  color: $color-text-tertiary;
   font-size: $font-size-small;
   cursor: pointer;
+
+  svg path {
+    transition: fill $animation-speed-medium ease-in-out;
+  }
 
 // TODO: transitioning box-shadow might cause performance issues, seems to work for now
   transition: transform $animation-speed-medium ease-in-out, box-shadow $animation-speed-medium ease-in-out;
@@ -31,6 +35,11 @@ $background: $color-bg-secondary;
 
   &--active {
     transform: translateY($top-space - grid(1)) scale(1.2);
+    color: $color-text-secondary;
+
+    svg path {
+      fill: $color-text-secondary;
+    }
   }
 
   &--background {
