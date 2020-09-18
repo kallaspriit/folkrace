@@ -31,14 +31,15 @@ import { voltageState } from "../../state/voltageState";
 export const StateExperiment: React.FC = () => {
   const history = useHistory();
 
-  const transportStatus = useRecoilValue(transportStatusState);
   const activeTransportName = useRecoilValue(activeTransportNameState);
   const serverIp = useRecoilValue(serverIpState);
+  const transportStatus = useRecoilValue(transportStatusState);
   const serialStatus = useRecoilValue(serialStatusState);
   const isAlive = useRecoilValue(aliveState);
+  // const isAlive = false;
   const areMotorsConnected = useRecoilValue(motorsConnectedState);
-  const lastHeartbeatTime = useRecoilValue(lastHeartbeatTimeState);
   const timer = useRecoilValue(timerState);
+  const lastHeartbeatTime = useRecoilValue(lastHeartbeatTimeState);
   const logMessages = useRecoilValue(logMessagesState);
   const voltage = useRecoilValue(voltageState);
   const load = useRecoilValue(loadState);
@@ -74,7 +75,7 @@ export const StateExperiment: React.FC = () => {
             USB serial status
           </ListItem>
           <ListItem compact trailing={isAlive ? "YES" : "NO"}>
-            Firmware connected
+            Firmware connection alive
           </ListItem>
           <ListItem compact trailing={areMotorsConnected ? "YES" : "NO"}>
             Motors connected
@@ -87,7 +88,7 @@ export const StateExperiment: React.FC = () => {
           </ListItem>
           <ListItem
             compact
-            trailing={voltage ? logMessages.length : "n/a"}
+            trailing={logMessages.length}
             onClick={() =>
               history.replace(
                 buildUrl<ExperimentsViewParams>(EXPERIMENTS_VIEW_PATH, { page: "log" }),

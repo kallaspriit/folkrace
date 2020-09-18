@@ -1,6 +1,6 @@
 import classNames from "classnames";
 import React from "react";
-import { ReactComponent as BackIcon } from "../../theme/icons/back.svg";
+import { ReactComponent as BackIcon } from "../../theme/icons/back-icon.svg";
 import { Container } from "../Container/Container";
 import { FlexProps, FlexElement, FlexRef } from "../Flex/Flex";
 import { GridBox } from "../GridBox/GridBox";

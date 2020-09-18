@@ -1,6 +1,6 @@
 {
   "editor.snippetSuggestions": "bottom",
-  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.tsdk": "d:\\projects\\folkbot\\app\\node_modules\\typescript\\lib",
   "editor.formatOnSave": true,
   "csscomb.formatOnSave": true,
   "editor.codeActionsOnSave": {

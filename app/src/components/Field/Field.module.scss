@@ -1,0 +1,150 @@
+@import "../../theme/variables";
+@import "../../theme/functions/grid";
+@import "../../theme/mixins/shake";
+
+// configuration
+$input-height: grid(8);
+$icon-width: grid(4);
+$icon-margin: grid(3);
+$error-height: grid(6);
+$label-padding: grid(1.5);
+$active-label-scale: 0.75;
+
+.field {
+  position: relative;
+  padding-top: $label-padding;
+  pointer-events: all;
+
+  &--has-error {
+    @include shake();
+
+    .border {
+      background-color: $color-text-tertiary !important;
+    }
+
+    .error {
+      opacity: 1;
+    }
+  }
+
+  // move the absolutely positioned label over the leading icon
+  &--has-leading .label {
+    left: $icon-width + $icon-margin;
+  }
+
+  // make border darker on value and focus
+  &--has-value .border,
+  &--has-focus .border {
+    background-color: $color-text-darker;
+  }
+
+  // make bordere thicker on focus
+  &--has-focus .border {
+    transform: scaleY(1.5);
+  }
+
+  // move the label above the input when input has focus or value
+  &--has-value .label,
+  &--has-focus .label {
+    transform: translateY(-$input-height / 2) scale($active-label-scale);
+  }
+
+  // added when requiresActivation prop is provided
+  &--deactivated {
+    // make deactivated field border transparent
+    .border {
+      background-color: change-color($color: $color-text-primary, $alpha: 0.0);
+    }
+
+    .label {
+      text-decoration: underline;
+    }
+  }
+}
+
+// border is separate element to be able to scale it for border thickness animation on focus
+.border {
+  width: 100%;
+  height: screen(2);
+  background-color: $color-text-primary;
+  transition: background-color $animation-speed-medium ease-in-out, transform $animation-speed-medium ease-in-out;
+
+  &--transparent {
+    opacity: 0;
+  }
+}
+
+.icon {
+  justify-items: flex-end;
+  align-items: center;
+  width: $icon-width + $icon-margin;
+  height: $input-height;
+
+  svg {
+    fill: $color-text-darker;
+  }
+
+  &--leading {
+    justify-content: flex-start;
+    padding-right: $icon-margin;
+  }
+
+  &--trailing {
+    justify-content: flex-end;
+    padding-left: $icon-margin;
+  }
+
+  &--expand-trailing {
+    width: $icon-width * 2 + $icon-margin + grid(2);
+  }
+
+  // make children use all available space
+  > * {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.label {
+  position: absolute;
+  top: $label-padding;
+  left: 0;
+  display: flex;
+  align-items: center;
+  height: $input-height;
+  color: $color-text-darker;
+  font-size: $font-size-large;
+  transition: transform $animation-speed-medium ease-in-out, color $animation-speed-medium ease-in-out;
+  transform: translateY(0);
+  transform-origin: center left;
+}
+
+.input {
+  width: 100%;
+  height: $input-height;
+  outline: none;
+  border: none;
+  background: none;
+  color: $color-text-darker;
+  font-size: $font-size-large;
+}
+
+.error {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: $error-height;
+  color: $color-text-tertiary;
+  font-size: $font-size-small;
+  opacity: 0;
+  transition: opacity $animation-speed-medium ease-in-out;
+}
+
+.toggle-password {
+  opacity: 0;
+  transition: opacity $animation-speed-medium ease-in-out !important;
+
+  &--visible {
+    opacity: 1;
+  }
+}

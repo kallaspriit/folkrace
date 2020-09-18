@@ -1,6 +1,6 @@
 import classNames from "classnames";
 import React from "react";
-import { ReactComponent as ForwardArrowIcon } from "../../theme/icons/forward-arrow.svg";
+import { ReactComponent as ForwardArrowIcon } from "../../theme/icons/forward-arrow-icon.svg";
 import { Column } from "../Column/Column";
 import { Container } from "../Container/Container";
 import { FlexProps } from "../Flex/Flex";

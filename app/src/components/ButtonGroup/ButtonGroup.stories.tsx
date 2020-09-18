@@ -1,6 +1,6 @@
 import { action } from "@storybook/addon-actions";
 import React from "react";
-import { ReactComponent as SettingsIcon } from "../../theme/icons/settings.svg";
+import { ReactComponent as SettingsIcon } from "../../theme/icons/settings-icon.svg";
 import { ButtonGroup, ButtonGroupButton } from "./ButtonGroup";
 
 export default {

@@ -1,5 +1,5 @@
 import React from "react";
-import { ReactComponent as BackIcon } from "../../theme/icons/back.svg";
+import { ReactComponent as BackIcon } from "../../theme/icons/back-icon.svg";
 import { IconButton } from "./IconButton";
 
 export default {

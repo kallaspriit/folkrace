@@ -1,7 +1,7 @@
 import { action } from "@storybook/addon-actions";
 import { withKnobs, boolean } from "@storybook/addon-knobs";
 import React from "react";
-import { ReactComponent as SettingsIcon } from "../../theme/icons/settings.svg";
+import { ReactComponent as SettingsIcon } from "../../theme/icons/settings-icon.svg";
 import { BlockButton } from "./BlockButton";
 
 export default {

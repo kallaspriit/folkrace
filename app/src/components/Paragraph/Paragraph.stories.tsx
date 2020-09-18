@@ -1,6 +1,6 @@
 import { withKnobs, boolean } from "@storybook/addon-knobs";
 import React from "react";
-import { ReactComponent as SettingsIcon } from "../../theme/icons/settings.svg";
+import { ReactComponent as SettingsIcon } from "../../theme/icons/settings-icon.svg";
 import { Container } from "../Container/Container";
 import { P } from "./Paragraph";
 

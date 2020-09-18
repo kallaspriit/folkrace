@@ -1,6 +1,6 @@
 import { withKnobs, boolean } from "@storybook/addon-knobs";
 import React from "react";
-import { ReactComponent as SettingsIcon } from "../../theme/icons/settings.svg";
+import { ReactComponent as SettingsIcon } from "../../theme/icons/settings-icon.svg";
 import { Column } from "../Column/Column";
 import { GridBox } from "../GridBox/GridBox";
 import { MockText } from "../MockText/MockText";

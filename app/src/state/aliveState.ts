@@ -7,12 +7,12 @@ export const aliveState = selector<boolean>({
   get: ({ get }) => {
     const lastHeartbeatTime = get(lastHeartbeatTimeState);
 
-    // subscibe to timer to resolve this state at interval
-    void get(timerState);
-
     if (!lastHeartbeatTime) {
       return false;
     }
+
+    // subscibe to timer to resolve this state at interval
+    get(timerState);
 
     // expecting heartbeat updates every second so consider offline if haven't received one in two seconds
     return Date.now() - lastHeartbeatTime.getTime() < 2000;
