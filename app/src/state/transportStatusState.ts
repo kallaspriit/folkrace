@@ -1,7 +1,7 @@
 import { atom } from "recoil";
-import { TransportState } from "../lib/transport";
+import { TransportStatus } from "../lib/transport";
 
-export const transportStatusState = atom<TransportState>({
+export const transportStatusState = atom<TransportStatus>({
   key: "transportStatusState",
-  default: TransportState.DISCONNECTED,
+  default: TransportStatus.DISCONNECTED,
 });

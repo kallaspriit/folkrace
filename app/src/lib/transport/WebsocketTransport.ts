@@ -1,6 +1,6 @@
 import { dummyLogger, Logger } from "ts-log";
 
-import { Transport, TransportListener, TransportState } from "./Transport";
+import { Transport, TransportListener, TransportStatus } from "./Transport";
 
 export interface WebsocketTransportOptions {
   host: string;
@@ -14,7 +14,7 @@ export class WebsocketTransport implements Transport {
   private readonly log: Logger;
   private readonly listeners: TransportListener[] = [];
   private options: Required<WebsocketTransportOptions>;
-  private state: TransportState = TransportState.DISCONNECTED;
+  private state: TransportStatus = TransportStatus.DISCONNECTED;
   private wasConnected = false;
   private ws?: WebSocket;
   private reconnectTimeout?: NodeJS.Timeout;
@@ -97,7 +97,7 @@ export class WebsocketTransport implements Transport {
     }
 
     // update state depending on whether the connection was ever established
-    this.setState(this.wasConnected ? TransportState.RECONNECTING : TransportState.CONNECTING);
+    this.setState(this.wasConnected ? TransportStatus.RECONNECTING : TransportStatus.CONNECTING);
 
     // attempt to open web-socket connection
     this.ws = new WebSocket(url);
@@ -109,7 +109,7 @@ export class WebsocketTransport implements Transport {
       this.wasConnected = true;
 
       // update state
-      this.setState(TransportState.CONNECTED);
+      this.setState(TransportStatus.CONNECTED);
     };
 
     // handle close event
@@ -123,7 +123,7 @@ export class WebsocketTransport implements Transport {
       }
 
       // update state
-      this.setState(TransportState.DISCONNECTED);
+      this.setState(TransportStatus.DISCONNECTED);
 
       // only attempt to reconnect if connection has succeeded before
       if (this.wasConnected) {
@@ -156,7 +156,7 @@ export class WebsocketTransport implements Transport {
 
   send(message: string) {
     // we can only send messages if we're connected
-    if (!this.ws || this.state !== TransportState.CONNECTED) {
+    if (!this.ws || this.state !== TransportStatus.CONNECTED) {
       this.log.warn(`sending message "${message}" requested but websocket state is ${this.state}`);
 
       // notify of failed message sending attempt
@@ -174,7 +174,7 @@ export class WebsocketTransport implements Transport {
     return true;
   }
 
-  private setState(newState: TransportState) {
+  private setState(newState: TransportStatus) {
     // ignore if state did not change
     if (newState === this.state) {
       return;

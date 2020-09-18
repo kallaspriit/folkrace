@@ -4,9 +4,6 @@
  * the components that we want to split into separate bundles.
  */
 
-// dashboard view
-export const DASHBOARD_VIEW_PATH = "/dashboard";
-
 // configure connection view
 export const CONFIGURE_CONNECTION_VIEW_PATH = "/configure-connection";
 
@@ -17,15 +14,6 @@ export type MainMenuViewMenu = "status" | "map" | "controller" | "remote" | "set
 
 export interface MainMenuViewParams {
   menu?: MainMenuViewMenu;
-  page?: string;
-  modifier?: string;
-}
-
-// experiments view
-export const EXPERIMENTS_VIEW_PATH = "/experiments/:experiment?/:page?/:modifier?";
-
-export interface ExperimentsViewParams {
-  experiment?: string;
   page?: string;
   modifier?: string;
 }

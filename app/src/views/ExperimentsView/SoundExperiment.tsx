@@ -6,7 +6,7 @@ import { Column } from "../../components/Column/Column";
 import { List, ListItem } from "../../components/List/List";
 import { TitleBar } from "../../components/TitleBar/TitleBar";
 import { View } from "../../components/View/View";
-import { ExperimentsViewParams, EXPERIMENTS_VIEW_PATH } from "../../routes";
+import { MainMenuViewParams, MAIN_MENU_VIEW_PATH } from "../../routes";
 import { buildUrl } from "../../services/buildUrl";
 
 export const SoundExperiment: React.FC = () => {
@@ -16,8 +16,12 @@ export const SoundExperiment: React.FC = () => {
   return (
     <View>
       <TitleBar
-        onBack={() => history.replace(buildUrl<ExperimentsViewParams>(EXPERIMENTS_VIEW_PATH))}
         title="Sound experiment"
+        onBack={() =>
+          history.replace(
+            buildUrl<MainMenuViewParams>(MAIN_MENU_VIEW_PATH, { menu: "settings", page: "experiments" }),
+          )
+        }
       />
       <Column expanded scrollable>
         <List>
@@ -30,13 +34,13 @@ export const SoundExperiment: React.FC = () => {
         </List>
       </Column>
       <ButtonGroup equalWidth>
-        <ButtonGroupButton secondary onClick={() => play()}>
+        <ButtonGroupButton tertiary onClick={() => play()}>
           Play
         </ButtonGroupButton>
-        <ButtonGroupButton secondary onClick={() => pause()}>
+        <ButtonGroupButton tertiary onClick={() => pause()}>
           Pause
         </ButtonGroupButton>
-        <ButtonGroupButton secondary onClick={() => stop()}>
+        <ButtonGroupButton tertiary onClick={() => stop()}>
           Stop
         </ButtonGroupButton>
       </ButtonGroup>

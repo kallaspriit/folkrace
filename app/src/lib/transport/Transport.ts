@@ -1,4 +1,4 @@
-export enum TransportState {
+export enum TransportStatus {
   DISCONNECTED = "DISCONNECTED",
   CONNECTING = "CONNECTING",
   RECONNECTING = "RECONNECTING",
@@ -6,7 +6,7 @@ export enum TransportState {
 }
 
 export interface TransportListener {
-  onStateChanged(transport: Transport, newState: TransportState, previousState: TransportState): void;
+  onStateChanged(transport: Transport, newState: TransportStatus, previousState: TransportStatus): void;
   onError(transport: Transport, error?: Error): void;
   onMessageSent(transport: Transport, message: string, wasSentSuccessfully: boolean): void;
   onMessageReceived(transport: Transport, message: string): void;
@@ -15,7 +15,7 @@ export interface TransportListener {
 export interface Transport {
   getName(): string;
   isAvailable(): boolean;
-  getState(): TransportState;
+  getState(): TransportStatus;
   addListener(listener: TransportListener): void;
   removeListener(listener: TransportListener): void;
   connect(): Promise<void>;

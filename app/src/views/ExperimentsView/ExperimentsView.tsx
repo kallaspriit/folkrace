@@ -1,7 +1,7 @@
 import React from "react";
 import { useHistory } from "react-router-dom";
 import { PageList, Page } from "../../components/PageList/PageList";
-import { ExperimentsViewParams, EXPERIMENTS_VIEW_PATH } from "../../routes";
+import { MainMenuViewParams, MAIN_MENU_VIEW_PATH } from "../../routes";
 import { buildPath } from "../../services/buildPath";
 import { LogExperiment } from "./LogExperiment";
 import { MainMenuExperiment } from "./MainMenuExperiment";
@@ -46,10 +46,12 @@ export const ExperimentsView: React.FC = () => {
       pages={pages}
       onBack={() => history.replace("/")}
       buildPagePath={(page, removeOptional) =>
-        buildPath<ExperimentsViewParams>(
-          EXPERIMENTS_VIEW_PATH,
+        buildPath<MainMenuViewParams>(
+          MAIN_MENU_VIEW_PATH,
           {
-            experiment: page.name,
+            menu: "settings",
+            page: "experiments",
+            modifier: page.name,
           },
           removeOptional,
         )

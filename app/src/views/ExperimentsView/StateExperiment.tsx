@@ -7,7 +7,7 @@ import { List, ListItem } from "../../components/List/List";
 import { useRenderCount } from "../../components/RenderCount/RenderCount";
 import { TitleBar } from "../../components/TitleBar/TitleBar";
 import { View } from "../../components/View/View";
-import { ExperimentsViewParams, EXPERIMENTS_VIEW_PATH } from "../../routes";
+import { MainMenuViewParams, MAIN_MENU_VIEW_PATH } from "../../routes";
 import { buildUrl } from "../../services/buildUrl";
 import { robot } from "../../services/robot";
 import { activeTransportNameState } from "../../state/activeTransportNameState";
@@ -59,8 +59,12 @@ export const StateExperiment: React.FC = () => {
   return (
     <View>
       <TitleBar
-        onBack={() => history.replace(buildUrl<ExperimentsViewParams>(EXPERIMENTS_VIEW_PATH))}
         title="State experiment"
+        onBack={() =>
+          history.replace(
+            buildUrl<MainMenuViewParams>(MAIN_MENU_VIEW_PATH, { menu: "settings", page: "experiments" }),
+          )
+        }
       />
       <Column expanded scrollable>
         <List>
@@ -95,8 +99,12 @@ export const StateExperiment: React.FC = () => {
             compact
             trailing={logMessages.length}
             onClick={() =>
-              history.replace(
-                buildUrl<ExperimentsViewParams>(EXPERIMENTS_VIEW_PATH, { page: "log" }),
+              history.push(
+                buildUrl<MainMenuViewParams>(MAIN_MENU_VIEW_PATH, {
+                  menu: "settings",
+                  page: "experiments",
+                  modifier: "log",
+                }),
               )
             }
           >
@@ -165,13 +173,13 @@ export const StateExperiment: React.FC = () => {
         </List>
       </Column>
       <ButtonGroup equalWidth>
-        <ButtonGroupButton secondary onClick={() => robot.setSpeed(1000, 1000)}>
+        <ButtonGroupButton tertiary onClick={() => robot.setSpeed(1000, 1000)}>
           Start motors
         </ButtonGroupButton>
-        <ButtonGroupButton secondary onClick={() => robot.setSpeed(0, 0)}>
+        <ButtonGroupButton tertiary onClick={() => robot.setSpeed(0, 0)}>
           Stop motors
         </ButtonGroupButton>
-        <ButtonGroupButton secondary onClick={() => robot.requestState()}>
+        <ButtonGroupButton tertiary onClick={() => robot.requestState()}>
           Request state
         </ButtonGroupButton>
       </ButtonGroup>

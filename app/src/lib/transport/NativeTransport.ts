@@ -1,6 +1,6 @@
 import { dummyLogger, Logger } from "ts-log";
 
-import { Transport, TransportListener, TransportState } from "./Transport";
+import { Transport, TransportListener, TransportStatus } from "./Transport";
 
 interface BridgeInterface {
   receive(message: string): void;
@@ -23,7 +23,7 @@ export class NativeTransport implements Transport {
   private readonly log: Logger;
   private readonly listeners: TransportListener[] = [];
   private readonly bridgeExists: boolean;
-  private state: TransportState = TransportState.DISCONNECTED;
+  private state: TransportStatus = TransportStatus.DISCONNECTED;
   private native?: BridgeInterface;
 
   constructor(options: NativeTransportOptions = {}) {
@@ -65,14 +65,14 @@ export class NativeTransport implements Transport {
 
   async connect() {
     // attempt to connect
-    this.setState(TransportState.CONNECTING);
+    this.setState(TransportStatus.CONNECTING);
 
     // default to using mock interface if not available
     if (window.native === undefined) {
       this.log.info("no native bridge is available");
 
       // connection failed
-      this.setState(TransportState.DISCONNECTED);
+      this.setState(TransportStatus.DISCONNECTED);
 
       return;
     }
@@ -91,7 +91,7 @@ export class NativeTransport implements Transport {
     this.send("!handshake");
 
     // set connecting state until handshake response is received
-    this.setState(TransportState.CONNECTING);
+    this.setState(TransportStatus.CONNECTING);
   }
 
   send(message: string) {
@@ -122,7 +122,7 @@ export class NativeTransport implements Transport {
     return false;
   }
 
-  private setState(newState: TransportState) {
+  private setState(newState: TransportStatus) {
     // ignore if state did not change
     if (newState === this.state) {
       return;
@@ -147,7 +147,7 @@ export class NativeTransport implements Transport {
     // handle handshake response
     if (message === "!handshake") {
       // consider connection successful
-      this.setState(TransportState.CONNECTED);
+      this.setState(TransportStatus.CONNECTED);
     }
   }
 }

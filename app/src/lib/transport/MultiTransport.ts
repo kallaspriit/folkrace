@@ -1,5 +1,5 @@
 import { dummyLogger, Logger } from "ts-log";
-import { Transport, TransportListener, TransportState } from "./Transport";
+import { Transport, TransportListener, TransportStatus } from "./Transport";
 
 export interface MultiTransportOptions {
   log?: Logger;
@@ -40,7 +40,7 @@ export class MultiTransport implements Transport {
 
     // return disconnected if no transport is available
     if (!activeTransport) {
-      return TransportState.DISCONNECTED;
+      return TransportStatus.DISCONNECTED;
     }
 
     // return active transport state
@@ -57,7 +57,7 @@ export class MultiTransport implements Transport {
     }
 
     // report initial state
-    listener.onStateChanged(activeTransport, activeTransport.getState(), TransportState.DISCONNECTED);
+    listener.onStateChanged(activeTransport, activeTransport.getState(), TransportStatus.DISCONNECTED);
   }
 
   removeListener(listener: TransportListener) {
@@ -75,7 +75,7 @@ export class MultiTransport implements Transport {
   async connect() {
     // call connect on all disconnected transports
     const promises = this.transports.map((transport) => {
-      if (transport.getState() !== TransportState.DISCONNECTED) {
+      if (transport.getState() !== TransportStatus.DISCONNECTED) {
         return Promise.resolve();
       }
 
@@ -152,7 +152,7 @@ export class MultiTransport implements Transport {
 
   getConnectedTransport() {
     // return first connected transport if any
-    return this.transports.find((transport) => transport.getState() === TransportState.CONNECTED);
+    return this.transports.find((transport) => transport.getState() === TransportStatus.CONNECTED);
   }
 
   getActiveTransport() {

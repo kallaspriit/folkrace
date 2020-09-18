@@ -6,7 +6,7 @@ import { PageView } from "../../components/PageView/PageView";
 import { TitleBar } from "../../components/TitleBar/TitleBar";
 import { View } from "../../components/View/View";
 import { useDisableScrolling } from "../../hooks/useDisableScrolling";
-import { ExperimentsViewParams, EXPERIMENTS_VIEW_PATH } from "../../routes";
+import { MainMenuViewParams, MAIN_MENU_VIEW_PATH } from "../../routes";
 import { buildUrl } from "../../services/buildUrl";
 import { ReactComponent as ControllerIcon } from "../../theme/icons/controller-icon.svg";
 import { ReactComponent as MapIcon } from "../../theme/icons/map-icon.svg";
@@ -23,8 +23,12 @@ export const MainMenuExperiment: React.FC = () => {
   return (
     <View>
       <TitleBar
-        onBack={() => history.replace(buildUrl<ExperimentsViewParams>(EXPERIMENTS_VIEW_PATH))}
         title="Main menu experiment"
+        onBack={() =>
+          history.replace(
+            buildUrl<MainMenuViewParams>(MAIN_MENU_VIEW_PATH, { menu: "settings", page: "experiments" }),
+          )
+        }
       />
       <PageView
         expanded

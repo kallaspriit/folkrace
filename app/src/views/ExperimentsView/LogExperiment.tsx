@@ -8,7 +8,7 @@ import { P } from "../../components/Paragraph/Paragraph";
 import { useRenderCount } from "../../components/RenderCount/RenderCount";
 import { TitleBar } from "../../components/TitleBar/TitleBar";
 import { View } from "../../components/View/View";
-import { ExperimentsViewParams, EXPERIMENTS_VIEW_PATH } from "../../routes";
+import { MainMenuViewParams, MAIN_MENU_VIEW_PATH } from "../../routes";
 import { buildUrl } from "../../services/buildUrl";
 import { robot } from "../../services/robot";
 import { logMessagesState } from "../../state/logMessagesState";
@@ -21,8 +21,12 @@ export const LogExperiment: React.FC = () => {
   return (
     <View>
       <TitleBar
-        onBack={() => history.replace(buildUrl<ExperimentsViewParams>(EXPERIMENTS_VIEW_PATH))}
         title="Log experiment"
+        onBack={() =>
+          history.replace(
+            buildUrl<MainMenuViewParams>(MAIN_MENU_VIEW_PATH, { menu: "settings", page: "experiments" }),
+          )
+        }
       />
       <List>
         <ListItem compact trailing={renderCount}>
@@ -38,10 +42,10 @@ export const LogExperiment: React.FC = () => {
         ))}
       </Column>
       <ButtonGroup equalWidth>
-        <ButtonGroupButton secondary onClick={() => setLogMessages([])}>
+        <ButtonGroupButton tertiary onClick={() => setLogMessages([])}>
           Clear log
         </ButtonGroupButton>
-        <ButtonGroupButton secondary onClick={() => robot.requestState()}>
+        <ButtonGroupButton tertiary onClick={() => robot.requestState()}>
           Request state
         </ButtonGroupButton>
       </ButtonGroup>
