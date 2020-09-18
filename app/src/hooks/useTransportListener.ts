@@ -24,12 +24,10 @@ export function useTransportListener(listener: TransportListener) {
   useEffect(() => {
     const existingWebsocketHost = websocketTransport.getOptions().host;
 
-    // skip if host did not change
-    if (websocketHost === existingWebsocketHost) {
+    // skip if host missing or has not changed
+    if (!websocketHost || websocketHost === existingWebsocketHost) {
       return;
     }
-
-    console.log("host changed", websocketHost);
 
     websocketTransport.updateOptions({
       host: websocketHost,

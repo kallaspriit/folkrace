@@ -37,6 +37,10 @@ export const Field = React.forwardRef<FlexElement, FieldProps>(
       expandTrailing, // used only by EditableField
       withoutBorder,
       className,
+      onClick,
+      onChange,
+      onFocus,
+      onBlur,
       ...rest
     },
     ref,
@@ -115,10 +119,34 @@ export const Field = React.forwardRef<FlexElement, FieldProps>(
               name={name}
               defaultValue={defaultValue}
               aria-describedby={constraintsIdentifier}
-              onClick={() => setIsActivated(true)}
-              onChange={(e) => handleValueChange(e.target.value)}
-              onFocus={() => setHasFocus(true)}
-              onBlur={() => setHasFocus(false)}
+              onClick={(e) => {
+                setIsActivated(true);
+
+                if (onClick) {
+                  onClick(e);
+                }
+              }}
+              onChange={(e) => {
+                handleValueChange(e.target.value);
+
+                if (onChange) {
+                  onChange(e);
+                }
+              }}
+              onFocus={(e) => {
+                setHasFocus(true);
+
+                if (onFocus) {
+                  onFocus(e);
+                }
+              }}
+              onBlur={(e) => {
+                setHasFocus(false);
+
+                if (onBlur) {
+                  onBlur(e);
+                }
+              }}
               className={styles.input}
               {...rest}
             />
