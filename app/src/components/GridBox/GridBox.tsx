@@ -3,9 +3,14 @@ import { Container } from "../Container/Container";
 import { FlexProps } from "../Flex/Flex";
 
 export interface GridBoxProps extends FlexProps {
-  size: number;
+  size?: number;
+  half?: boolean;
 }
 
-export const GridBox: React.FC<GridBoxProps> = ({ size, style, ...rest }) => (
-  <Container style={{ ...style, width: `${size}rem`, height: `${size}rem` }} {...rest} />
-);
+export const GridBox: React.FC<GridBoxProps> = ({ size, half, style, ...rest }) => {
+  // full size should match $layout-view-padding in _variables.scss
+  const fullSize = 6;
+  const useSize = size ? size : half ? fullSize / 2 : fullSize;
+
+  return <Container style={{ ...style, width: `${useSize}rem`, height: `${useSize}rem` }} {...rest} />;
+};

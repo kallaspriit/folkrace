@@ -35,7 +35,7 @@ $active-label-scale: 0.75;
   // make border darker on value and focus
   &--has-value .border,
   &--has-focus .border {
-    background-color: $color-text-darker;
+    background-color: $color-text-primary;
   }
 
   // make bordere thicker on focus
@@ -66,7 +66,7 @@ $active-label-scale: 0.75;
 .border {
   width: 100%;
   height: screen(2);
-  background-color: $color-text-primary;
+  background-color: $color-text-tertiary;
   transition: background-color $animation-speed-medium ease-in-out, transform $animation-speed-medium ease-in-out;
 
   &--transparent {
@@ -125,7 +125,7 @@ $active-label-scale: 0.75;
   outline: none;
   border: none;
   background: none;
-  color: $color-text-darker;
+  color: $color-text-primary;
   font-size: $font-size-large;
 }
 
@@ -134,7 +134,7 @@ $active-label-scale: 0.75;
   flex-direction: column;
   justify-content: center;
   height: $error-height;
-  color: $color-text-tertiary;
+  color: #900;
   font-size: $font-size-small;
   opacity: 0;
   transition: opacity $animation-speed-medium ease-in-out;

@@ -53,7 +53,7 @@ export const TitleBar = React.forwardRef<FlexElement, TitleBarProps>(
         // adds a spacer between every child
         return (
           <>
-            {index > 0 && <GridBox size={6} />}
+            {index > 0 && <GridBox />}
             {child}
           </>
         );

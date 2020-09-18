@@ -37,6 +37,7 @@ export interface FlexOptions {
   panY?: boolean;
   paragraph?: boolean;
   span?: boolean;
+  form?: boolean;
   tiny?: boolean;
   small?: boolean;
   large?: boolean;
@@ -88,6 +89,7 @@ export const Flex: React.FC<FlexProps> = ({
   panY,
   paragraph,
   span,
+  form,
   tiny,
   small,
   large,
@@ -128,7 +130,7 @@ export const Flex: React.FC<FlexProps> = ({
   }
 
   // render paragraph as <p> elements, spans as <span>, otherwise use <div>
-  const tag = paragraph ? <p /> : span ? <span /> : <div />;
+  const tag = form ? <form /> : paragraph ? <p /> : span ? <span /> : <div />;
 
   const element = (
     <tag.type

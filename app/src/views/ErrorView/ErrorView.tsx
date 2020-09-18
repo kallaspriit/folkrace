@@ -29,23 +29,23 @@ export const ErrorView: React.FC<ErrorViewProps> = ({ error, title }) => {
     <View scrollable>
       <Column limited padded expanded className={styles["error-view"]}>
         <Expanded />
-        <GridBox size={6} />
+        <GridBox />
         <P center darker>
           {title || "Oops, something went wrong!"}
         </P>
-        <GridBox size={6} />
+        <GridBox />
         <P center small className={styles.message}>
           {message}
         </P>
-        <GridBox size={6} />
+        <GridBox />
         <Expanded />
         {/* <Container className={styles.animation}>
           <Lottie loop animationData={errorAnimation} />
         </Container>
         <Expanded /> */}
-        <GridBox size={6} />
+        <GridBox />
         <BlockButton onClick={() => (window.location.href = "/")}>Start over</BlockButton>
-        <GridBox size={3} />
+        <GridBox half />
         <TextButton onClick={() => window.location.reload()}>Attempt to reload</TextButton>
       </Column>
     </View>

@@ -144,7 +144,7 @@
   "useRecoilState": {
     "scope": "typescript,typescriptreact",
     "prefix": ["recoil", "useRecoilState"],
-    "body": "const [${1}, set${1/(.*)/${1:/capitalize}/}] = useRecoilState(${2:false});",
+    "body": "const [${1}, set${1/(.*)/${1:/capitalize}/}] = useRecoilState(${1}State);",
     "description": "Generate useRecoilState statement"
   }
 }

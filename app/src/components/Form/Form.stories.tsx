@@ -46,7 +46,7 @@ export const Example = () => {
         error={errors.password}
         register={register({ validate: validateMinimumLength(8) })}
       />
-      <GridBox size={3} />
+      <GridBox half />
       <BlockButton inline tertiary type="submit" onClick={handleSubmit(onSubmit)}>
         Log In
       </BlockButton>

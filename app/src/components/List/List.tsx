@@ -59,12 +59,12 @@ export const ListItem: React.FC<ListItemProps> = ({
 
 export const ListTitle: React.FC<FlexProps> = ({ children, ...rest }) => (
   <>
-    <GridBox size={6} />
+    <GridBox />
     <Column paddedHorizontal {...rest}>
       <P large darker>
         {children}
       </P>
     </Column>
-    <GridBox size={3} />
+    <GridBox half />
   </>
 );

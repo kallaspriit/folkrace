@@ -11,12 +11,13 @@ export interface WebsocketTransportOptions {
 }
 
 export class WebsocketTransport implements Transport {
-  private readonly options: Required<WebsocketTransportOptions>;
   private readonly log: Logger;
   private readonly listeners: TransportListener[] = [];
+  private options: Required<WebsocketTransportOptions>;
   private state: TransportState = TransportState.DISCONNECTED;
   private wasConnected = false;
   private ws?: WebSocket;
+  private reconnectTimeout?: NodeJS.Timeout;
 
   constructor(options: WebsocketTransportOptions) {
     this.options = {
@@ -34,6 +35,17 @@ export class WebsocketTransport implements Transport {
 
   isAvailable() {
     return WebSocket !== undefined;
+  }
+
+  getOptions() {
+    return this.options;
+  }
+
+  updateOptions(options: Partial<WebsocketTransportOptions>) {
+    this.options = {
+      ...this.options,
+      ...options,
+    };
   }
 
   getState() {
@@ -60,6 +72,29 @@ export class WebsocketTransport implements Transport {
     const url = `${this.options.useSSL ? "wss" : "ws"}://${this.options.host}:${this.options.port}`;
 
     this.log.info(`connecting to web-socket server at ${url}`);
+
+    // close existing connection if exists
+    if (this.ws) {
+      console.log("closing connection", this.ws);
+
+      // clear event handlers
+      this.ws.onopen = () => {};
+      this.ws.onclose = () => {};
+      this.ws.onerror = () => {};
+      this.ws.onmessage = () => {};
+
+      // close the connection
+      this.ws.close();
+
+      this.ws = undefined;
+    }
+
+    // clear reconnect timeout if exists
+    if (this.reconnectTimeout !== undefined) {
+      clearTimeout(this.reconnectTimeout);
+
+      this.reconnectTimeout = undefined;
+    }
 
     // update state depending on whether the connection was ever established
     this.setState(this.wasConnected ? TransportState.RECONNECTING : TransportState.CONNECTING);
@@ -92,7 +127,9 @@ export class WebsocketTransport implements Transport {
 
       // only attempt to reconnect if connection has succeeded before
       if (this.wasConnected) {
-        setTimeout(() => {
+        this.reconnectTimeout = setTimeout(() => {
+          this.reconnectTimeout = undefined;
+
           void this.connect();
         }, this.options.reconnectInterval);
       }
