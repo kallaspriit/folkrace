@@ -8,10 +8,10 @@ import { View } from "../../components/View/View";
 import { useDisableScrolling } from "../../hooks/useDisableScrolling";
 import { ExperimentsViewParams, EXPERIMENTS_VIEW_PATH } from "../../routes";
 import { buildUrl } from "../../services/buildUrl";
+import { ReactComponent as ControllerIcon } from "../../theme/icons/controller-icon.svg";
 import { ReactComponent as MapIcon } from "../../theme/icons/map-icon.svg";
 import { ReactComponent as RemoteIcon } from "../../theme/icons/remote-icon.svg";
 import { ReactComponent as SettingsIcon } from "../../theme/icons/settings-icon.svg";
-import { ReactComponent as SimulationIcon } from "../../theme/icons/simulation-icon.svg";
 import { ReactComponent as StatusIcon } from "../../theme/icons/status-icon.svg";
 
 export const MainMenuExperiment: React.FC = () => {
@@ -39,7 +39,7 @@ export const MainMenuExperiment: React.FC = () => {
       <MainMenu activeItemIndex={activeItemIndex} onItemClick={setActiveItemIndex}>
         <MainMenuItem icon={<StatusIcon />}>Status</MainMenuItem>
         <MainMenuItem icon={<MapIcon />}>Map</MainMenuItem>
-        <MainMenuItem icon={<SimulationIcon />}>Simulation</MainMenuItem>
+        <MainMenuItem icon={<ControllerIcon />}>Controller</MainMenuItem>
         <MainMenuItem icon={<RemoteIcon />}>Remote</MainMenuItem>
         <MainMenuItem icon={<SettingsIcon />}>Settings</MainMenuItem>
       </MainMenu>

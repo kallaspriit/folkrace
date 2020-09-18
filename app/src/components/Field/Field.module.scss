@@ -112,7 +112,7 @@ $active-label-scale: 0.75;
   display: flex;
   align-items: center;
   height: $input-height;
-  color: $color-text-darker;
+  color: $color-text-secondary;
   font-size: $font-size-large;
   transition: transform $animation-speed-medium ease-in-out, color $animation-speed-medium ease-in-out;
   transform: translateY(0);

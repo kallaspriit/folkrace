@@ -8,6 +8,7 @@ export interface Page {
   name: string;
   title: string;
   page: React.ReactNode;
+  trailing?: React.ReactNode;
 }
 
 export interface PageListProps {
@@ -32,7 +33,11 @@ export const PageList: React.FC<PageListProps> = ({ title, pages, onBack, buildP
           <TitleBar onBack={onBack} title={title} />
           <List scrollable expanded>
             {pages.map((page) => (
-              <ListItem key={page.name} onClick={() => history.push(buildPagePath(page, true))}>
+              <ListItem
+                key={page.name}
+                trailing={page.trailing}
+                onClick={() => history.push(buildPagePath(page, true))}
+              >
                 {page.title}
               </ListItem>
             ))}

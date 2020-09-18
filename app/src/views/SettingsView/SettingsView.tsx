@@ -1,0 +1,36 @@
+import React from "react";
+import { useHistory } from "react-router";
+import { Page, PageList } from "../../components/PageList/PageList";
+import { MAIN_MENU_VIEW_PATH, MainMenuViewParams } from "../../routes";
+import { buildPath } from "../../services/buildPath";
+import { ConfigureConnectionView } from "../ConfigureConnectionView/ConfigureConnectionView";
+
+const pages: Page[] = [
+  {
+    name: "connection",
+    title: "Configure connection",
+    page: <ConfigureConnectionView />,
+  },
+];
+
+export const SettingsView: React.FC = () => {
+  const history = useHistory();
+
+  return (
+    <PageList
+      title="Settings"
+      pages={pages}
+      onBack={() => history.goBack()}
+      buildPagePath={(page, removeOptional) =>
+        buildPath<MainMenuViewParams>(
+          MAIN_MENU_VIEW_PATH,
+          {
+            menu: "settings",
+            page: page.name,
+          },
+          removeOptional,
+        )
+      }
+    />
+  );
+};

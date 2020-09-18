@@ -22,7 +22,6 @@ interface ConnectionFormValues {
 
 export const ConfigureConnectionView: React.FC = () => {
   const history = useHistory();
-
   const transportStatus = useRecoilValue(transportStatusState);
   const [websocketHost, setWebsocketHost] = useRecoilState(websocketHostState);
   const { register, handleSubmit, errors } = useForm<ConnectionFormValues>();
@@ -37,7 +36,7 @@ export const ConfigureConnectionView: React.FC = () => {
 
   return (
     <View>
-      <TitleBar onBack={() => history.replace("/")} title="Configure connection" />
+      <TitleBar onBack={() => history.goBack()} title="Configure connection" />
       <Form scrollable padded expanded onSubmit={handleSubmit(onSubmit)}>
         <Field
           type="text"
