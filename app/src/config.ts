@@ -13,7 +13,9 @@ export const config = {
   rules: {
     battery: {
       low: 14.9,
-      critical: 13.9,
+      // critical: 13.9,
+      // TODO: using higher threshold for testing
+      critical: 14.9,
       alarmInterval: 5000,
     },
   },

@@ -1,8 +1,6 @@
 import React from "react";
 import { Route, Switch, Redirect } from "react-router";
 import { BrowserRouter as Router } from "react-router-dom";
-import { useLowBatteryAlarm } from "./hooks/useLowBatteryAlarm";
-import { useStateRouter } from "./hooks/useStateRouter";
 import { DASHBOARD_VIEW_PATH, EXPERIMENTS_VIEW_PATH, CONFIGURE_CONNECTION_VIEW_PATH } from "./routes";
 import { buildUrl } from "./services/buildUrl";
 import { getWebsocketHost } from "./services/getWebsocketHost";
@@ -12,12 +10,6 @@ import { ExperimentsView } from "./views/ExperimentsView/ExperimentsView";
 import { NotFoundView } from "./views/NotFoundView/NotFoundView";
 
 export const App: React.FC = () => {
-  // listens for events from multi-transport and forwards it to state
-  useStateRouter();
-
-  // plays alarm when the battery voltage is critically low
-  useLowBatteryAlarm();
-
   // decide where to redirect root path
   const isWebsocketHostDefined = getWebsocketHost() !== undefined;
   const rootRedirectPath = isWebsocketHostDefined
@@ -25,27 +17,24 @@ export const App: React.FC = () => {
     : buildUrl(CONFIGURE_CONNECTION_VIEW_PATH);
 
   return (
-    <>
-      <Router>
-        <Switch>
-          <Route exact path="/">
-            <Redirect to={rootRedirectPath} />
-          </Route>
-          <Route path={DASHBOARD_VIEW_PATH}>
-            <DashboardView />
-          </Route>
-          <Route path={CONFIGURE_CONNECTION_VIEW_PATH}>
-            <ConfigureConnectionView />
-          </Route>
-          <Route path={EXPERIMENTS_VIEW_PATH}>
-            <ExperimentsView />
-          </Route>
-          <Route>
-            <NotFoundView />
-          </Route>
-        </Switch>
-      </Router>
-      {/* <Version /> */}
-    </>
+    <Router>
+      <Switch>
+        <Route exact path="/">
+          <Redirect to={rootRedirectPath} />
+        </Route>
+        <Route path={DASHBOARD_VIEW_PATH}>
+          <DashboardView />
+        </Route>
+        <Route path={CONFIGURE_CONNECTION_VIEW_PATH}>
+          <ConfigureConnectionView />
+        </Route>
+        <Route path={EXPERIMENTS_VIEW_PATH}>
+          <ExperimentsView />
+        </Route>
+        <Route>
+          <NotFoundView />
+        </Route>
+      </Switch>
+    </Router>
   );
 };

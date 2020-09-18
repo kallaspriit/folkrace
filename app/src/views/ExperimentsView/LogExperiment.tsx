@@ -3,7 +3,9 @@ import { useHistory } from "react-router-dom";
 import { useRecoilState } from "recoil";
 import { ButtonGroup, ButtonGroupButton } from "../../components/ButtonGroup/ButtonGroup";
 import { Column } from "../../components/Column/Column";
+import { List, ListItem } from "../../components/List/List";
 import { P } from "../../components/Paragraph/Paragraph";
+import { useRenderCount } from "../../components/RenderCount/RenderCount";
 import { TitleBar } from "../../components/TitleBar/TitleBar";
 import { View } from "../../components/View/View";
 import { ExperimentsViewParams, EXPERIMENTS_VIEW_PATH } from "../../routes";
@@ -14,6 +16,7 @@ import { logMessagesState } from "../../state/logMessagesState";
 export const LogExperiment: React.FC = () => {
   const history = useHistory();
   const [logMessages, setLogMessages] = useRecoilState(logMessagesState);
+  const renderCount = useRenderCount("LogExperiment");
 
   return (
     <View>
@@ -21,6 +24,11 @@ export const LogExperiment: React.FC = () => {
         onBack={() => history.replace(buildUrl<ExperimentsViewParams>(EXPERIMENTS_VIEW_PATH))}
         title="Log experiment"
       />
+      <List>
+        <ListItem compact trailing={renderCount}>
+          Render count
+        </ListItem>
+      </List>
       <Column expanded scrollable padded compact autoscroll>
         {logMessages.map(({ type, message, transportName }, index) => (
           <P small key={index}>

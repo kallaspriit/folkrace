@@ -1,4 +1,6 @@
+import { useMemo } from "react";
 import { useRecoilState } from "recoil";
+import { TransportListener } from "../lib/transport";
 import { multiTransport } from "../services/multiTransport";
 import { activeTransportNameState } from "../state/activeTransportNameState";
 import { LogMessageType } from "../state/logMessagesState";
@@ -32,79 +34,60 @@ export function useStateRouter() {
     setTimer(Date.now());
   }, 1000);
 
-  // handle all queued messages in animation frame
-  // const handleQueuedMessages = useCallback(() => {
-  //   while (messageQueue.length > 0) {
-  //     const message = messageQueue.shift();
+  // configure transport listener
+  const transportListener = useMemo<TransportListener>(
+    () => ({
+      // called when active transport state changes
+      onStateChanged: (transport, newState, _previousState) => {
+        setTransportState(newState);
+        setActiveTransportName(transport.getName());
 
-  //     if (!message) {
-  //       return;
-  //     }
+        log(LogMessageType.INFO, `# ${transport.getName()} state changed to ${newState}`);
+      },
 
-  //     const [command, ...args] = message.split(":");
+      // called on transport error
+      onError: (_transport, error) => {
+        log(LogMessageType.ERROR, `@ transport error occurred${error ? ` (${error.message})` : ""}`);
+      },
 
-  //     // log message if command is not blacklisted
-  //     if (!noLogCommands.includes(command)) {
-  //       log(LogMessageType.RECEIVE, message);
-  //     }
+      // called when transport message is sent
+      onMessageSent: (transport, message, wasSentSuccessfully: boolean) => {
+        const [command] = message.split(":");
+        const noLogCommands: string[] = [];
 
-  //     // handle the command
-  //     handleCommand(command, args);
-  //   }
+        // don't log blacklisted messages
+        if (!noLogCommands.includes(command)) {
+          if (wasSentSuccessfully) {
+            log(
+              LogMessageType.SEND,
+              `${message}${!wasSentSuccessfully ? " [SENDING FAILED]" : ""}`,
+              transport.getName(),
+            );
+          } else {
+            log(LogMessageType.ERROR, `Sending message "${message}" failed`, transport.getName());
+          }
+        }
+      },
 
-  //   // requestAnimationFrame(() => {
-  //   //   handleQueuedMessages();
-  //   // });
-  // }, [handleCommand, log]);
+      // called when transport message is received
+      onMessageReceived: (transport, message) => {
+        const [command, ...args] = message.split(":");
+        const noLogCommands: string[] = [];
 
-  // // start handling queued messages
-  // useInterval(handleQueuedMessages, 16);
+        // don't blacklisted messages
+        if (command.length > 1 && !noLogCommands.includes(command)) {
+          log(LogMessageType.RECEIVE, message, transport.getName());
+        }
+
+        // handle the command
+        handleCommand(command, args);
+      },
+    }),
+    // we don't want to create new listener when log changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
 
   // adds new multi-transport listeners and forwards the events to state
-  useTransportListener({
-    // called when active transport state changes
-    onStateChanged: (transport, newState, _previousState) => {
-      setTransportState(newState);
-      setActiveTransportName(transport.getName());
-
-      log(LogMessageType.INFO, `# ${transport.getName()} state changed to ${newState}`);
-    },
-
-    // called on transport error
-    onError: (_transport, error) => {
-      log(LogMessageType.ERROR, `@ transport error occurred${error ? ` (${error.message})` : ""}`);
-    },
-
-    // called when transport message is sent
-    onMessageSent: (transport, message, wasSentSuccessfully: boolean) => {
-      const [command] = message.split(":");
-      const noLogCommands: string[] = [];
-
-      // don't blacklisted messages
-      if (!noLogCommands.includes(command)) {
-        if (wasSentSuccessfully) {
-          log(LogMessageType.SEND, `${message}${!wasSentSuccessfully ? " [SENDING FAILED]" : ""}`, transport.getName());
-        } else {
-          log(LogMessageType.ERROR, `Sending message "${message}" failed`, transport.getName());
-        }
-      }
-    },
-
-    // called when transport message is received
-    onMessageReceived: (transport, message) => {
-      // queue the message
-      // messageQueue.push(message);
-
-      const [command, ...args] = message.split(":");
-      const noLogCommands: string[] = [];
-
-      // don't blacklisted messages
-      if (command.length > 1 && !noLogCommands.includes(command)) {
-        log(LogMessageType.RECEIVE, message, transport.getName());
-      }
-
-      // handle the command
-      handleCommand(command, args);
-    },
-  });
+  useTransportListener(transportListener);
 }

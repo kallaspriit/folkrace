@@ -4,6 +4,7 @@ import { useRecoilValue } from "recoil";
 import { ButtonGroup, ButtonGroupButton } from "../../components/ButtonGroup/ButtonGroup";
 import { Column } from "../../components/Column/Column";
 import { List, ListItem } from "../../components/List/List";
+import { useRenderCount } from "../../components/RenderCount/RenderCount";
 import { TitleBar } from "../../components/TitleBar/TitleBar";
 import { View } from "../../components/View/View";
 import { ExperimentsViewParams, EXPERIMENTS_VIEW_PATH } from "../../routes";
@@ -50,6 +51,7 @@ export const StateExperiment: React.FC = () => {
   const targetSpeeds = useRecoilValue(targetSpeedsState);
   const encoders = useRecoilValue(encodersState);
   const lidarStatus = useRecoilValue(lidarStatusState);
+  const renderCount = useRenderCount("StateExperiment");
 
   // request initial state
   useEffect(() => robot.requestState(), []);
@@ -62,6 +64,9 @@ export const StateExperiment: React.FC = () => {
       />
       <Column expanded scrollable>
         <List>
+          <ListItem compact trailing={renderCount}>
+            Render count
+          </ListItem>
           <ListItem compact trailing={activeTransportName ?? "n/a"}>
             Active transport name
           </ListItem>

@@ -49,6 +49,15 @@ export class MultiTransport implements Transport {
 
   addListener(listener: TransportListener) {
     this.listeners.push(listener);
+
+    const activeTransport = this.getActiveTransport();
+
+    if (!activeTransport) {
+      return;
+    }
+
+    // report initial state
+    listener.onStateChanged(activeTransport, activeTransport.getState(), TransportState.DISCONNECTED);
   }
 
   removeListener(listener: TransportListener) {

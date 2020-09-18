@@ -1,23 +1,46 @@
-import { useRecoilState } from "recoil";
+import { useCallback } from "react";
+import { useSetRecoilState } from "recoil";
 import { assertUnreachable } from "../services/assertUnreachable";
 import { logMessagesState, LogMessageType } from "../state/logMessagesState";
 
 export function useLog() {
-  const [logMessages, setLogMessages] = useRecoilState(logMessagesState);
+  const setLogMessagesState = useSetRecoilState(logMessagesState);
+
+  const log = useCallback(
+    (type: LogMessageType, message: string, transportName?: string) => {
+      // append log message
+      setLogMessagesState((logMessages) => [
+        ...logMessages,
+        {
+          type,
+          message,
+          transportName,
+        },
+      ]);
+
+      // also log to navigator console
+      logToConsole(type, message, transportName);
+    },
+    [setLogMessagesState],
+  );
+
+  return log;
 
   // adds log message to log messages state
-  return (type: LogMessageType, message: string, transportName?: string) => {
-    setLogMessages([
-      ...logMessages,
-      {
-        type,
-        message,
-        transportName,
-      },
-    ]);
+  // return (type: LogMessageType, message: string, transportName?: string) => {
+  //   // append log message
+  //   setLogMessagesState((logMessages) => [
+  //     ...logMessages,
+  //     {
+  //       type,
+  //       message,
+  //       transportName,
+  //     },
+  //   ]);
 
-    logToConsole(type, message, transportName);
-  };
+  //   // also log to navigator console
+  //   logToConsole(type, message, transportName);
+  // };
 }
 
 function logToConsole(type: LogMessageType, message: string, _transportName?: string) {
