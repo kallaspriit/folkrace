@@ -2,6 +2,6 @@ import { config } from "../config";
 import { WebsocketTransport } from "../lib/transport";
 
 export const websocketTransport = new WebsocketTransport({
-  ...config.webSocket,
+  ...config.websocket,
   // log: console,
 });

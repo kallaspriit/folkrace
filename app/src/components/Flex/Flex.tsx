@@ -15,7 +15,8 @@ export type TextAlignment = "left" | "center" | "right" | "justify";
 
 export type FlexElement = HTMLDivElement;
 
-export interface FlexProps extends React.ComponentPropsWithoutRef<"div"> {
+export interface FlexOptions {
+  tag?: JSX.Element;
   secondary?: boolean;
   alternate?: boolean;
   column?: boolean;
@@ -61,6 +62,8 @@ export interface FlexProps extends React.ComponentPropsWithoutRef<"div"> {
   /** @deprecated Don't use this directly, use FlexRef instead */
   _dangerouselySetRef?: React.Ref<FlexElement>;
 }
+
+export type FlexProps = React.ComponentPropsWithoutRef<"div"> & FlexOptions;
 
 // use FlexRef if you need the ref forwarded
 export const Flex: React.FC<FlexProps> = ({

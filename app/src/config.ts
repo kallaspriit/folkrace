@@ -1,12 +1,12 @@
 export const config = {
   clientVersion: process.env.REACT_APP_VERSION || "n/a",
   debug: process.env.NODE_ENV === "development",
-  webSocket: {
+  websocket: {
     // allow overriding web-socket options via local storage
     host:
       // process.env.NODE_ENV === "development" &&
-      localStorage.webSocketHost !== undefined ? localStorage.webSocketHost : "127.0.0.1",
-    port: localStorage.webSocketPort !== undefined ? parseInt(localStorage.webSocketPort, 10) : 8000,
+      localStorage.websocketHost !== undefined ? localStorage.websocketHost : "127.0.0.1",
+    port: localStorage.websocketPort !== undefined ? parseInt(localStorage.websocketPort, 10) : 8000,
     useSSL: false,
     reconnectInterval: 3000,
   },

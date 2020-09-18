@@ -7,6 +7,9 @@
 // dashboard view
 export const DASHBOARD_VIEW_PATH = "/dashboard";
 
+// configure connection view
+export const CONFIGURE_CONNECTION_VIEW_PATH = "/configure-connection";
+
 // experiments view
 export const EXPERIMENTS_VIEW_PATH = "/experiments/:experiment?/:page?/:modifier?";
 

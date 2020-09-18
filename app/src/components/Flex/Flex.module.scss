@@ -71,6 +71,12 @@
     // TODO: needed for Safari (carousel does not get height in expanded containers etc)
     flex-basis: 100%;
     flex-grow: 1;
+
+    form {
+      flex-basis: 100%;
+      flex-grow: 1;
+      background-color: blue;
+    }
   }
 
   &--unshrinkable {
