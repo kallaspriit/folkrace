@@ -5,12 +5,12 @@
   padding: grid(2) $layout-view-padding;
   border-top: 1px solid $color-bg-tertiary;
 
-  &--no-border {
-    border-top: none;
-  }
-
   &--compact {
     padding: grid(2) $layout-view-padding / 2;
+  }
+
+  &:first-child {
+    border-top: none;
   }
 
   &:last-child {

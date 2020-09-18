@@ -1,0 +1,20 @@
+@import "../../theme/variables";
+
+.viewport {
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+
+  touch-action: pan-y;
+}
+
+.slider {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transition: transform $animation-speed-medium ease-in-out;
+
+  > * {
+    position: absolute;
+  }
+}

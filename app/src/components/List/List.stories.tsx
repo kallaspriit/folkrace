@@ -97,11 +97,3 @@ export const WithoutTrailing = () => (
     </ListItem>
   </List>
 );
-
-export const WithoutTopBorder = () => (
-  <List>
-    <ListItem noBorder>
-      <P>Language</P>
-    </ListItem>
-  </List>
-);

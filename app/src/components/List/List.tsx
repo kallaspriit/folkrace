@@ -17,7 +17,6 @@ export interface ListItemProps extends FlexProps {
   trailing?: React.ReactNode;
   removeTrailing?: boolean;
   leadingIconAutoSize?: boolean;
-  noBorder?: boolean;
   compact?: boolean;
 }
 
@@ -26,7 +25,6 @@ export const ListItem: React.FC<ListItemProps> = ({
   trailing,
   removeTrailing,
   leadingIconAutoSize,
-  noBorder,
   compact,
   children,
   className,
@@ -34,11 +32,7 @@ export const ListItem: React.FC<ListItemProps> = ({
 }) => (
   <Row
     crossAxisAlignment="center"
-    className={classNames(
-      styles["list-item"],
-      { [styles["list-item--no-border"]]: noBorder, [styles["list-item--compact"]]: compact },
-      className,
-    )}
+    className={classNames(styles["list-item"], { [styles["list-item--compact"]]: compact }, className)}
     {...rest}
   >
     {leading && (
