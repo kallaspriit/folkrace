@@ -1,6 +1,6 @@
 import { withKnobs, boolean } from "@storybook/addon-knobs";
 import React from "react";
-import { ReactComponent as SettingsIcon } from "../../theme/icons/settings-icon.svg";
+import { ReactComponent as AppleIcon } from "../../theme/icons/apple-icon.svg";
 import { Container } from "../Container/Container";
 import { P } from "./Paragraph";
 
@@ -80,6 +80,6 @@ export const WithMultipleChildren = () => (
     <a href="https://apple.com" target="_blank" rel="noopener noreferrer">
       Apple
     </a>
-    <SettingsIcon style={{ height: "1em" }} />
+    <AppleIcon style={{ height: "1em" }} />
   </P>
 );

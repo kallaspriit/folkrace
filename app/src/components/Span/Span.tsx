@@ -1,8 +1,5 @@
-import React from "react";
-import { FlexProps, Flex } from "../Flex/Flex";
+import { FlexBase, FlexTag } from "../Flex/Flex";
 
-export const Span: React.FC<FlexProps> = ({ children, ...rest }) => (
-  <Flex span {...rest}>
-    {children}
-  </Flex>
-);
+export class Span extends FlexBase<"span"> {
+  tag: FlexTag = "span";
+}

@@ -1,10 +1,5 @@
-import React from "react";
-import { Flex, FlexOptions } from "../Flex/Flex";
+import { FlexBase, FlexTag } from "../Flex/Flex";
 
-export type FormProps = FlexOptions & React.ComponentPropsWithoutRef<"form">;
-
-export const Form: React.FC<FormProps> = ({ children, ...rest }) => (
-  <Flex form {...(rest as any)}>
-    {children}
-  </Flex>
-);
+export class Form extends FlexBase<"form"> {
+  tag: FlexTag = "form";
+}

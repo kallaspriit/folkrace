@@ -2,7 +2,7 @@ import classNames from "classnames";
 import React from "react";
 import { ReactComponent as BackIcon } from "../../theme/icons/back-icon.svg";
 import { Container } from "../Container/Container";
-import { FlexProps, FlexElement, FlexRef } from "../Flex/Flex";
+import { FlexProps, FlexElement, Flex } from "../Flex/Flex";
 import { GridBox } from "../GridBox/GridBox";
 import { IconButton } from "../IconButton/IconButton";
 import styles from "./TitleBar.module.scss";
@@ -17,11 +17,14 @@ export interface TitleBarProps extends FlexProps {
   onBack?: OnBackCallback;
 }
 
-export const TitleBar = React.forwardRef<FlexElement, TitleBarProps>(
-  ({ fixed, transparent, secondary, title, onBack, className, style, children, ...rest }, ref) => (
-    <FlexRef
+export const TitleBar = React.forwardRef<FlexElement, TitleBarProps>(function TitleBar(
+  { fixed, transparent, secondary, title, onBack, className, style, children, ...rest },
+  ref,
+) {
+  return (
+    <Flex
       row
-      ref={ref}
+      flexRef={ref}
       className={classNames(
         styles["title-bar"],
         {
@@ -58,8 +61,6 @@ export const TitleBar = React.forwardRef<FlexElement, TitleBarProps>(
           </>
         );
       })}
-    </FlexRef>
-  ),
-);
-
-TitleBar.displayName = "TitleBar";
+    </Flex>
+  );
+});

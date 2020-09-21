@@ -21,18 +21,6 @@ export const WithLargeText = () => (
   </Stack>
 );
 
-export const WithLargeTextAndParagraph = () => (
-  <Stack referenceFirstChild>
-    <Container debug paragraph style={{ fontSize: "10rem" }}>
-      Hello World!
-    </Container>
-    {/* Draw line through the middle */}
-    <Container>
-      <div style={{ height: "1px", backgroundColor: "#F00", position: "absolute", top: "50%", width: "100%" }}></div>
-    </Container>
-  </Stack>
-);
-
 export const WithMultipleChildren = () => (
   <Container debug>
     <div>First row</div>

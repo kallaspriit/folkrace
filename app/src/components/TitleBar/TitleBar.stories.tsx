@@ -1,5 +1,9 @@
 import { action } from "@storybook/addon-actions";
 import React from "react";
+import { ReactComponent as DownloadIcon } from "../../theme/icons/download-icon.svg";
+import { ReactComponent as Favouriteicon } from "../../theme/icons/favourite-icon.svg";
+import { ReactComponent as ShareIcon } from "../../theme/icons/share-icon.svg";
+import { IconButton } from "../IconButton/IconButton";
 import { TitleBar } from "./TitleBar";
 
 export default {
@@ -27,4 +31,18 @@ export const WithSecondary = () => (
     <TitleBar fixed secondary title="Hello" />
     <div style={{ height: "2000px" }}>scrollig content</div>
   </div>
+);
+
+export const WithIconButtons = () => (
+  <TitleBar mainAxisAlignment="flex-end" onBack={action("clicked back button")}>
+    <IconButton secondary icon={<ShareIcon />}>
+      Share
+    </IconButton>
+    <IconButton secondary icon={<DownloadIcon />}>
+      Download
+    </IconButton>
+    <IconButton secondary icon={<Favouriteicon />}>
+      Favourite
+    </IconButton>
+  </TitleBar>
 );

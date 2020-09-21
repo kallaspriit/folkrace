@@ -1,6 +1,6 @@
 import { withKnobs, boolean } from "@storybook/addon-knobs";
 import React from "react";
-import { ReactComponent as SettingsIcon } from "../../theme/icons/settings-icon.svg";
+import { ReactComponent as AppleIcon } from "../../theme/icons/apple-icon.svg";
 import { Column } from "../Column/Column";
 import { GridBox } from "../GridBox/GridBox";
 import { MockText } from "../MockText/MockText";
@@ -17,7 +17,7 @@ export const Default = () => (
   <Flex debug>
     <div>First child</div>
     <div>Second child</div>
-    <SettingsIcon style={{ width: "32px" }} />
+    <AppleIcon style={{ width: "32px" }} />
   </Flex>
 );
 
@@ -25,7 +25,7 @@ export const WithSecondary = () => (
   <Flex debug secondary={boolean("Secondary", true)}>
     <div>Seondary uses secondary text color</div>
     <a href="https://google.com">Link child</a>
-    <SettingsIcon style={{ width: "32px" }} />
+    <AppleIcon style={{ width: "32px" }} />
   </Flex>
 );
 
@@ -33,7 +33,7 @@ export const WithAlternate = () => (
   <Flex debug alternate={boolean("Alternate", true)}>
     <div>Alternate uses the other font</div>
     <a href="https://google.com">Link child</a>
-    <SettingsIcon style={{ width: "32px" }} />
+    <AppleIcon style={{ width: "32px" }} />
   </Flex>
 );
 
@@ -122,6 +122,30 @@ export const WithPaddedVertical = () => (
   </Flex>
 );
 
+export const WithPaddedCompact = () => (
+  <Flex padded compact debug>
+    <P>
+      Content is padded by <em>$layout-view-padding</em>
+    </P>
+  </Flex>
+);
+
+export const WithPaddedHorizontalCompact = () => (
+  <Flex paddedHorizontal compact debug>
+    <P>
+      Content is horizontally padded by <em>$layout-view-padding</em>
+    </P>
+  </Flex>
+);
+
+export const WithPaddedVerticalCompact = () => (
+  <Flex paddedVertical compact debug>
+    <P>
+      Content is vertically padded by <em>$layout-view-padding</em>
+    </P>
+  </Flex>
+);
+
 export const WithLimited = () => (
   <Flex limited debug>
     This rather long content is width is limited to $layout-limited-width after which it has to wrap
@@ -143,25 +167,6 @@ export const WithCenter = () => (
 export const WithCover = () => (
   <Flex cover debug>
     Container is 100% width/height
-  </Flex>
-);
-
-export const WithParagraph = () => (
-  <Column>
-    <Flex debug>Without text</Flex>
-    <GridBox size={1} />
-    <Flex paragraph debug>
-      With text (makes the unsymmetric font vertically centered)
-    </Flex>
-  </Column>
-);
-
-export const WithSpan = () => (
-  <Flex paragraph debug>
-    Hello{" "}
-    <Flex span strong debug2>
-      world!
-    </Flex>
   </Flex>
 );
 

@@ -1,0 +1,68 @@
+@import "../../theme/variables";
+@import "../../theme/functions/grid";
+
+.modal {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: $z-index-top;
+  visibility: hidden;
+  padding: grid(3);
+  opacity: 0;
+  transition: opacity $animation-speed-fast ease-in-out, visibility $animation-speed-fast ease-in-out;
+
+  &--backdrop {
+    background-color: $color-bg-backdrop;
+  }
+
+  &--open {
+    visibility: visible;
+    opacity: 1;
+  }
+}
+
+.body {
+  width: grid(68);
+  border-radius: screen(20);
+  background-color: $color-bg-light;
+
+  &--fullscreen {
+    flex: 1;
+    max-width: $layout-limited-width;
+    width: 100%;
+  }
+}
+
+.content {
+  padding: $layout-view-padding;
+  height: 100%;
+
+  &--without-padding {
+    padding: 0;
+  }
+}
+
+.title {
+  padding-bottom: grid(4);
+}
+
+.modal-actions {
+  border-top: 1px solid $color-bg-divider;
+}
+
+.modal-button {
+  padding: grid(3) 0;
+  cursor: pointer;
+
+  &--highlighted {
+    color: $color-bg-quaternary;
+  }
+}
+
+.divider {
+  flex: 1 0 1;
+  width: 1px;
+  background-color: $color-bg-divider;
+}
