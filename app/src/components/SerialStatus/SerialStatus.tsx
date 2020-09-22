@@ -6,7 +6,7 @@ import { serialStatusState } from "../../state/serialStatusState";
 import { ReactComponent as SerialIcon } from "../../theme/icons/serial-icon.svg";
 import { Status } from "../Status/Status";
 
-export const StatusSerial: React.FC = () => {
+export const SerialStatus: React.FC = () => {
   const serialStatus = useRecoilValue(serialStatusState);
 
   return (
