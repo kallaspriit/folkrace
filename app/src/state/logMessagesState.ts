@@ -9,9 +9,9 @@ export enum LogMessageType {
 }
 
 export interface LogMessage {
-  type: LogMessageType;
-  message: string;
-  transportName?: string;
+  readonly type: LogMessageType;
+  readonly message: string;
+  readonly transportName?: string;
 }
 
 export const logMessagesState = atom<LogMessage[]>({

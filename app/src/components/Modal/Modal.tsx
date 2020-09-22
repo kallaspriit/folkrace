@@ -56,7 +56,7 @@ export const Modal: React.FC<ModalProps> = ({
     >
       <Flex
         column
-        flexRef={modalRef}
+        ref={modalRef}
         className={classNames(styles["body"], {
           [styles["body--fullscreen"]]: fullscreen,
         })}

@@ -90,7 +90,7 @@ export const Field = React.forwardRef<HTMLInputElement, FieldProps>(function Fie
   return (
     <Flex
       column
-      flexRef={ref}
+      ref={ref}
       className={classNames(
         styles.field,
         {

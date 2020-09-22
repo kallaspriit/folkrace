@@ -2,8 +2,8 @@ import { atom } from "recoil";
 
 // represents motor speeds in amps
 export interface TargetSpeedsState {
-  left: number;
-  right: number;
+  readonly left: number;
+  readonly right: number;
 }
 
 export const targetSpeedsState = atom<TargetSpeedsState>({

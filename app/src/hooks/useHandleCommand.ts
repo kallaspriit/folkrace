@@ -1,14 +1,17 @@
 import { useMemo } from "react";
-import { useHandleIpCommand } from "../handlers/handleIpCommand";
-import { useHandleLidarCommand } from "../handlers/handleLidarCommand";
-import { useHandleSpeedCommand } from "../handlers/handleSpeedCommand";
 import { useHandleAttitudeCommand } from "../handlers/useHandleAttitudeCommand";
 import { useHandleButtonCommand } from "../handlers/useHandleButtonCommand";
 import { useHandleCurrentCommand } from "../handlers/useHandleCurrentCommand";
 import { useHandleEncoderCommand } from "../handlers/useHandleEncoderCommand";
 import { useHandleHeartbeatCommand } from "../handlers/useHandleHeartbeatCommand";
+import { useHandleIpCommand } from "../handlers/useHandleIpCommand";
+import { useHandleLidarMeasurementCommand } from "../handlers/useHandleLidarMeasurementCommand";
+import { useHandleLidarStateCommand } from "../handlers/useHandleLidarStateCommand";
 import { useHandleMotorsCommand } from "../handlers/useHandleMotorsCommand";
+import { useHandleResetCommand } from "../handlers/useHandleResetCommand";
 import { useHandleSerialStatusCommand } from "../handlers/useHandleSerialCommand";
+import { useHandleSpeedCommand } from "../handlers/useHandleSpeedCommand";
+import { useHandleUsbCommand } from "../handlers/useHandleUsbCommand";
 import { useHandleVoltageCommand } from "../handlers/useHandleVoltageCommand";
 import { LogMessageType } from "../state/logMessagesState";
 import { useLog } from "./useLog";
@@ -26,10 +29,13 @@ export function useHandleCommand() {
   const handleVoltageCommand = useHandleVoltageCommand();
   const handleButtonCommand = useHandleButtonCommand();
   const handleSpeedCommand = useHandleSpeedCommand();
-  const handleLidarCommand = useHandleLidarCommand();
+  const handleLidarStateCommand = useHandleLidarStateCommand();
+  const handleLidarMeasurementCommand = useHandleLidarMeasurementCommand();
   const handleSerialStatusCommand = useHandleSerialStatusCommand();
   const handleMotorsCommand = useHandleMotorsCommand();
   const handleIpCommand = useHandleIpCommand();
+  const handleResetCommand = useHandleResetCommand();
+  const handleUsbCommand = useHandleUsbCommand();
 
   // map of command names to handlers
   const handlerMap: Record<string, CommandHandlerFn | undefined> = useMemo(
@@ -41,13 +47,14 @@ export function useHandleCommand() {
       v: handleVoltageCommand,
       b: handleButtonCommand,
       s: handleSpeedCommand,
-      l: handleLidarCommand,
+      l: handleLidarStateCommand,
+      m: handleLidarMeasurementCommand,
       serial: handleSerialStatusCommand,
       motors: handleMotorsCommand,
       ip: handleIpCommand,
-      // TODO: implement "usb:7936:8210:CDC DEVICE"
+      reset: handleResetCommand,
+      usb: handleUsbCommand,
       // TODO: implement "rpm:300"
-      // TODO: implement "reset"
     }),
     [
       handleHeartbeatCommand,
@@ -57,10 +64,13 @@ export function useHandleCommand() {
       handleVoltageCommand,
       handleButtonCommand,
       handleSpeedCommand,
-      handleLidarCommand,
+      handleLidarStateCommand,
+      handleLidarMeasurementCommand,
       handleSerialStatusCommand,
       handleMotorsCommand,
       handleIpCommand,
+      handleResetCommand,
+      handleUsbCommand,
     ],
   );
 

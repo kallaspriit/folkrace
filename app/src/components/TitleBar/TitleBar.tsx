@@ -24,7 +24,7 @@ export const TitleBar = React.forwardRef<FlexElement, TitleBarProps>(function Ti
   return (
     <Flex
       row
-      flexRef={ref}
+      ref={ref}
       className={classNames(
         styles["title-bar"],
         {

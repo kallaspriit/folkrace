@@ -2,7 +2,7 @@ import { useRecoilState } from "recoil";
 import { assertArgumentCount } from "../services/assertArgumentCount";
 import { lidarStatusState } from "../state/lidarStatusState";
 
-export function useHandleLidarCommand() {
+export function useHandleLidarStateCommand() {
   const [, setLidarStatus] = useRecoilState(lidarStatusState);
 
   // for example "l:1:1:3002:2987:56" means lidar is running and valid

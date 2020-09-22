@@ -1,9 +1,9 @@
 import { atom } from "recoil";
 
 export interface ButtonsState {
-  left: boolean;
-  right: boolean;
-  start: boolean;
+  readonly left: boolean;
+  readonly right: boolean;
+  readonly start: boolean;
 }
 
 export const buttonsState = atom<ButtonsState>({

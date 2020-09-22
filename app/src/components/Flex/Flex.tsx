@@ -61,10 +61,16 @@ export interface FlexOptions {
   textAlign?: TextAlignment;
 }
 
-export type FlexProps<T extends FlexTag = "div"> = React.ComponentPropsWithoutRef<T> &
-  FlexOptions & {
-    flexRef?: React.Ref<FlexElement>;
-  };
+interface FlexRef {
+  /**
+   * Inner forwarded ref.
+   *
+   * @deprecated Use normal "ref" instead.
+   */
+  flexRef?: React.Ref<FlexElement>;
+}
+
+export type FlexProps<T extends FlexTag = "div"> = React.ComponentPropsWithoutRef<T> & FlexOptions & FlexRef;
 
 // generic version, don't use directly, use <Flex/>, <P/> etc
 export class FlexBase<T extends FlexTag = "div"> extends React.Component<FlexProps<T>> {
@@ -235,7 +241,6 @@ export class FlexBase<T extends FlexTag = "div"> extends React.Component<FlexPro
   }
 }
 
-// default Flex that uses <div/>
-export class Flex extends FlexBase<"div"> {
-  tag: FlexTag = "div";
-}
+export const Flex = React.forwardRef<FlexElement, FlexProps<"div">>(function Flex(props, ref) {
+  return <FlexBase<"div"> {...props} flexRef={ref} />;
+});

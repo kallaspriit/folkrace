@@ -1,11 +1,11 @@
 import { atom } from "recoil";
 
 export interface LidarStatus {
-  isRunning: boolean;
-  isValid: boolean;
-  targetRpm: number;
-  currentRpm: number;
-  motorPwm: number;
+  readonly isRunning: boolean;
+  readonly isValid: boolean;
+  readonly targetRpm: number;
+  readonly currentRpm: number;
+  readonly motorPwm: number;
 }
 
 export const lidarStatusState = atom<LidarStatus | undefined>({

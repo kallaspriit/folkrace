@@ -17,6 +17,7 @@ import { buttonsState } from "../../state/buttonsState";
 import { currentsState } from "../../state/currentsState";
 import { encodersState } from "../../state/encodersState";
 import { lastHeartbeatTimeState } from "../../state/lastHeartbeatTimeState";
+import { lidarMeasurementsState } from "../../state/lidarMeasurementsState";
 import { lidarStatusState } from "../../state/lidarStatusState";
 import { loadState } from "../../state/loadState";
 import { logMessagesState } from "../../state/logMessagesState";
@@ -27,6 +28,7 @@ import { serverIpState } from "../../state/serverIpState";
 import { targetSpeedsState } from "../../state/targetSpeedsState";
 import { timerState } from "../../state/timerState";
 import { transportStatusState } from "../../state/transportStatusState";
+import { usbState } from "../../state/usbState";
 import { voltageState } from "../../state/voltageState";
 
 export const StateExperiment: React.FC = () => {
@@ -51,6 +53,8 @@ export const StateExperiment: React.FC = () => {
   const targetSpeeds = useRecoilValue(targetSpeedsState);
   const encoders = useRecoilValue(encodersState);
   const lidarStatus = useRecoilValue(lidarStatusState);
+  const usb = useRecoilValue(usbState);
+  const lidarMeasurements = useRecoilValue(lidarMeasurementsState);
   const renderCount = useRenderCount("StateExperiment");
 
   // request initial state
@@ -68,9 +72,6 @@ export const StateExperiment: React.FC = () => {
       />
       <Column expanded scrollable>
         <List>
-          <ListItem compact trailing={renderCount}>
-            Render count
-          </ListItem>
           <ListItem compact trailing={activeTransportName ?? "n/a"}>
             Active transport name
           </ListItem>
@@ -169,6 +170,21 @@ export const StateExperiment: React.FC = () => {
           </ListItem>
           <ListItem compact trailing={lidarStatus ? `${lidarStatus.motorPwm}%` : "n/a"}>
             Lidar PWM duty cycle
+          </ListItem>
+          <ListItem compact trailing={usb?.vendorId ?? "n/a"}>
+            USB vendor id
+          </ListItem>
+          <ListItem compact trailing={usb?.productId ?? "n/a"}>
+            USB product id
+          </ListItem>
+          <ListItem compact trailing={usb?.name ?? "n/a"}>
+            USB name
+          </ListItem>
+          <ListItem compact trailing={lidarMeasurements.length}>
+            Lidar measurement count
+          </ListItem>
+          <ListItem compact trailing={renderCount}>
+            Render count
           </ListItem>
         </List>
       </Column>

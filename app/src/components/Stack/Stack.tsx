@@ -13,7 +13,7 @@ export const Stack = React.forwardRef<FlexElement, StackProps>(function Stack(
 ) {
   return (
     <Flex
-      flexRef={ref}
+      ref={ref}
       className={classNames(
         styles.stack,
         {

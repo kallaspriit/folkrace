@@ -2,8 +2,8 @@ import { atom } from "recoil";
 
 // represents motor currents in amps
 export interface CurrentsState {
-  left: number;
-  right: number;
+  readonly left: number;
+  readonly right: number;
 }
 
 export const currentsState = atom<CurrentsState>({

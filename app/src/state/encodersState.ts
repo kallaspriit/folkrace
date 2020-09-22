@@ -2,8 +2,8 @@ import { atom } from "recoil";
 
 // represents encoder steps values
 export interface EncodersState {
-  left: number;
-  right: number;
+  readonly left: number;
+  readonly right: number;
 }
 
 export const encodersState = atom<EncodersState>({

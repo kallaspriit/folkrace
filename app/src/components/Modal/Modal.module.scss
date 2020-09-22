@@ -1,5 +1,6 @@
 @import "../../theme/variables";
 @import "../../theme/functions/grid";
+@import "../../theme/functions/screen";
 
 .modal {
   position: fixed;
@@ -14,7 +15,7 @@
   transition: opacity $animation-speed-fast ease-in-out, visibility $animation-speed-fast ease-in-out;
 
   &--backdrop {
-    background-color: $color-bg-backdrop;
+    background-color: rgba(0, 0, 0, 0.5);
   }
 
   &--open {
@@ -26,7 +27,7 @@
 .body {
   width: grid(68);
   border-radius: screen(20);
-  background-color: $color-bg-light;
+  background-color: $color-bg-secondary;
 
   &--fullscreen {
     flex: 1;
@@ -49,7 +50,7 @@
 }
 
 .modal-actions {
-  border-top: 1px solid $color-bg-divider;
+  border-top: 1px solid $color-bg-tertiary;
 }
 
 .modal-button {
@@ -57,12 +58,12 @@
   cursor: pointer;
 
   &--highlighted {
-    color: $color-bg-quaternary;
+    color: $color-bg-action;
   }
 }
 
 .divider {
   flex: 1 0 1;
   width: 1px;
-  background-color: $color-bg-divider;
+  background-color: $color-bg-tertiary;
 }

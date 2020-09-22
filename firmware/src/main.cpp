@@ -473,7 +473,6 @@ void handleHelpCommand(Commander *commander)
   printf("\n");
   printf("! Possible responses / messages:\n");
   printf("! - motors:IS_WORKING                - is connection to the motor controller working (1 if working, 0 for not working)\n");
-  printf("! - rpm:TARGET_RPM                   - lidar target rpm\n");
   printf("! - pong                             - response to ping\n");
   printf("! - reset                            - usb connection state changed\n");
   printf("! - e:LEFT:RIGHT                     - motor encoders absolute position for left and right motors\n");
@@ -484,6 +483,7 @@ void handleHelpCommand(Commander *commander)
   printf("! - c:CURRENT_LEFT:CURRENT_RIGHT     - motors currents in hundreths of amps (1253 means 12.53A etc)\n");
   printf("! - a:ROLL:PITCH_YAW                 - ahrs attitude in degrees\n");
   printf("! - h:LOOP_FREQUENCY:LOAD_PERCENTAGE - heartbeat with measured loop frequency and main thread load\n");
+  printf("! - m:M1_A:M1_D:M1_Q:...             - lidar measurement angle, distance, quality (4 measurements at a time)\n");
   printf("! - l:IS_RUNNING:IS_VALID:TARGET_RPM:CURRENT_RPM:MOTOR_PWN - lidar state\n");
   printf("\n");
 }
@@ -535,9 +535,6 @@ void handleRpmCommand(Commander *commander)
   int targetRpm = commander->getIntArgument(0);
 
   lidar.setTargetRpm(targetRpm);
-
-  // report new target rpm
-  send("rpm:%d\n", targetRpm);
 
   reportLidarState();
 }
@@ -836,7 +833,7 @@ void stepLidar()
     Lidar::Measurement *measurement4 = lidar.getMeasurement(readLidarMeasurementCount++);
 
     // send the measurements
-    send("l:%d:%d:%d:%d:%d:%d:%d:%d:%d:%d:%d:%d\n", measurement1->angle, measurement1->distance, measurement1->quality, measurement2->angle, measurement2->distance, measurement2->quality, measurement3->angle, measurement3->distance, measurement3->quality, measurement4->angle, measurement4->distance, measurement4->quality);
+    send("m:%d:%d:%d:%d:%d:%d:%d:%d:%d:%d:%d:%d\n", measurement1->angle, measurement1->distance, measurement1->quality, measurement2->angle, measurement2->distance, measurement2->quality, measurement3->angle, measurement3->distance, measurement3->quality, measurement4->angle, measurement4->distance, measurement4->quality);
   } while (true);
 }
 

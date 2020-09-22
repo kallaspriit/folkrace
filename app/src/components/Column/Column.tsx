@@ -13,7 +13,7 @@ export const Column: React.FC<ColumnProps> = ({ autoscroll, children, ...rest })
 
   if (autoscroll) {
     return (
-      <Flex column scrollable flexRef={ref} {...rest}>
+      <Flex column scrollable ref={ref} {...rest}>
         {children}
       </Flex>
     );
