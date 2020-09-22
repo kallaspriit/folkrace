@@ -17,8 +17,6 @@ export interface StatusProps {
 export const Status: React.FC<StatusProps> = ({ title, description, status, icon }) => (
   <Column
     center
-    padded
-    compact
     className={classNames(styles.status, {
       [styles["status--good"]]: status === "good",
       [styles["status--warn"]]: status === "warn",
@@ -26,8 +24,10 @@ export const Status: React.FC<StatusProps> = ({ title, description, status, icon
     })}
   >
     <Container className={styles["icon-wrap"]}>{icon}</Container>
-    <P compact>{title}</P>
-    <P compact small>
+    <P compact center>
+      {title}
+    </P>
+    <P compact small center>
       {description}
     </P>
   </Column>

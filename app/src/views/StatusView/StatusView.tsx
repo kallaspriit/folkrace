@@ -1,4 +1,5 @@
 import React from "react";
+import { BatteryStatus } from "../../components/BatteryStatus/BatteryStatus";
 import { FirmwareStatus } from "../../components/FirmwareStatus/FirmwareStatus";
 import { Grid } from "../../components/Grid/Grid";
 import { SerialStatus } from "../../components/SerialStatus/SerialStatus";
@@ -12,6 +13,7 @@ export const StatusView: React.FC = () => (
       <SerialStatus />
       <TransportStatus />
       <FirmwareStatus />
+      <BatteryStatus />
     </Grid>
   </View>
 );

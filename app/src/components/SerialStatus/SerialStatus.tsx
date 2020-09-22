@@ -13,9 +13,6 @@ export const SerialStatus: React.FC = () => {
     <Status
       title="Serial"
       description={getSerialStatusName(serialStatus)}
-      // description={
-      //   serialStatus === SerialStatusEnum.CONNECTED && usb !== undefined ? usb.name : getSerialStatusName(serialStatus)
-      // }
       status={getSerialStatusStateStatus(serialStatus)}
       icon={<SerialIcon />}
     />
