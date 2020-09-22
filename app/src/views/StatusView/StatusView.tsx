@@ -1,4 +1,5 @@
 import React from "react";
+import { FirmwareStatus } from "../../components/FirmwareStatus/FirmwareStatus";
 import { Grid } from "../../components/Grid/Grid";
 import { SerialStatus } from "../../components/SerialStatus/SerialStatus";
 import { TransportStatus } from "../../components/TransportStatus/TransportStatus";
@@ -10,6 +11,7 @@ export const StatusView: React.FC = () => (
     <Grid className={styles["status-grid"]}>
       <SerialStatus />
       <TransportStatus />
+      <FirmwareStatus />
     </Grid>
   </View>
 );
