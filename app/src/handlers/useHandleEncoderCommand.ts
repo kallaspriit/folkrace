@@ -1,9 +1,9 @@
-import { useRecoilState } from "recoil";
+import { useSetRecoilState } from "recoil";
 import { assertArgumentCount } from "../services/assertArgumentCount";
 import { encodersState } from "../state/encodersState";
 
 export function useHandleEncoderCommand() {
-  const [, setEncoders] = useRecoilState(encodersState);
+  const setEncoders = useSetRecoilState(encodersState);
 
   // for example "e:1253:1314" means left motor has travelled 1253 steps and right 1314 steps
   return (args: string[]) => {

@@ -1,9 +1,9 @@
-import { useRecoilState } from "recoil";
+import { useSetRecoilState } from "recoil";
 import { assertArgumentCount } from "../services/assertArgumentCount";
 import { currentsState } from "../state/currentsState";
 
 export function useHandleCurrentCommand() {
-  const [, setCurrents] = useRecoilState(currentsState);
+  const setCurrents = useSetRecoilState(currentsState);
 
   // for example "current:1253:1314" means 12.53A for the left motor and 13.14A for the right
   return (args: string[]) => {

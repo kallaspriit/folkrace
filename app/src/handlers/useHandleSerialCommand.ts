@@ -1,11 +1,11 @@
-import { useRecoilState } from "recoil";
+import { useSetRecoilState } from "recoil";
 import { assertArgumentCount } from "../services/assertArgumentCount";
 import { SerialStatus, serialStatusState } from "../state/serialStatusState";
 
 type SerialType = "usb" | "bluetooth";
 
 export function useHandleSerialStatusCommand() {
-  const [, setSerialStatus] = useRecoilState(serialStatusState);
+  const setSerialStatus = useSetRecoilState(serialStatusState);
 
   // for example "button:start:1" means start button is pressed, "button:left:0" means left bumper was released
   return (args: string[]) => {

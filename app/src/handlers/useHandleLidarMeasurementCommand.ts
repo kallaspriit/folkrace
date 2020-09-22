@@ -1,11 +1,10 @@
-import { useRecoilState, useSetRecoilState } from "recoil";
+import { useSetRecoilState } from "recoil";
 import { assertArgumentCount } from "../services/assertArgumentCount";
 import { lidarMeasurementsState, LidarMeasurement } from "../state/lidarMeasurementsState";
 
 const maxMeasurementCount = 360;
 
 export function useHandleLidarMeasurementCommand() {
-  // const [existingLidarMeasurements, setLidarMeasurements] = useRecoilState(lidarMeasurementsState);
   const setLidarMeasurements = useSetRecoilState(lidarMeasurementsState);
 
   // for example "m:a1:a2:a3:b1:b2:b3:d1:d2:d3:e1:e2:e3" means four measurements with angle, distance, quality

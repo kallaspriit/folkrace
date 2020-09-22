@@ -1,9 +1,9 @@
-import { useRecoilState } from "recoil";
+import { useSetRecoilState } from "recoil";
 import { assertArgumentCount } from "../services/assertArgumentCount";
 import { serverIpState } from "../state/serverIpState";
 
 export function useHandleIpCommand() {
-  const [, setServerIp] = useRecoilState(serverIpState);
+  const setServerIp = useSetRecoilState(serverIpState);
 
   // for example "ip:192.168.1.123"
   return (args: string[]) => {

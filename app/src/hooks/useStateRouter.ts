@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useRecoilState } from "recoil";
+import { useSetRecoilState } from "recoil";
 import { TransportListener } from "../lib/transport";
 import { multiTransport } from "../services/multiTransport";
 import { activeTransportNameState } from "../state/activeTransportNameState";
@@ -16,18 +16,16 @@ import { useTransportListener } from "./useTransportListener";
 
 // listens for events from multi-transport and forwards it to state
 export function useStateRouter() {
-  const [transportState, setTransportState] = useRecoilState(transportStatusState);
-  const [, setActiveTransportName] = useRecoilState(activeTransportNameState);
-  const [, setTimer] = useRecoilState(timerState);
+  const setTransportState = useSetRecoilState(transportStatusState);
+  const setActiveTransportName = useSetRecoilState(activeTransportNameState);
+  const setTimer = useSetRecoilState(timerState);
   const log = useLog();
   const handleCommand = useHandleCommand();
 
   const currentTransportState = multiTransport.getState();
 
   // set initial transport state
-  if (transportState !== currentTransportState) {
-    setTransportState(currentTransportState);
-  }
+  setTransportState(currentTransportState);
 
   // update timer every second (useful to check something at interval)
   useInterval(() => {

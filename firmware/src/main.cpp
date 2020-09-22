@@ -814,7 +814,17 @@ void stepLidar()
     return;
   }
 
-  // loop through unseen lidar measurements
+  // int queuedMeasurementCount = lidar.getTotalMeasurementCount() - readLidarMeasurementCount;
+
+  // // send queued measurements one by one
+  // for (int i = 0; i < queuedMeasurementCount; i++)
+  // {
+  //   Lidar::Measurement *measurement = lidar.getMeasurement(readLidarMeasurementCount++);
+  //
+  //   send("m:%d:%d:%d\n", measurement->angle, measurement->distance, measurement->quality);
+  // }
+
+  // loop through unseen lidar measurements, send 4 at a time
   do
   {
     // get number of queued measurements
@@ -993,7 +1003,8 @@ int main()
 
     s();
     stepLidar();
-    d("stepLidar", 3000);
+    // d("stepLidar", 3000);
+    d("stepLidar", 30000);
 
     // s();
     // stepImu();

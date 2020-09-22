@@ -1,9 +1,9 @@
-import { useRecoilState } from "recoil";
+import { useSetRecoilState } from "recoil";
 import { assertArgumentCount } from "../services/assertArgumentCount";
 import { lidarStatusState } from "../state/lidarStatusState";
 
 export function useHandleLidarStateCommand() {
-  const [, setLidarStatus] = useRecoilState(lidarStatusState);
+  const setLidarStatus = useSetRecoilState(lidarStatusState);
 
   // for example "l:1:1:3002:2987:56" means lidar is running and valid
   // with target rpm 300.2, current rpm 298.7 and pwm duty 56%
