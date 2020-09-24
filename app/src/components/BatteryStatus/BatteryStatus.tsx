@@ -44,7 +44,7 @@ function getBatteryTitle({ isAlive, voltage }: BatteryInfo) {
 
 function getBatteryDescription({ isAlive, voltage }: BatteryInfo) {
   if (!isAlive) {
-    return "Not responsive";
+    return "Not available";
   } else if (voltage === undefined) {
     return "Unknown";
   }

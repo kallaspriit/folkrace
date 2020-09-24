@@ -30,14 +30,14 @@ export const FirmwareStatus: React.FC = () => {
   return (
     <Status
       title="Firmware"
-      description={getFirmwareStatusName(firmwareInfo)}
-      status={getFirmwareStateStatus(firmwareInfo)}
+      description={getFirmwareDescription(firmwareInfo)}
+      status={getFirmwareStatus(firmwareInfo)}
       icon={<FirmwareIcon />}
     />
   );
 };
 
-function getFirmwareStatusName({ isAlive, areMotorsConnected, load, loopFrequency }: FirmwareInfo) {
+function getFirmwareDescription({ isAlive, areMotorsConnected, load, loopFrequency }: FirmwareInfo) {
   if (!isAlive) {
     return "Not responsive";
   } else if (!areMotorsConnected) {
@@ -51,7 +51,7 @@ function getFirmwareStatusName({ isAlive, areMotorsConnected, load, loopFrequenc
   return `${Math.round(load)}% / ${loopFrequency}Hz`;
 }
 
-function getFirmwareStateStatus({ isAlive, areMotorsConnected, load, loopFrequency }: FirmwareInfo): StateStatus {
+function getFirmwareStatus({ isAlive, areMotorsConnected, load, loopFrequency }: FirmwareInfo): StateStatus {
   if (isAlive) {
     if (!areMotorsConnected) {
       return "warn";
