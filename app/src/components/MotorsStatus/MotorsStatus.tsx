@@ -26,6 +26,10 @@ export function getMotorsDescription(motorsConnected: boolean, targetSpeeds: Tar
     return "Not connected";
   }
 
+  if (targetSpeeds.left === 0 && targetSpeeds.right === 0) {
+    return "Stopped";
+  }
+
   return `${targetSpeeds.left} / ${targetSpeeds.right}`;
 }
 
