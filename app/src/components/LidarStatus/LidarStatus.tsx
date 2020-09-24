@@ -36,13 +36,9 @@ export function getLidarStatus(lidarStatus: LidarStatusInfo | undefined): StateS
     return "error";
   }
 
-  if (lidarStatus.isRunning) {
-    if (lidarStatus.isValid) {
-      return "good";
-    }
-
+  if (lidarStatus.isRunning && !lidarStatus.isValid) {
     return "warn";
   }
 
-  return "error";
+  return "good";
 }
