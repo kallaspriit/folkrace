@@ -1,0 +1,50 @@
+@import "../../theme/variables";
+@import "../../theme/functions/grid";
+
+.log {
+  position: relative;
+  padding-bottom: grid(3);
+}
+
+.log-item {
+  font-family: $font-monospace;
+
+  &--info {
+    color: $color-text-secondary;
+  }
+
+  &--send {
+    color: $color-good;
+  }
+
+  &--receive {
+    color: #009999;
+  }
+
+  &--warn {
+    color: $color-warn;
+  }
+
+  &--error {
+    color: $color-error;
+  }
+}
+
+.message-line {
+  display: inline-block;
+  width: grid(6);
+  text-align: right;
+  color: $color-text-tertiary;
+  border-right: 1px solid #404040;
+  padding: 0 grid(1) 0 0;
+  margin-right: grid(1);
+}
+
+.clear-button {
+  position: absolute;
+  width: grid(8);
+  height: grid(8);
+  right: 0;
+  top: 0;
+  padding: grid(1);
+}

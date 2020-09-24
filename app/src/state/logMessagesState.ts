@@ -9,8 +9,10 @@ export enum LogMessageType {
 }
 
 export interface LogMessage {
+  readonly index: number;
   readonly type: LogMessageType;
   readonly message: string;
+  readonly timestamp: number;
   readonly transportName?: string;
 }
 

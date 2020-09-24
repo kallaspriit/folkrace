@@ -6,9 +6,10 @@ import { activeTransportNameState } from "../../state/activeTransportNameState";
 import { serverIpState } from "../../state/serverIpState";
 import { transportStatusState } from "../../state/transportStatusState";
 import { ReactComponent as TransportIcon } from "../../theme/icons/transport-icon.svg";
+import { FlexProps } from "../Flex/Flex";
 import { Status, StateStatus } from "../Status/Status";
 
-export const TransportStatus: React.FC = () => {
+export const TransportStatus: React.FC<FlexProps> = ({ ...rest }) => {
   const activeTransportName = useRecoilValue(activeTransportNameState);
   const transportStatus = useRecoilValue(transportStatusState);
   const serverIp = useRecoilValue(serverIpState);
@@ -19,6 +20,7 @@ export const TransportStatus: React.FC = () => {
       description={getTransportDescription(transportStatus, serverIp)}
       status={getTransportStatus(transportStatus)}
       icon={<TransportIcon />}
+      {...rest}
     />
   );
 };

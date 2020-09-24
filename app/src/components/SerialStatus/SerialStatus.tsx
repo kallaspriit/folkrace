@@ -3,9 +3,10 @@ import { useRecoilValue } from "recoil";
 import { assertUnreachable } from "../../services/assertUnreachable";
 import { serialStatusState, SerialStatus as SerialStatusEnum } from "../../state/serialStatusState";
 import { ReactComponent as SerialIcon } from "../../theme/icons/serial-icon.svg";
+import { FlexProps } from "../Flex/Flex";
 import { Status, StateStatus } from "../Status/Status";
 
-export const SerialStatus: React.FC = () => {
+export const SerialStatus: React.FC<FlexProps> = ({ ...rest }) => {
   const serialStatus = useRecoilValue(serialStatusState);
 
   return (
@@ -14,6 +15,7 @@ export const SerialStatus: React.FC = () => {
       description={getSerialDescription(serialStatus)}
       status={getSerialStatus(serialStatus)}
       icon={<SerialIcon />}
+      {...rest}
     />
   );
 };

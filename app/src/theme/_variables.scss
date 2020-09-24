@@ -23,6 +23,11 @@ $color-text-primary: #FFFFFF;
 $color-text-secondary: #C2CCCC;
 $color-text-tertiary: #858578;
 
+// status colors
+$color-good: #009900;
+$color-warn: #999900;
+$color-error: #990000;
+
 // TODO: what to do with these?
 $color-text-lighter: $color-text-secondary;
 $color-text-darker: $color-text-tertiary;

@@ -3,9 +3,10 @@ import { useRecoilValue } from "recoil";
 import { motorsConnectedState } from "../../state/motorsConnectedState";
 import { targetSpeedsState, TargetSpeedsState } from "../../state/targetSpeedsState";
 import { ReactComponent as MotorsIcon } from "../../theme/icons/motors-icon.svg";
+import { FlexProps } from "../Flex/Flex";
 import { Status, StateStatus } from "../Status/Status";
 
-export const MotorsStatus: React.FC = () => {
+export const MotorsStatus: React.FC<FlexProps> = ({ ...rest }) => {
   const motorsConnected = useRecoilValue(motorsConnectedState);
   const targetSpeeds = useRecoilValue(targetSpeedsState);
 
@@ -15,6 +16,7 @@ export const MotorsStatus: React.FC = () => {
       description={getMotorsDescription(motorsConnected, targetSpeeds)}
       status={getMotorsStatus(motorsConnected)}
       icon={<MotorsIcon />}
+      {...rest}
     />
   );
 };

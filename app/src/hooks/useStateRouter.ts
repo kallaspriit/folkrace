@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { useSetRecoilState } from "recoil";
 import { TransportListener } from "../lib/transport";
 import { multiTransport } from "../services/multiTransport";
@@ -22,15 +22,25 @@ export function useStateRouter() {
   const log = useLog();
   const handleCommand = useHandleCommand();
 
-  const currentTransportState = multiTransport.getState();
-
-  // set initial transport state
-  setTransportState(currentTransportState);
-
-  // update timer every second (useful to check something at interval)
   useInterval(() => {
     setTimer(Date.now());
   }, 1000);
+
+  useEffect(() => {
+    // test log messages
+    log(LogMessageType.INFO, "info message");
+    log(LogMessageType.SEND, "send message");
+    log(LogMessageType.RECEIVE, "receive message");
+    log(LogMessageType.WARN, "warn message");
+    log(LogMessageType.ERROR, "error message");
+
+    const currentTransportState = multiTransport.getState();
+
+    // set initial transport state
+    setTransportState(currentTransportState);
+
+    // update timer every second (useful to check something at interval)
+  }, [log, setTransportState]);
 
   // configure transport listener
   const transportListener = useMemo<TransportListener>(
@@ -40,12 +50,12 @@ export function useStateRouter() {
         setTransportState(newState);
         setActiveTransportName(transport.getName());
 
-        log(LogMessageType.INFO, `# ${transport.getName()} state changed to ${newState}`);
+        log(LogMessageType.INFO, `${transport.getName()} state changed to ${newState}`);
       },
 
       // called on transport error
       onError: (_transport, error) => {
-        log(LogMessageType.ERROR, `@ transport error occurred${error ? ` (${error.message})` : ""}`);
+        log(LogMessageType.ERROR, `transport error occurred${error ? ` (${error.message})` : ""}`);
       },
 
       // called when transport message is sent
@@ -62,7 +72,7 @@ export function useStateRouter() {
               transport.getName(),
             );
           } else {
-            log(LogMessageType.ERROR, `Sending message "${message}" failed`, transport.getName());
+            log(LogMessageType.ERROR, `sending message "${message}" failed`, transport.getName());
           }
         }
       },

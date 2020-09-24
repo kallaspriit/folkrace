@@ -29,16 +29,16 @@ export const TransportExperiment: React.FC = () => {
       onStateChanged: (transport, newState, _previousState) => {
         setConnectionState(newState);
 
-        log(LogMessageType.INFO, `# ${transport.getName()} state changed to ${newState}`);
+        log(LogMessageType.INFO, `${transport.getName()} state changed to ${newState}`);
       },
       onError: (_transport, error) => {
-        log(LogMessageType.ERROR, `@ transport error occurred${error ? ` (${error.message})` : ""}`);
+        log(LogMessageType.ERROR, `transport error occurred${error ? ` (${error.message})` : ""}`);
       },
       onMessageSent: (transport, message, wasSentSuccessfully: boolean) => {
         if (wasSentSuccessfully) {
           log(LogMessageType.SEND, `${message}${!wasSentSuccessfully ? " [SENDING FAILED]" : ""}`, transport.getName());
         } else {
-          log(LogMessageType.ERROR, `Sending message "${message}" failed`, transport.getName());
+          log(LogMessageType.ERROR, `sending message "${message}" failed`, transport.getName());
         }
       },
       onMessageReceived: (transport, message) => {

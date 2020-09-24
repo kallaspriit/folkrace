@@ -4,6 +4,7 @@ import { config } from "../../config";
 import { aliveState } from "../../state/aliveState";
 import { voltageState } from "../../state/voltageState";
 import { ReactComponent as BatteryIcon } from "../../theme/icons/battery-icon.svg";
+import { FlexProps } from "../Flex/Flex";
 import { Status, StateStatus } from "../Status/Status";
 
 interface BatteryInfo {
@@ -11,7 +12,7 @@ interface BatteryInfo {
   voltage: number | undefined;
 }
 
-export const BatteryStatus: React.FC = () => {
+export const BatteryStatus: React.FC<FlexProps> = ({ ...rest }) => {
   const isAlive = useRecoilValue(aliveState);
   const voltage = useRecoilValue(voltageState);
 
@@ -26,6 +27,7 @@ export const BatteryStatus: React.FC = () => {
       description={getBatteryDescription(batteryInfo)}
       status={getBatteryStatus(batteryInfo)}
       icon={<BatteryIcon />}
+      {...rest}
     />
   );
 };

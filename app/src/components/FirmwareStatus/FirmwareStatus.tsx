@@ -5,6 +5,7 @@ import { loadState } from "../../state/loadState";
 import { loopFrequencyState } from "../../state/loopFrequencyState";
 import { motorsConnectedState } from "../../state/motorsConnectedState";
 import { ReactComponent as FirmwareIcon } from "../../theme/icons/serial-icon.svg";
+import { FlexProps } from "../Flex/Flex";
 import { Status, StateStatus } from "../Status/Status";
 
 interface FirmwareInfo {
@@ -14,7 +15,7 @@ interface FirmwareInfo {
   loopFrequency: number | undefined;
 }
 
-export const FirmwareStatus: React.FC = () => {
+export const FirmwareStatus: React.FC<FlexProps> = ({ ...rest }) => {
   const isAlive = useRecoilValue(aliveState);
   const areMotorsConnected = useRecoilValue(motorsConnectedState);
   const load = useRecoilValue(loadState);
@@ -33,6 +34,7 @@ export const FirmwareStatus: React.FC = () => {
       description={getFirmwareDescription(firmwareInfo)}
       status={getFirmwareStatus(firmwareInfo)}
       icon={<FirmwareIcon />}
+      {...rest}
     />
   );
 };

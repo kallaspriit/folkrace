@@ -3,6 +3,8 @@ import { useSetRecoilState } from "recoil";
 import { assertUnreachable } from "../services/assertUnreachable";
 import { logMessagesState, LogMessageType } from "../state/logMessagesState";
 
+let logMessageCount = 0;
+
 export function useLog() {
   const setLogMessagesState = useSetRecoilState(logMessagesState);
 
@@ -12,8 +14,10 @@ export function useLog() {
       setLogMessagesState((logMessages) => [
         ...logMessages,
         {
+          index: logMessageCount++,
           type,
           message,
+          timestamp: Date.now(),
           transportName,
         },
       ]);

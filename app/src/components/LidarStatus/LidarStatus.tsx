@@ -2,9 +2,10 @@ import React from "react";
 import { useRecoilValue } from "recoil";
 import { lidarStatusState, LidarStatus as LidarStatusInfo } from "../../state/lidarStatusState";
 import { ReactComponent as LidarIcon } from "../../theme/icons/lidar-icon.svg";
+import { FlexProps } from "../Flex/Flex";
 import { Status, StateStatus } from "../Status/Status";
 
-export const LidarStatus: React.FC = () => {
+export const LidarStatus: React.FC<FlexProps> = ({ ...rest }) => {
   const lidarStatus = useRecoilValue(lidarStatusState);
 
   return (
@@ -13,6 +14,7 @@ export const LidarStatus: React.FC = () => {
       description={getLidarDescription(lidarStatus)}
       status={getLidarStatus(lidarStatus)}
       icon={<LidarIcon />}
+      {...rest}
     />
   );
 };
