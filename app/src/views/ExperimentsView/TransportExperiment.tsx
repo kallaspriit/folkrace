@@ -26,7 +26,7 @@ export const TransportExperiment: React.FC = () => {
   // transport listener, just logs everything
   const transportListener = useMemo<TransportListener>(
     () => ({
-      onStateChanged: (transport, newState, _previousState) => {
+      onStatusChanged: (transport, newState, _previousState) => {
         setConnectionState(newState);
 
         log(LogMessageType.INFO, `${transport.getName()} state changed to ${newState}`);

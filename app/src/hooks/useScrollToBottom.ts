@@ -1,4 +1,8 @@
+import { useState } from "react";
+
 export function useScrollToBottom(ref: React.RefObject<HTMLElement>, isEnabled = true) {
+  const [isFirstExecution, setIsFirstExecution] = useState(true);
+
   if (!isEnabled) {
     return;
   }
@@ -15,8 +19,13 @@ export function useScrollToBottom(ref: React.RefObject<HTMLElement>, isEnabled =
   const isNearBottom = el.scrollHeight - el.clientHeight <= el.scrollTop + 50;
 
   // only force the scroll if near bottom
-  if (!isNearBottom) {
+  if (!isNearBottom && !isFirstExecution) {
     return;
+  }
+
+  // set not first execution
+  if (isFirstExecution) {
+    setIsFirstExecution(false);
   }
 
   // execute next frame in case height changes

@@ -8,7 +8,7 @@ export interface RenderCountProps {
 export const RenderCount: React.FC<RenderCountProps> = ({ label }) => {
   const renderCount = useRenderCount(label);
 
-  return <NameValuePair name="Render count" value={renderCount} />;
+  return <NameValuePair name="Render count">{renderCount}</NameValuePair>;
 };
 
 const renderCountMap: Record<string, number | undefined> = {};

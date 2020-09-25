@@ -6,7 +6,7 @@ export enum TransportStatus {
 }
 
 export interface TransportListener {
-  onStateChanged(transport: Transport, newState: TransportStatus, previousState: TransportStatus): void;
+  onStatusChanged(transport: Transport, newStatus: TransportStatus, previousStatus: TransportStatus): void;
   onError(transport: Transport, error?: Error): void;
   onMessageSent(transport: Transport, message: string, wasSentSuccessfully: boolean): void;
   onMessageReceived(transport: Transport, message: string): void;

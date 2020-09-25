@@ -65,7 +65,7 @@ export const MainMenuView: React.FC = () => {
   const { params } = useRouteMatch<MainMenuViewParams>();
   const history = useHistory();
 
-  useDisableScrolling();
+  // useDisableScrolling();
 
   const activeMenuInfo = getMenuByName(params.menu);
 

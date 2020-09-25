@@ -57,7 +57,7 @@ export const ConfigureConnectionView: React.FC = () => {
           register={register({ required: "Hostname is required" })}
         />
         <GridBox half />
-        <NameValuePair name="Transport status" value={transportStatus} />
+        <NameValuePair name="Transport status">{transportStatus}</NameValuePair>
         <GridBox half />
         <Expanded />
         <BlockButton type="submit" onClick={handleSubmit(onSubmit)}>

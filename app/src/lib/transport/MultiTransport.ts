@@ -57,7 +57,7 @@ export class MultiTransport implements Transport {
     }
 
     // report initial state
-    listener.onStateChanged(activeTransport, activeTransport.getState(), TransportStatus.DISCONNECTED);
+    listener.onStatusChanged(activeTransport, activeTransport.getState(), TransportStatus.DISCONNECTED);
   }
 
   removeListener(listener: TransportListener) {
@@ -104,14 +104,14 @@ export class MultiTransport implements Transport {
   addTransport(transport: Transport) {
     // listen for transport events and forward active transport events
     transport.addListener({
-      onStateChanged: (eventTransport, newState, previousState) => {
+      onStatusChanged: (eventTransport, newState, previousState) => {
         const activeTransport = this.getActiveTransport();
 
         if (eventTransport !== activeTransport) {
           return;
         }
 
-        this.listeners.forEach((listener) => listener.onStateChanged(eventTransport, newState, previousState));
+        this.listeners.forEach((listener) => listener.onStatusChanged(eventTransport, newState, previousState));
       },
       onError: (eventTransport, error) => {
         const activeTransport = this.getActiveTransport();

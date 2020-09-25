@@ -10,14 +10,12 @@ export const config = {
     useSSL: false,
     reconnectInterval: 3000,
   },
-  rules: {
-    battery: {
-      low: 15.0,
-      // critical: 13.9,
-      // TODO: using higher threshold for testing
-      critical: 14.5,
-      alarmInterval: 5000,
-    },
+  battery: {
+    low: 15.0,
+    // critical: 13.9,
+    // TODO: using higher threshold for testing
+    critical: 14.5,
+    alarmInterval: 5000,
   },
   vehicle: {
     trackWidth: 0.12, // meters
@@ -26,5 +24,14 @@ export const config = {
     encoderCountsPerRotation: 20, // encoder pulse count per revolution
     gearboxRatio: 25, // 25/1 gearbox ratio
     speedUpdateInterval: 1000 / 100, // 100Hz
+  },
+  rates: {
+    rcRate: 1.0,
+    expoRate: 0.0,
+    superRate: 0.7,
+  },
+  log: {
+    ignoreSentCommands: ["s"],
+    ignoreReceivedCommands: ["s", "e", "h", "m", "v"],
   },
 };

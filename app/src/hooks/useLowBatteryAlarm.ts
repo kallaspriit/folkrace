@@ -6,7 +6,7 @@ import { useInterval } from "./useInterval";
 
 export function useLowBatteryAlarm() {
   const batteryVoltage = useRecoilValue(voltageState);
-  const isBatteryCritical = batteryVoltage !== undefined && batteryVoltage <= config.rules.battery.critical;
+  const isBatteryCritical = batteryVoltage !== undefined && batteryVoltage <= config.battery.critical;
   const [play] = useSound("/sounds/low-battery.mp3");
 
   useInterval(() => {
@@ -15,5 +15,5 @@ export function useLowBatteryAlarm() {
     }
 
     play();
-  }, config.rules.battery.alarmInterval);
+  }, config.battery.alarmInterval);
 }

@@ -1,7 +1,9 @@
 import { useMemo, useEffect } from "react";
 import { useSetRecoilState } from "recoil";
-import { TransportListener } from "../lib/transport";
+import { config } from "../config";
+import { TransportListener, TransportStatus } from "../lib/transport";
 import { multiTransport } from "../services/multiTransport";
+import { robot } from "../services/robot";
 import { activeTransportNameState } from "../state/activeTransportNameState";
 import { LogMessageType } from "../state/logMessagesState";
 import { timerState } from "../state/timerState";
@@ -16,7 +18,7 @@ import { useTransportListener } from "./useTransportListener";
 
 // listens for events from multi-transport and forwards it to state
 export function useStateRouter() {
-  const setTransportState = useSetRecoilState(transportStatusState);
+  const setTransportStatus = useSetRecoilState(transportStatusState);
   const setActiveTransportName = useSetRecoilState(activeTransportNameState);
   const setTimer = useSetRecoilState(timerState);
   const log = useLog();
@@ -37,20 +39,25 @@ export function useStateRouter() {
     const currentTransportState = multiTransport.getState();
 
     // set initial transport state
-    setTransportState(currentTransportState);
+    setTransportStatus(currentTransportState);
 
     // update timer every second (useful to check something at interval)
-  }, [log, setTransportState]);
+  }, [log, setTransportStatus]);
 
   // configure transport listener
   const transportListener = useMemo<TransportListener>(
     () => ({
       // called when active transport state changes
-      onStateChanged: (transport, newState, _previousState) => {
-        setTransportState(newState);
+      onStatusChanged: (transport, newStatus, previousStatus) => {
+        setTransportStatus(newStatus);
         setActiveTransportName(transport.getName());
 
-        log(LogMessageType.INFO, `${transport.getName()} state changed to ${newState}`);
+        // request state once connected
+        if (newStatus === TransportStatus.CONNECTED) {
+          robot.requestState();
+        }
+
+        log(LogMessageType.INFO, `${transport.getName()} state changed from ${previousStatus} to ${newStatus}`);
       },
 
       // called on transport error
@@ -61,10 +68,9 @@ export function useStateRouter() {
       // called when transport message is sent
       onMessageSent: (transport, message, wasSentSuccessfully: boolean) => {
         const [command] = message.split(":");
-        const noLogCommands: string[] = [];
 
         // don't log blacklisted messages
-        if (!noLogCommands.includes(command)) {
+        if (!config.log.ignoreSentCommands.includes(command)) {
           if (wasSentSuccessfully) {
             log(
               LogMessageType.SEND,
@@ -80,10 +86,9 @@ export function useStateRouter() {
       // called when transport message is received
       onMessageReceived: (transport, message) => {
         const [command, ...args] = message.split(":");
-        const noLogCommands: string[] = [];
 
         // don't blacklisted messages
-        if (command.length > 1 && !noLogCommands.includes(command)) {
+        if (!config.log.ignoreReceivedCommands.includes(command)) {
           log(LogMessageType.RECEIVE, message, transport.getName());
         }
 

@@ -13,29 +13,10 @@ export interface GamepadManagerOptions {
 
 export class GamepadManager {
   gamepads: ManagedGamepad[] = [];
-  private options: Required<GamepadManagerOptions>;
-  private log: Logger;
   private _handleGamepadConnected = this.handleGamepadConnected.bind(this);
   private _handleGamepadDisconnected = this.handleGamepadDisconnected.bind(this);
 
-  constructor(options: GamepadManagerOptions = {}) {
-    this.options = {
-      log: dummyLogger,
-      autoPoll: true,
-      defaultDeadzone: 0,
-      onConnect: (_gamepad) => {
-        // nothing by default
-      },
-      onDisconnect: (_gamepad) => {
-        // nothing by default
-      },
-      onUpdate: (_gamepad) => {
-        // nothing by default
-      },
-      ...options,
-    };
-    this.log = this.options.log;
-
+  constructor(private options: GamepadManagerOptions = {}) {
     // detect gamepad support
     if (typeof navigator.getGamepads !== "function") {
       this.log.info("gamepads are not supported");
@@ -49,8 +30,10 @@ export class GamepadManager {
     // listen for gamepad disconnect events
     window.addEventListener("gamepaddisconnected", this._handleGamepadDisconnected);
 
+    // get existing gamepads
     const gamepads = Array.from(navigator.getGamepads());
 
+    // register existing gamepads
     gamepads.forEach((gamepad) => {
       if (!gamepad) {
         return;
@@ -60,6 +43,14 @@ export class GamepadManager {
         gamepad: gamepad,
       } as unknown) as Event);
     });
+  }
+
+  get log() {
+    if (!this.options.log) {
+      return dummyLogger;
+    }
+
+    return this.options.log;
   }
 
   destroy() {
@@ -79,26 +70,41 @@ export class GamepadManager {
       `gamepad #${gamepad.index} "${gamepad.id}" connected (${gamepad.buttons.length} buttons, ${gamepad.axes.length} axes)`,
     );
 
+    // use provided deadzone if available, otherwise calculate default deadzone
+    const defaultDeadzone =
+      this.options.defaultDeadzone !== undefined
+        ? this.options.defaultDeadzone
+        : GamepadManager.getAutoDeadzone([...gamepad.axes]);
+
+    console.log({ defaultDeadzone });
+
     // create managed gamepad
     const managedGamepad = new ManagedGamepad({
+      id: gamepad.id,
       index: gamepad.index,
-      defaultDeadzone: this.options.defaultDeadzone,
+      defaultDeadzone,
       log: this.log,
     });
-
-    // listen for updates, trigger update events
-    managedGamepad.addUpdateListener((updatedGamepad) => this.options.onUpdate(updatedGamepad));
-
-    // start polling if requested automatically
-    if (this.options.autoPoll) {
-      managedGamepad.startPolling();
-    }
 
     // store reference
     this.gamepads.push(managedGamepad);
 
+    const { onConnect, onUpdate, autoPoll = true } = this.options;
+
     // trigger connect event
-    this.options.onConnect(managedGamepad);
+    if (onConnect) {
+      onConnect(managedGamepad);
+    }
+
+    // listen for updates, trigger update events
+    if (onUpdate) {
+      managedGamepad.addUpdateListener(onUpdate);
+    }
+
+    // start polling if requested automatically
+    if (autoPoll) {
+      managedGamepad.startPolling();
+    }
   }
 
   handleGamepadDisconnected(e: Event) {
@@ -125,8 +131,27 @@ export class GamepadManager {
     // stop polling
     managedGamepad.stopPolling();
 
+    const { onDisconnect } = this.options;
+
     // trigger disconnect event
-    this.options.onDisconnect(managedGamepad);
+    if (onDisconnect) {
+      onDisconnect(managedGamepad);
+    }
+  }
+
+  static getAutoDeadzone(axes: number[], multiplier = 1.5) {
+    let maxAxisValue = 0;
+
+    axes.forEach((axisValue) => {
+      const absValue = Math.abs(axisValue);
+
+      if (absValue > maxAxisValue) {
+        maxAxisValue = absValue;
+      }
+    });
+
+    // add some headroom as current offset might not be the worst possible
+    return maxAxisValue * multiplier;
   }
 
   getGamepadByIndex(index: number) {

@@ -73,7 +73,7 @@ export class SimulatedTransport implements Transport {
     this.state = newState;
 
     // notify the listeners of state change
-    this.listeners.forEach((listener) => listener.onStateChanged(this, newState, previousState));
+    this.listeners.forEach((listener) => listener.onStatusChanged(this, newState, previousState));
   }
 
   private onMessageReceived(message: string) {

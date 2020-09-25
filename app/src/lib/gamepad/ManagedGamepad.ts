@@ -2,6 +2,7 @@ import { dummyLogger, Logger } from "ts-log";
 
 export interface ManagedGamepadOptions {
   readonly index: number;
+  readonly id: string;
   readonly defaultDeadzone?: number;
   readonly log?: Logger;
 }
@@ -12,7 +13,7 @@ export class ManagedGamepad {
   index: number;
   axes: number[] = [];
   buttons: GamepadButton[] = [];
-  private deadzone: number[] = [];
+  private axisDeadzone: number[] = [];
   private defaultDeadzone: number = 0;
   private readonly options: Required<ManagedGamepadOptions>;
   private readonly log: Logger;
@@ -34,8 +35,12 @@ export class ManagedGamepad {
     this.poll();
   }
 
-  setDeadzone(axisIndex: number, deadzone: number) {
-    this.deadzone[axisIndex] = deadzone;
+  get id() {
+    return this.options.id;
+  }
+
+  setAxisDeadzone(axisIndex: number, deadzone: number) {
+    this.axisDeadzone[axisIndex] = deadzone;
   }
 
   setDefaultDeadzone(deadzone: number) {
@@ -132,7 +137,7 @@ export class ManagedGamepad {
 
   private applyDeadzone() {
     this.axes = this.axes.map((value, index) => {
-      const deadzone = this.deadzone[index] !== undefined ? this.deadzone[index] : this.defaultDeadzone;
+      const deadzone = this.axisDeadzone[index] !== undefined ? this.axisDeadzone[index] : this.defaultDeadzone;
 
       if (Math.abs(value) < deadzone) {
         return 0;

@@ -34,6 +34,10 @@ export class Robot {
     this.send("s", left, right);
   }
 
+  stop() {
+    this.setSpeed(0, 0);
+  }
+
   ping(transportOnly = false) {
     this.pingSentTime = Date.now();
 

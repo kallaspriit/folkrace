@@ -4,12 +4,23 @@ import { Row } from "../Row/Row";
 
 export interface NameValuePairProps {
   name: React.ReactNode;
-  value: React.ReactNode;
+  vertical?: boolean;
 }
 
-export const NameValuePair: React.FC<NameValuePairProps> = ({ name, value }) => (
-  <Row mainAxisAlignment="space-between">
-    {typeof name === "string" ? <P>{name}</P> : name}
-    {typeof value === "string" ? <P>{value}</P> : value}
-  </Row>
-);
+export const NameValuePair: React.FC<NameValuePairProps> = ({ name, vertical, children }) => {
+  if (vertical) {
+    return (
+      <>
+        <P>{name}</P>
+        {typeof children === "string" ? <P small>{children}</P> : children}
+      </>
+    );
+  }
+
+  return (
+    <Row mainAxisAlignment="space-between">
+      {typeof name === "string" ? <P>{name}</P> : name}
+      {typeof children === "string" ? <P>{children}</P> : children}
+    </Row>
+  );
+};
