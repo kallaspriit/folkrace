@@ -14,7 +14,7 @@ export const FirmwareStatus: React.FC<FlexProps> = ({ ...rest }) => {
   const load = useRecoilValue(loadState);
   const loopFrequency = useRecoilValue(loopFrequencyState);
 
-  const getFirmwareDescription = () => {
+  const getDescription = () => {
     if (!isAlive) {
       return "Not responsive";
     } else if (!areMotorsConnected) {
@@ -28,13 +28,13 @@ export const FirmwareStatus: React.FC<FlexProps> = ({ ...rest }) => {
     return `${Math.round(load)}% / ${loopFrequency}Hz`;
   };
 
-  const getFirmwareStatus = (): StateStatus => {
+  const getStatus = (): StateStatus => {
     if (isAlive) {
       if (!areMotorsConnected) {
         return "warn";
       } else if (load !== undefined && load > 100) {
         return "warn";
-      } else if (loopFrequency !== undefined && loopFrequency < 60) {
+      } else if (loopFrequency !== undefined && loopFrequency < 59) {
         return "warn";
       }
 
@@ -45,12 +45,6 @@ export const FirmwareStatus: React.FC<FlexProps> = ({ ...rest }) => {
   };
 
   return (
-    <Status
-      title="Firmware"
-      description={getFirmwareDescription()}
-      status={getFirmwareStatus()}
-      icon={<FirmwareIcon />}
-      {...rest}
-    />
+    <Status title="Firmware" description={getDescription()} status={getStatus()} icon={<FirmwareIcon />} {...rest} />
   );
 };

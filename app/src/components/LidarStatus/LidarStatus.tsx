@@ -10,7 +10,7 @@ export const LidarStatus: React.FC<FlexProps> = ({ ...rest }) => {
   const isAlive = useRecoilValue(aliveState);
   const lidarStatus = useRecoilValue(lidarStatusState);
 
-  const getLidarDescription = (): string => {
+  const getDescription = (): string => {
     if (!isAlive) {
       return "Offline";
     }
@@ -28,7 +28,7 @@ export const LidarStatus: React.FC<FlexProps> = ({ ...rest }) => {
     return `${lidarStatus.currentRpm} / ${lidarStatus.targetRpm} RPM`;
   };
 
-  const getLidarStatus = (): StateStatus => {
+  const getStatus = (): StateStatus => {
     if (!lidarStatus || !isAlive) {
       return "error";
     }
@@ -48,13 +48,5 @@ export const LidarStatus: React.FC<FlexProps> = ({ ...rest }) => {
     return "error";
   };
 
-  return (
-    <Status
-      title="Lidar"
-      description={getLidarDescription()}
-      status={getLidarStatus()}
-      icon={<LidarIcon />}
-      {...rest}
-    />
-  );
+  return <Status title="Lidar" description={getDescription()} status={getStatus()} icon={<LidarIcon />} {...rest} />;
 };

@@ -32,6 +32,6 @@ export const config = {
   },
   log: {
     ignoreSentCommands: ["s"],
-    ignoreReceivedCommands: ["s", "e", "h", "m", "v"],
+    ignoreReceivedCommands: ["s", "t", "e", "h", "m", "v"],
   },
 };

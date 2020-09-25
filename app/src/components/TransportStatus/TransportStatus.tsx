@@ -14,7 +14,7 @@ export const TransportStatus: React.FC<FlexProps> = ({ ...rest }) => {
   const transportStatus = useRecoilValue(transportStatusState);
   const serverIp = useRecoilValue(serverIpState);
 
-  const getTransportDescription = (): string => {
+  const getDescription = (): string => {
     if (transportStatus === TransportStatusEnum.CONNECTED && serverIp !== undefined) {
       return serverIp;
     }
@@ -40,7 +40,7 @@ export const TransportStatus: React.FC<FlexProps> = ({ ...rest }) => {
     }
   };
 
-  const getTransportStatus = (): StateStatus => {
+  const getStatus = (): StateStatus => {
     switch (transportStatus) {
       case TransportStatusEnum.DISCONNECTED:
         return "error";
@@ -65,8 +65,8 @@ export const TransportStatus: React.FC<FlexProps> = ({ ...rest }) => {
   return (
     <Status
       title={activeTransportName ?? "Transport"}
-      description={getTransportDescription()}
-      status={getTransportStatus()}
+      description={getDescription()}
+      status={getStatus()}
       icon={<TransportIcon />}
       {...rest}
     />

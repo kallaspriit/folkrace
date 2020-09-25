@@ -1,6 +1,6 @@
 import { atom } from "recoil";
 
-// represents motor speeds in amps
+// represents target motor speeds in ticks per second
 export interface TargetSpeedsState {
   readonly left: number;
   readonly right: number;

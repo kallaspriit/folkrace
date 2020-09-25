@@ -5,7 +5,7 @@ import { RemoteController } from "../lib/remote-controller";
 import { calculateControllerRate } from "../services/calculateControllerRate";
 import { robot } from "../services/robot";
 
-export function useRemoteControl() {
+export function useRemoteControl(isEnabled = true) {
   const [gamepadName, setGamepadName] = useState<string>();
 
   useEffect(() => {
@@ -30,6 +30,11 @@ export function useRemoteControl() {
         setGamepadName(remainingGamepad?.id);
       },
       onUpdate: (gamepad) => {
+        // ignore if not enabled
+        if (!isEnabled) {
+          return;
+        }
+
         // use rate inputs to have better control around center axes
         const speed = calculateControllerRate(gamepad.axes[3] * -1, config.rates);
         const omega = calculateControllerRate(gamepad.axes[0], config.rates);
@@ -44,7 +49,7 @@ export function useRemoteControl() {
       gamepadManager.destroy();
       robot.stop();
     };
-  }, []);
+  }, [isEnabled]);
 
   return {
     gamepadName,

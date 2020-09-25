@@ -11,7 +11,7 @@ export const BatteryStatus: React.FC<FlexProps> = ({ ...rest }) => {
   const isAlive = useRecoilValue(aliveState);
   const voltage = useRecoilValue(voltageState);
 
-  const getBatteryTitle = () => {
+  const getTitle = () => {
     if (isAlive && voltage !== undefined) {
       if (voltage < config.battery.critical) {
         return "Battery critical";
@@ -23,7 +23,7 @@ export const BatteryStatus: React.FC<FlexProps> = ({ ...rest }) => {
     return "Battery";
   };
 
-  const getBatteryDescription = () => {
+  const getDescription = () => {
     if (!isAlive) {
       return "Offline";
     } else if (voltage === undefined) {
@@ -33,7 +33,7 @@ export const BatteryStatus: React.FC<FlexProps> = ({ ...rest }) => {
     return `${voltage.toFixed(1)}V`;
   };
 
-  const getBatteryStatus = (): StateStatus => {
+  const getStatus = (): StateStatus => {
     if (!isAlive) {
       return "error";
     } else if (voltage === undefined) {
@@ -48,12 +48,6 @@ export const BatteryStatus: React.FC<FlexProps> = ({ ...rest }) => {
   };
 
   return (
-    <Status
-      title={getBatteryTitle()}
-      description={getBatteryDescription()}
-      status={getBatteryStatus()}
-      icon={<BatteryIcon />}
-      {...rest}
-    />
+    <Status title={getTitle()} description={getDescription()} status={getStatus()} icon={<BatteryIcon />} {...rest} />
   );
 };

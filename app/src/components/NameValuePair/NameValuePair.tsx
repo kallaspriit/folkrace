@@ -12,7 +12,13 @@ export const NameValuePair: React.FC<NameValuePairProps> = ({ name, vertical, ch
     return (
       <>
         <P>{name}</P>
-        {typeof children === "string" ? <P small>{children}</P> : children}
+        {typeof children === "string" ? (
+          <P small secondary>
+            {children}
+          </P>
+        ) : (
+          children
+        )}
       </>
     );
   }

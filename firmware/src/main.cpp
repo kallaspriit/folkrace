@@ -112,6 +112,7 @@ Timer updateRearLedTimer;
 Timer performanceTimer;
 Timer reportLidarStateTimer;
 Timer reportBatteryVoltageTimer;
+Timer reportEncoderTimer;
 Timeout stopMotorsTimeout;
 
 // setup status leds
@@ -136,9 +137,15 @@ DebouncedInterruptIn rightBumper(RIGHT_BUMPER_PIN);
 const int SEND_BUFFER_SIZE = 64;
 static char sendBuffer[SEND_BUFFER_SIZE];
 
-// keep track of encoder values
+// keep track of last reported values
 uint32_t lastEncoderDeltaM1 = 0;
 uint32_t lastEncoderDeltaM2 = 0;
+uint32_t lastSpeedM1 = 0;
+uint32_t lastSpeedM2 = 0;
+
+// for the logic side to calculate correct speed when motors stop, firmware needs to send the same
+// encoder values twice
+bool haveReportedSameEncoderValues = false;
 
 // track button state changes (default to unknown)
 int lastStartButtonState = -1;
@@ -361,19 +368,77 @@ void reportEncoderValues(bool force = false)
     return;
   }
 
-  // don't bother sending the update if the speeds have not changed
-  if (!force && labs(encoderDeltaM1 - lastEncoderDeltaM1) == 0 && labs(encoderDeltaM2 - lastEncoderDeltaM2) == 0)
+  // check whether the encoder values have changed since last reported
+  bool haveEncoderValuesChanged = labs(encoderDeltaM1 - lastEncoderDeltaM1) != 0 || labs(encoderDeltaM2 - lastEncoderDeltaM2) != 0;
+
+  // handle encoder values having not changed
+  if (!haveEncoderValuesChanged)
   {
-    return;
+    if (!haveReportedSameEncoderValues)
+    {
+      // encoder values have not changed but we have not done the double-report so don't skip
+      haveReportedSameEncoderValues = true;
+    }
+    else
+    {
+      // encoder values have not changed and have already double-reported the values, skip if force is not required
+      if (!force)
+      {
+        return;
+      }
+    }
+  }
+  else
+  {
+    // encoder values have changed, reset same values boolean
+    haveReportedSameEncoderValues = false;
   }
 
   // keep track of last values
   lastEncoderDeltaM1 = encoderDeltaM1;
   lastEncoderDeltaM2 = encoderDeltaM2;
 
+  int timeSinceLastEncoderReportUs = reportEncoderTimer.elapsed_time().count();
+
+  reportEncoderTimer.reset();
+
   // send the encoder values (convert to int to get negative values)
-  send("e:%d:%d\n", (int)encoderDeltaM1, (int)encoderDeltaM2);
+  send("e:%d:%d:%d\n", (int)encoderDeltaM1, (int)encoderDeltaM2, timeSinceLastEncoderReportUs);
 }
+
+// reports motor speeds (not used, speed is calculated from encoder values instead)
+// void reportMotorSpeeds(bool force = false)
+// {
+//   uint8_t statusM1, statusM2;
+//   bool readSuccessM1, readSuccessM2;
+
+//   uint32_t absSpeedM1 = motors.readSpeedM1(MOTOR_CONTROLLER_ADDRESS, &statusM1, &readSuccessM1);
+//   uint32_t absSpeedM2 = motors.readSpeedM2(MOTOR_CONTROLLER_ADDRESS, &statusM2, &readSuccessM2);
+
+//   handleMotorsCommunicationResult(readSuccessM1);
+//   handleMotorsCommunicationResult(readSuccessM2);
+
+//   // status 0 means fowrard and 1 backwards
+//   int directionM1 = (int)statusM1 == 0 ? 1 : -1;
+//   int directionM2 = (int)statusM2 == 0 ? 1 : -1;
+
+//   // calculate speed with direction
+//   int speedM1 = absSpeedM1 * directionM1;
+//   int speedM2 = absSpeedM2 * directionM2;
+
+//   // don't bother sending the update if the speeds have not changed
+//   if (!force && labs(speedM1 - lastSpeedM1) == 0 && labs(speedM2 - lastSpeedM2) == 0)
+//   {
+//     return;
+//   }
+
+//   // keep track of last values
+//   lastSpeedM1 = speedM1;
+//   lastSpeedM2 = speedM2;
+
+//   // send the motor speeds (convert to int to get negative values)
+//   send("s:%d:%d\n", speedM1, speedM2);
+// }
 
 // reports given button state
 void reportButtonState(string name, int state)
@@ -391,7 +456,7 @@ void reportButtonStates()
 
 void reportTargetSpeed()
 {
-  send("s:%d:%d\n", targetSpeedM1, targetSpeedM2);
+  send("t:%d:%d\n", targetSpeedM1, targetSpeedM2);
 }
 
 void reportLidarState()
@@ -475,10 +540,10 @@ void handleHelpCommand(Commander *commander)
   printf("! - motors:IS_WORKING                - is connection to the motor controller working (1 if working, 0 for not working)\n");
   printf("! - pong                             - response to ping\n");
   printf("! - reset                            - usb connection state changed\n");
-  printf("! - e:LEFT:RIGHT                     - motor encoders absolute position for left and right motors\n");
+  printf("! - e:LEFT:RIGHT:ELAPSED_TIME_US     - motor encoders absolute position for left and right motors with time since last report\n");
   printf("! - b:NAME:IS_PRESSED                - whether given button is pressed (1) or release (0)\n");
-  printf("! - s:SPEED_LEFT:SPEED_RIGHT         - target speed for left and right motors\n");
-  printf("! - s:SPEED_LEFT:SPEED_RIGHT         - target speed for left and right motors\n");
+  printf("! - t:SPEED_LEFT:SPEED_RIGHT         - target speed for left and right motors\n");
+  printf("! - s:SPEED_LEFT:SPEED_RIGHT         - actual speed for left and right motors\n");
   printf("! - v:VOLTAGE                        - main battery voltage in tenths of volts (162 means 16.2V etc)\n");
   printf("! - c:CURRENT_LEFT:CURRENT_RIGHT     - motors currents in hundreths of amps (1253 means 12.53A etc)\n");
   printf("! - a:ROLL:PITCH_YAW                 - ahrs attitude in degrees\n");
@@ -939,6 +1004,7 @@ void setupTimers()
   reportHeartbeatTimer.start();
   reportLidarStateTimer.start();
   reportBatteryVoltageTimer.start();
+  reportEncoderTimer.start();
   loopTimer.start();
 }
 

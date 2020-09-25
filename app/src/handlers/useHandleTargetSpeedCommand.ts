@@ -2,7 +2,7 @@ import { useSetRecoilState } from "recoil";
 import { assertArgumentCount } from "../services/assertArgumentCount";
 import { targetSpeedsState } from "../state/targetSpeedsState";
 
-export function useHandleSpeedCommand() {
+export function useHandleTargetSpeedCommand() {
   const setTargetSpeeds = useSetRecoilState(targetSpeedsState);
 
   // for example "s:1253:1314" means left speed 1253 and right speed 1314

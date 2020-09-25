@@ -10,7 +10,7 @@ import { useHandleLidarStateCommand } from "../handlers/useHandleLidarStateComma
 import { useHandleMotorsCommand } from "../handlers/useHandleMotorsCommand";
 import { useHandleResetCommand } from "../handlers/useHandleResetCommand";
 import { useHandleSerialStatusCommand } from "../handlers/useHandleSerialCommand";
-import { useHandleSpeedCommand } from "../handlers/useHandleSpeedCommand";
+import { useHandleTargetSpeedCommand } from "../handlers/useHandleTargetSpeedCommand";
 import { useHandleUsbCommand } from "../handlers/useHandleUsbCommand";
 import { useHandleVoltageCommand } from "../handlers/useHandleVoltageCommand";
 import { LogMessageType } from "../state/logMessagesState";
@@ -28,7 +28,7 @@ export function useHandleCommand() {
   const handleCurrentCommand = useHandleCurrentCommand();
   const handleVoltageCommand = useHandleVoltageCommand();
   const handleButtonCommand = useHandleButtonCommand();
-  const handleSpeedCommand = useHandleSpeedCommand();
+  const handleTargetSpeedCommand = useHandleTargetSpeedCommand();
   const handleLidarStateCommand = useHandleLidarStateCommand();
   const handleLidarMeasurementCommand = useHandleLidarMeasurementCommand();
   const handleSerialStatusCommand = useHandleSerialStatusCommand();
@@ -46,7 +46,7 @@ export function useHandleCommand() {
       c: handleCurrentCommand,
       v: handleVoltageCommand,
       b: handleButtonCommand,
-      s: handleSpeedCommand,
+      t: handleTargetSpeedCommand,
       l: handleLidarStateCommand,
       m: handleLidarMeasurementCommand,
       serial: handleSerialStatusCommand,
@@ -63,7 +63,7 @@ export function useHandleCommand() {
       handleCurrentCommand,
       handleVoltageCommand,
       handleButtonCommand,
-      handleSpeedCommand,
+      handleTargetSpeedCommand,
       handleLidarStateCommand,
       handleLidarMeasurementCommand,
       handleSerialStatusCommand,

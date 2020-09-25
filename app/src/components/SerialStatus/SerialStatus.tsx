@@ -9,7 +9,7 @@ import { Status, StateStatus } from "../Status/Status";
 export const SerialStatus: React.FC<FlexProps> = ({ ...rest }) => {
   const serialStatus = useRecoilValue(serialStatusState);
 
-  const getSerialDescription = (): string => {
+  const getDescription = (): string => {
     switch (serialStatus) {
       case SerialStatusEnum.CONNECTING:
         return "Connecting";
@@ -37,7 +37,7 @@ export const SerialStatus: React.FC<FlexProps> = ({ ...rest }) => {
     }
   };
 
-  const getSerialStatus = (): StateStatus => {
+  const getStatus = (): StateStatus => {
     switch (serialStatus) {
       case SerialStatusEnum.CONNECTING:
         return "warn";
@@ -65,13 +65,5 @@ export const SerialStatus: React.FC<FlexProps> = ({ ...rest }) => {
     }
   };
 
-  return (
-    <Status
-      title="Serial"
-      description={getSerialDescription()}
-      status={getSerialStatus()}
-      icon={<SerialIcon />}
-      {...rest}
-    />
-  );
+  return <Status title="Serial" description={getDescription()} status={getStatus()} icon={<SerialIcon />} {...rest} />;
 };

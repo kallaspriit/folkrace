@@ -14,6 +14,7 @@ import { activeTransportNameState } from "../../state/activeTransportNameState";
 import { aliveState } from "../../state/aliveState";
 import { attitudeState } from "../../state/attitudeState";
 import { buttonsState } from "../../state/buttonsState";
+import { currentSpeedsState } from "../../state/currentSpeedsState";
 import { currentsState } from "../../state/currentsState";
 import { encodersState } from "../../state/encodersState";
 import { lastHeartbeatTimeState } from "../../state/lastHeartbeatTimeState";
@@ -51,6 +52,7 @@ export const StateExperiment: React.FC = () => {
   const buttons = useRecoilValue(buttonsState);
   const currents = useRecoilValue(currentsState);
   const targetSpeeds = useRecoilValue(targetSpeedsState);
+  const currentSpeeds = useRecoilValue(currentSpeedsState);
   const encoders = useRecoilValue(encodersState);
   const lidarStatus = useRecoilValue(lidarStatusState);
   const usb = useRecoilValue(usbState);
@@ -149,6 +151,12 @@ export const StateExperiment: React.FC = () => {
           </ListItem>
           <ListItem compact trailing={targetSpeeds.right}>
             Right motor target speed
+          </ListItem>
+          <ListItem compact trailing={currentSpeeds.left}>
+            Left motor current speed
+          </ListItem>
+          <ListItem compact trailing={currentSpeeds.right}>
+            Right motor current speed
           </ListItem>
           <ListItem compact trailing={encoders.left}>
             Left encoder
