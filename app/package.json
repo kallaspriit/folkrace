@@ -4,6 +4,9 @@
   "private": true,
   "dependencies": {
     "classnames": "^2.2.6",
+    "color": "^3.1.2",
+    "lodash.throttle": "^4.1.1",
+    "pathfinding": "^0.4.18",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-hook-form": "^6.8.3",
@@ -12,7 +15,8 @@
     "react-scripts": "3.4.3",
     "recoil": "0.0.13",
     "ts-log": "^2.1.4",
-    "use-sound": "^1.0.2"
+    "use-sound": "^1.0.2",
+    "victor": "^1.1.0"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -21,6 +25,8 @@
     "eject": "react-scripts eject",
     "lint": "eslint src/**/*.{ts,tsx}",
     "lint-fix": "eslint --fix src/**/*.{ts,tsx}",
+    "prettier": "npx prettier --write **/*.ts",
+    "prettier-check": "npx prettier --list-different **/*.ts",
     "storybook": "start-storybook -p 9009 -s public",
     "build-storybook": "build-storybook -s public"
   },
@@ -50,12 +56,16 @@
     "@testing-library/react": "^11.0.4",
     "@testing-library/user-event": "^12.1.5",
     "@types/classnames": "^2.2.10",
+    "@types/color": "^3.0.1",
     "@types/jest": "^26.0.14",
+    "@types/lodash.throttle": "^4.1.6",
     "@types/node": "^14.11.1",
+    "@types/pathfinding": "0.0.4",
     "@types/react": "^16.9.49",
     "@types/react-dom": "^16.9.8",
     "@types/react-router": "^5.1.8",
     "@types/react-router-dom": "^5.1.5",
+    "@types/victor": "^1.1.0",
     "@types/webpack-env": "^1.15.3",
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-import": "^2.22.0",
