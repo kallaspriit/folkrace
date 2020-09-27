@@ -6,8 +6,7 @@ import { ReactComponent as ClearlIcon } from "../../theme/icons/clear-icon.svg";
 import { Column } from "../Column/Column";
 import { Container } from "../Container/Container";
 import { FlexProps } from "../Flex/Flex";
-import { P } from "../Paragraph/Paragraph";
-import { Span } from "../Span/Span";
+import { Row } from "../Row/Row";
 import styles from "./Log.module.scss";
 
 export const Log: React.FC<FlexProps> = ({ className, ...rest }) => {
@@ -30,27 +29,30 @@ export interface LogItemProps extends FlexProps {
 }
 
 export const LogItem: React.FC<LogItemProps> = ({ message, className, ...rest }) => (
-  <P
-    tiny
-    compact
-    className={classNames(
-      styles["log-item"],
-      {
-        [styles["log-item--info"]]: message.type === LogMessageType.INFO,
-        [styles["log-item--send"]]: message.type === LogMessageType.SEND,
-        [styles["log-item--receive"]]: message.type === LogMessageType.RECEIVE,
-        [styles["log-item--warn"]]: message.type === LogMessageType.WARN,
-        [styles["log-item--error"]]: message.type === LogMessageType.ERROR,
-      },
-      className,
-    )}
-    {...rest}
-  >
-    <Span tiny compact className={styles["message-line"]}>
+  <Row>
+    <Container tiny compact className={styles["message-line"]}>
       {message.index + 1}
-    </Span>
-    {getMessageTypeName(message.type)} {message.message}
-  </P>
+    </Container>
+    <Container
+      tiny
+      compact
+      expanded
+      className={classNames(
+        styles["log-item"],
+        {
+          [styles["log-item--info"]]: message.type === LogMessageType.INFO,
+          [styles["log-item--send"]]: message.type === LogMessageType.SEND,
+          [styles["log-item--receive"]]: message.type === LogMessageType.RECEIVE,
+          [styles["log-item--warn"]]: message.type === LogMessageType.WARN,
+          [styles["log-item--error"]]: message.type === LogMessageType.ERROR,
+        },
+        className,
+      )}
+      {...rest}
+    >
+      {getMessageTypeName(message.type)} {message.message}
+    </Container>
+  </Row>
 );
 
 function getMessageTypeName(messageType: LogMessageType) {

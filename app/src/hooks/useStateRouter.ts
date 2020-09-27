@@ -29,11 +29,11 @@ export function useStateRouter() {
 
   useEffect(() => {
     // test log messages
-    log.info("info message");
-    log.send("send message");
-    log.receive("receive message");
-    log.warn("warn message");
-    log.error("error message");
+    // log.info("info message that is quite long so it will span several lines");
+    // log.send("send message");
+    // log.receive("receive message");
+    // log.warn("warn message");
+    // log.error("error message");
 
     const currentTransportState = multiTransport.getState();
 
