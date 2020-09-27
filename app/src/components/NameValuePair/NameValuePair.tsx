@@ -26,7 +26,7 @@ export const NameValuePair: React.FC<NameValuePairProps> = ({ name, vertical, ch
   return (
     <Row mainAxisAlignment="space-between">
       {typeof name === "string" ? <P>{name}</P> : name}
-      {typeof children === "string" ? <P>{children}</P> : children}
+      {typeof children === "string" ? <P secondary>{children}</P> : children}
     </Row>
   );
 };

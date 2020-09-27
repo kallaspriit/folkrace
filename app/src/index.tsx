@@ -13,16 +13,16 @@ ReactDOM.render(<Root />, document.getElementById("root"));
 serviceWorker.unregister();
 
 // use hot reload if available
-if (module.hot) {
-  module.hot.accept("./Root", () => {
-    // clear old console messages and notify about hot-reload
-    console.clear();
-    console.log("-- Hot reloaded the app (press F5 for full reload) --");
+// if (module.hot) {
+//   module.hot.accept("./Root", () => {
+//     // clear old console messages and notify about hot-reload
+//     console.clear();
+//     console.log("-- Hot reloaded the app (press F5 for full reload) --");
 
-    // get updated root component
-    const NextRoot = require("./Root").Root;
+//     // get updated root component
+//     const NextRoot = require("./Root").Root;
 
-    // render updated root
-    ReactDOM.render(<NextRoot />, document.getElementById("root"));
-  });
-}
+//     // render updated root
+//     ReactDOM.render(<NextRoot />, document.getElementById("root"));
+//   });
+// }

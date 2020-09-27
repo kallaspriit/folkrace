@@ -1,6 +1,6 @@
 import { dummyLogger, Logger } from "ts-log";
 
-import { ManagedGamepad } from "./";
+import { ManagedGamepad, HandleUpdateFn } from "./";
 
 export interface GamepadManagerOptions {
   readonly log?: Logger;
@@ -8,7 +8,7 @@ export interface GamepadManagerOptions {
   readonly defaultDeadzone?: number;
   onConnect?(gamepad: ManagedGamepad): void;
   onDisconnect?(gamepad: ManagedGamepad): void;
-  onUpdate?(gamepad: ManagedGamepad): void;
+  onUpdate?: HandleUpdateFn;
 }
 
 export class GamepadManager {

@@ -138,8 +138,8 @@ const int SEND_BUFFER_SIZE = 64;
 static char sendBuffer[SEND_BUFFER_SIZE];
 
 // keep track of last reported values
-uint32_t lastEncoderDeltaM1 = 0;
-uint32_t lastEncoderDeltaM2 = 0;
+uint32_t lastEncoderValueM1 = 0;
+uint32_t lastEncoderValueM2 = 0;
 uint32_t lastSpeedM1 = 0;
 uint32_t lastSpeedM2 = 0;
 
@@ -356,9 +356,9 @@ int getBatteryVoltage()
 // reports encoder values
 void reportEncoderValues(bool force = false)
 {
-  uint32_t encoderDeltaM1, encoderDeltaM2;
+  uint32_t encoderValueM1, encoderValueM2;
 
-  bool readSuccess = motors.readEncoders(MOTOR_CONTROLLER_ADDRESS, encoderDeltaM1, encoderDeltaM2);
+  bool readSuccess = motors.readEncoders(MOTOR_CONTROLLER_ADDRESS, encoderValueM1, encoderValueM2);
 
   handleMotorsCommunicationResult(readSuccess);
 
@@ -369,7 +369,7 @@ void reportEncoderValues(bool force = false)
   }
 
   // check whether the encoder values have changed since last reported
-  bool haveEncoderValuesChanged = labs(encoderDeltaM1 - lastEncoderDeltaM1) != 0 || labs(encoderDeltaM2 - lastEncoderDeltaM2) != 0;
+  bool haveEncoderValuesChanged = labs(encoderValueM1 - lastEncoderValueM1) != 0 || labs(encoderValueM2 - lastEncoderValueM2) != 0;
 
   // handle encoder values having not changed
   if (!haveEncoderValuesChanged)
@@ -394,9 +394,13 @@ void reportEncoderValues(bool force = false)
     haveReportedSameEncoderValues = false;
   }
 
+  // calculate encoder delta values
+  int encoderDeltaM1 = encoderValueM1 - lastEncoderValueM1;
+  int encoderDeltaM2 = encoderValueM2 - lastEncoderValueM2;
+
   // keep track of last values
-  lastEncoderDeltaM1 = encoderDeltaM1;
-  lastEncoderDeltaM2 = encoderDeltaM2;
+  lastEncoderValueM1 = encoderValueM1;
+  lastEncoderValueM2 = encoderValueM2;
 
   int timeSinceLastEncoderReportUs = reportEncoderTimer.elapsed_time().count();
 
@@ -540,7 +544,7 @@ void handleHelpCommand(Commander *commander)
   printf("! - motors:IS_WORKING                - is connection to the motor controller working (1 if working, 0 for not working)\n");
   printf("! - pong                             - response to ping\n");
   printf("! - reset                            - usb connection state changed\n");
-  printf("! - e:LEFT:RIGHT:ELAPSED_TIME_US     - motor encoders absolute position for left and right motors with time since last report\n");
+  printf("! - e:LEFT:RIGHT:ELAPSED_TIME_US     - motor encoders delta position for left and right motors with time since last report\n");
   printf("! - b:NAME:IS_PRESSED                - whether given button is pressed (1) or release (0)\n");
   printf("! - t:SPEED_LEFT:SPEED_RIGHT         - target speed for left and right motors\n");
   printf("! - s:SPEED_LEFT:SPEED_RIGHT         - actual speed for left and right motors\n");

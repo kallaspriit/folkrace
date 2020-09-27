@@ -1,3 +1,4 @@
+import { rotationsPerMinuteToEncoderCountsPerSecond } from "../../services/rotationsPerMinuteToEncoderCountsPerSecond";
 import { Transport } from "../transport/Transport";
 
 export interface RobotConfig {
@@ -30,12 +31,19 @@ export class Robot {
     this.send("state");
   }
 
-  setSpeed(left: number, right: number) {
-    this.send("s", left, right);
+  setMotorsTargetRpm(leftRpm: number, rightRpm: number) {
+    const leftEncoderCountsPerSecond = rotationsPerMinuteToEncoderCountsPerSecond(leftRpm);
+    const rightEncoderCountsPerSecond = rotationsPerMinuteToEncoderCountsPerSecond(rightRpm);
+
+    this.setMotorsTargetEncoderCountsPerSecond(leftEncoderCountsPerSecond, rightEncoderCountsPerSecond);
+  }
+
+  setMotorsTargetEncoderCountsPerSecond(leftEncoderCountsPerSecond: number, rightEncoderCountsPerSecond: number) {
+    this.send("s", leftEncoderCountsPerSecond, rightEncoderCountsPerSecond);
   }
 
   stop() {
-    this.setSpeed(0, 0);
+    this.setMotorsTargetRpm(0, 0);
   }
 
   ping(transportOnly = false) {

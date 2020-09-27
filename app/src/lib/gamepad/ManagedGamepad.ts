@@ -7,7 +7,7 @@ export interface ManagedGamepadOptions {
   readonly log?: Logger;
 }
 
-export type HandleUpdateFn = (gamepad: ManagedGamepad) => void;
+export type HandleUpdateFn = (gamepad: ManagedGamepad, haveButtonsChanged: boolean) => void;
 
 export class ManagedGamepad {
   index: number;
@@ -112,16 +112,43 @@ export class ManagedGamepad {
       return;
     }
 
+    // check whether buttons state has changed
+    const newButtons = [...gamepad.buttons];
+    const haveButtonsChanged = newButtons.reduce((haveChanged, newButton, index) => {
+      // return true if have already found a button that changed
+      if (haveChanged) {
+        return true;
+      }
+
+      const previousButton = this.buttons[index] as GamepadButton | undefined;
+
+      // return changed if no previous button with the same index existed
+      if (!previousButton) {
+        return true;
+      }
+
+      // check whether button state at the same index has changed
+      if (
+        newButton.pressed !== previousButton.pressed ||
+        newButton.touched !== previousButton.touched ||
+        newButton.value !== previousButton.value
+      ) {
+        return true;
+      }
+
+      return false;
+    }, false);
+
     // store current state
     this.axes = [...gamepad.axes];
-    this.buttons = [...gamepad.buttons];
+    this.buttons = newButtons;
 
     // applies deadzone to axes
     this.applyDeadzone();
 
     // call the update listeners
     for (const updateListener of this.updateListeners) {
-      updateListener(this);
+      updateListener(this, haveButtonsChanged);
     }
   }
 

@@ -51,38 +51,52 @@ export class TrackedVehicleKinematics {
     };
   }
 
-  getSpeedEncoderCount(speedMetersPerSecond: number) {
+  // getSpeedEncoderCount(speedMetersPerSecond: number) {
+  //   const circumference = this.options.wheelDiameter * Math.PI;
+  //   const gearedEncoderCountsPerRevolution = this.options.encoderCountsPerRotation * this.options.gearboxRatio;
+  //   const rotationsPerSecond = speedMetersPerSecond / circumference;
+  //   const targetEncoderCountsPerSecond = rotationsPerSecond * gearedEncoderCountsPerRevolution;
+
+  //   return Math.floor(targetEncoderCountsPerSecond);
+  // }
+
+  speedToRpm(speedMetersPerSecond: number) {
     const circumference = this.options.wheelDiameter * Math.PI;
-    const gearedEncoderCountsPerRevolution = this.options.encoderCountsPerRotation * this.options.gearboxRatio;
     const rotationsPerSecond = speedMetersPerSecond / circumference;
-    const targetEncoderCountPerSecond = rotationsPerSecond * gearedEncoderCountsPerRevolution;
+    const rotationPerMinute = rotationsPerSecond * 60;
 
-    return Math.floor(targetEncoderCountPerSecond);
+    return rotationPerMinute;
   }
 
-  getEncoderCountSpeed(encoderCountsPerSecond: number) {
-    const circumference = this.options.wheelDiameter * Math.PI;
-    const gearedEncoderCountsPerRevolution = this.options.encoderCountsPerRotation * this.options.gearboxRatio;
-
-    const revolutionsPerSecond = encoderCountsPerSecond / gearedEncoderCountsPerRevolution;
-    const speed = revolutionsPerSecond / circumference;
-
-    return speed;
-  }
-
-  motorToEncoderSpeed(motorSpeed: MotorValue): MotorValue {
+  speedsToRpms(speeds: MotorValue): MotorValue {
     return {
-      left: this.getSpeedEncoderCount(motorSpeed.left),
-      right: this.getSpeedEncoderCount(motorSpeed.right),
+      left: this.speedToRpm(speeds.left),
+      right: this.speedToRpm(speeds.right),
     };
   }
 
-  encoderToMotorSpeed(encoderSpeed: MotorValue): MotorValue {
-    return {
-      left: this.getEncoderCountSpeed(encoderSpeed.left),
-      right: this.getEncoderCountSpeed(encoderSpeed.right),
-    };
-  }
+  // getEncoderCountSpeed(encoderCountsPerSecond: number) {
+  //   const circumference = this.options.wheelDiameter * Math.PI;
+  //   const gearedEncoderCountsPerRevolution = this.options.encoderCountsPerRotation * this.options.gearboxRatio;
+  //   const revolutionsPerSecond = encoderCountsPerSecond / gearedEncoderCountsPerRevolution;
+  //   const speed = revolutionsPerSecond / circumference;
+
+  //   return speed;
+  // }
+
+  // motorToEncoderSpeed(motorSpeed: MotorValue): MotorValue {
+  //   return {
+  //     left: this.getSpeedEncoderCount(motorSpeed.left),
+  //     right: this.getSpeedEncoderCount(motorSpeed.right),
+  //   };
+  // }
+
+  // encoderToMotorSpeed(encoderSpeed: MotorValue): MotorValue {
+  //   return {
+  //     left: this.getEncoderCountSpeed(encoderSpeed.left),
+  //     right: this.getEncoderCountSpeed(encoderSpeed.right),
+  //   };
+  // }
 
   motionToSpeed(speed: number, omega: number): MotorValue {
     // TODO: calculate actual kinematics
@@ -94,9 +108,11 @@ export class TrackedVehicleKinematics {
     return TrackedVehicleKinematics.getLimitedSpeed(speeds, this.options.maxSpeed);
   }
 
-  speedToMotion(encoderSpeed: MotorValue): Motion {
+  speedToMotion(_encoderSpeed: MotorValue): Motion {
     // TODO: convert encoder speeds to track speeds in meters per second
     // const motorSpeed = this.encoderToMotorSpeed(encoderSpeed);
+
+    // const velocityX =
 
     return {
       position: {

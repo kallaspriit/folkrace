@@ -31,7 +31,7 @@ export function useRemoteControl(isEnabled = true) {
 
         setGamepadName(remainingGamepad?.id);
       },
-      onUpdate: (gamepad) => {
+      onUpdate: (gamepad, haveButtonsChanged) => {
         // ignore if not enabled
         if (!isEnabled) {
           return;
@@ -41,6 +41,26 @@ export function useRemoteControl(isEnabled = true) {
         const speed = calculateControllerRate(gamepad.axes[3] * -1, config.rates);
         const omega = calculateControllerRate(gamepad.axes[0], config.rates);
 
+        if (haveButtonsChanged) {
+          const pressedButtonIndexes = gamepad.buttons
+            .filter((button) => button.pressed)
+            .map((pressedButton) => gamepad.buttons.indexOf(pressedButton));
+
+          log.info(`pressed: ${pressedButtonIndexes.length > 0 ? pressedButtonIndexes.join(", ") : "none"}`);
+
+          const isPressedX = gamepad.buttons[0].pressed;
+
+          // run fixed rpm experiment when X is pressed
+          if (isPressedX) {
+            robot.setMotorsTargetRpm(60, 60);
+
+            return;
+          } else {
+            robot.stop();
+          }
+        }
+
+        // speed is in m/s, omega is in rad/s
         remoteController.setSpeed(speed);
         remoteController.setOmega(omega);
       },

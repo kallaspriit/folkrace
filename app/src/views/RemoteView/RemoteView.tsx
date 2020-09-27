@@ -7,7 +7,9 @@ import { GridBox } from "../../components/GridBox/GridBox";
 import { NameValuePair } from "../../components/NameValuePair/NameValuePair";
 import { TitleBar } from "../../components/TitleBar/TitleBar";
 import { useRemoteControl } from "../../hooks/useRemoteControl";
+import { currentMotorRpmsState } from "../../state/currentMotorRpmsState";
 import { currentSpeedsState } from "../../state/currentSpeedsState";
+import { targetMotorRpmsState } from "../../state/targetMotorRpmsState";
 import { targetSpeedsState } from "../../state/targetSpeedsState";
 
 export const RemoteView: React.FC = () => {
@@ -15,6 +17,8 @@ export const RemoteView: React.FC = () => {
   const { gamepadName } = useRemoteControl();
   const currentSpeeds = useRecoilValue(currentSpeedsState);
   const targetSpeeds = useRecoilValue(targetSpeedsState);
+  const currentMotorRpms = useRecoilValue(currentMotorRpmsState);
+  const targetMotorRpms = useRecoilValue(targetMotorRpmsState);
 
   return (
     <Flex cover>
@@ -25,10 +29,16 @@ export const RemoteView: React.FC = () => {
         </NameValuePair>
         <GridBox size={3} />
         <NameValuePair name="Left speed">
-          {Math.round(currentSpeeds.left)} / {targetSpeeds.left}
+          {Math.round(currentSpeeds.left)} / {targetSpeeds.left} QPPS
         </NameValuePair>
         <NameValuePair name="Right speed">
-          {currentSpeeds.right.toFixed(0)} / {targetSpeeds.right}
+          {currentSpeeds.right.toFixed(0)} / {targetSpeeds.right} QPPS
+        </NameValuePair>
+        <NameValuePair name="Left RPM">
+          {currentMotorRpms.left.toFixed(0)} / {targetMotorRpms.left.toFixed(0)} RPM
+        </NameValuePair>
+        <NameValuePair name="Right RPM">
+          {currentMotorRpms.right.toFixed(0)} / {targetMotorRpms.right.toFixed(0)} RPM
         </NameValuePair>
       </Column>
     </Flex>

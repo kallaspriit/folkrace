@@ -15,9 +15,9 @@ export class RemoteController {
   private readonly kinematics: TrackedVehicleKinematics;
   private readonly robot: Robot;
   private readonly scheduleUpdateMotorSpeeds: () => void;
-  private speed = 0;
-  private omega = 0;
-  private lastSentSpeed?: MotorValue;
+  private speed = 0; // in m/s
+  private omega = 0; // in rad/s
+  private lastSentTargetRpms?: MotorValue;
 
   constructor(options: RemoteControllerOptions) {
     this.options = {
@@ -69,13 +69,14 @@ export class RemoteController {
 
   private updateMotorSpeeds() {
     const motorSpeeds = this.kinematics.motionToSpeed(this.speed, this.omega);
-    const encoderSpeeds = this.kinematics.motorToEncoderSpeed(motorSpeeds);
+    // const encoderSpeeds = this.kinematics.motorToEncoderSpeed(motorSpeeds);
+    const motorRpms = this.kinematics.speedsToRpms(motorSpeeds);
 
     // only send the speed if different from last
-    if (!this.lastSentSpeed || TrackedVehicleKinematics.isSpeedDifferent(encoderSpeeds, this.lastSentSpeed)) {
-      this.robot.setSpeed(encoderSpeeds.left, encoderSpeeds.right);
+    if (!this.lastSentTargetRpms || TrackedVehicleKinematics.isSpeedDifferent(motorRpms, this.lastSentTargetRpms)) {
+      this.robot.setMotorsTargetRpm(motorRpms.left, motorRpms.right);
 
-      this.lastSentSpeed = encoderSpeeds;
+      this.lastSentTargetRpms = motorRpms;
     }
   }
 }

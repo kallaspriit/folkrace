@@ -1,6 +1,6 @@
 import { useSetRecoilState } from "recoil";
 import { assertArgumentCount } from "../services/assertArgumentCount";
-import { currentSpeedsState, CurrentSpeedsState } from "../state/currentSpeedsState";
+import { currentSpeedsState } from "../state/currentSpeedsState";
 import { encodersState } from "../state/encodersState";
 
 export function useHandleEncoderCommand() {
@@ -21,26 +21,10 @@ export function useHandleEncoderCommand() {
       right,
     });
 
-    setCurrentSpeeds((lastCurrentSpeeds) => {
-      const { lastEncoderLeft, lastEncoderRight } = lastCurrentSpeeds;
-
-      // calculate current speeds (needs last encoder values)
-      const speeds: CurrentSpeedsState =
-        lastEncoderLeft !== undefined && lastEncoderRight !== undefined
-          ? {
-              lastEncoderLeft: left,
-              lastEncoderRight: right,
-              left: (left - lastEncoderLeft) / timeSinceLastEncodersReportSeconds,
-              right: (right - lastEncoderRight) / timeSinceLastEncodersReportSeconds,
-            }
-          : {
-              lastEncoderLeft: left,
-              lastEncoderRight: right,
-              left: lastCurrentSpeeds.left,
-              right: lastCurrentSpeeds.right,
-            };
-
-      return speeds;
+    // TODO: convert from ticks per second to rotations per minute
+    setCurrentSpeeds({
+      left: left / timeSinceLastEncodersReportSeconds,
+      right: right / timeSinceLastEncodersReportSeconds,
     });
   };
 }
