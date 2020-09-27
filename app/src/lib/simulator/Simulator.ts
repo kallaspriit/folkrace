@@ -1,3 +1,4 @@
+import { Logger } from "ts-log";
 import { config } from "../../config";
 import { drawRobot } from "../../services/drawRobot";
 import { robot } from "../../services/robot";
@@ -18,6 +19,7 @@ export interface SimulatorOptions {
   radius: number;
   cellSize: number;
   pathPlanningIntervalMs: number;
+  log?: Logger;
 }
 
 export enum Stat {
@@ -57,7 +59,7 @@ export class Simulator {
     // setup gamepad
     this.gamepadManager = new GamepadManager({
       // defaultDeadzone: 0.01,
-      log: console,
+      log: options.log,
       onConnect: (gamepad) => {
         console.log("GOT GAMEPAD", gamepad, this.gamepadManager.gamepads);
 
@@ -91,7 +93,7 @@ export class Simulator {
     this.remoteController = new RemoteController({
       vehicleOptions: config.vehicle,
       robot,
-      log: console,
+      log: this.options.log,
     });
 
     // setup visualizer

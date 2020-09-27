@@ -72,7 +72,6 @@ export class SimulatedRobot {
   angle = 0;
 
   private readonly options: Required<SimulatedRobotOptions>;
-  private readonly log: Logger;
   private readonly kinematics: TrackedVehicleKinematics;
   private readonly ticker: Ticker;
   private readonly messageListeners: MessageListenerFn[] = [];
@@ -86,7 +85,6 @@ export class SimulatedRobot {
       log: dummyLogger,
       ...options,
     };
-    this.log = this.options.log;
 
     // setup kinematics
     this.kinematics = new TrackedVehicleKinematics(config.vehicle);
@@ -98,6 +96,10 @@ export class SimulatedRobot {
 
     // TODO: don't run unless simulated transport is used
     this.ticker.start();
+  }
+
+  get log() {
+    return this.options.log;
   }
 
   addMessageListener(listener: MessageListenerFn) {

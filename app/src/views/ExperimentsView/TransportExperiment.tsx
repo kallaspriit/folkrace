@@ -14,7 +14,7 @@ import { TransportStatus, TransportListener } from "../../lib/transport";
 import { MainMenuViewParams, MAIN_MENU_VIEW_PATH } from "../../routes";
 import { buildUrl } from "../../services/buildUrl";
 import { robot } from "../../services/robot";
-import { LogMessageType, logMessagesState } from "../../state/logMessagesState";
+import { logMessagesState } from "../../state/logMessagesState";
 
 export const TransportExperiment: React.FC = () => {
   const history = useHistory();
@@ -29,20 +29,20 @@ export const TransportExperiment: React.FC = () => {
       onStatusChanged: (transport, newState, _previousState) => {
         setConnectionState(newState);
 
-        log(LogMessageType.INFO, `${transport.getName()} state changed to ${newState}`);
+        log.info(`${transport.getName()} state changed to ${newState}`);
       },
       onError: (_transport, error) => {
-        log(LogMessageType.ERROR, `transport error occurred${error ? ` (${error.message})` : ""}`);
+        log.error(`transport error occurred${error ? ` (${error.message})` : ""}`);
       },
       onMessageSent: (transport, message, wasSentSuccessfully: boolean) => {
         if (wasSentSuccessfully) {
-          log(LogMessageType.SEND, `${message}${!wasSentSuccessfully ? " [SENDING FAILED]" : ""}`, transport.getName());
+          log.send(`${message}${!wasSentSuccessfully ? " [SENDING FAILED]" : ""}`, transport.getName());
         } else {
-          log(LogMessageType.ERROR, `sending message "${message}" failed`, transport.getName());
+          log.error(`sending message "${message}" failed`, transport.getName());
         }
       },
       onMessageReceived: (transport, message) => {
-        log(LogMessageType.RECEIVE, message, transport.getName());
+        log.receive(message, transport.getName());
       },
     }),
     // we don't want to create new listener when log changes
@@ -72,10 +72,9 @@ export const TransportExperiment: React.FC = () => {
           </ListItem>
         </List>
         <Column expanded padded compact autoscroll>
-          {logMessages.map(({ type, message, transportName }, index) => (
+          {logMessages.map(({ type, message }, index) => (
             <P small key={index}>
-              [{type}] {transportName && `[${transportName}] `}
-              {message}
+              [{type}] {message}
             </P>
           ))}
         </Column>

@@ -11,7 +11,6 @@ export interface WebsocketTransportOptions {
 }
 
 export class WebsocketTransport implements Transport {
-  private readonly log: Logger;
   private readonly listeners: TransportListener[] = [];
   private options: Required<WebsocketTransportOptions>;
   private state: TransportStatus = TransportStatus.DISCONNECTED;
@@ -26,7 +25,10 @@ export class WebsocketTransport implements Transport {
       reconnectInterval: 1000,
       ...options,
     };
-    this.log = this.options.log;
+  }
+
+  get log() {
+    return this.options.log;
   }
 
   getName() {

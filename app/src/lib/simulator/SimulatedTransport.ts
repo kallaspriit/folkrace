@@ -11,7 +11,6 @@ export interface SimulatedTransportOptions {
 
 export class SimulatedTransport implements Transport {
   private readonly options: Required<SimulatedTransportOptions>;
-  private readonly log: Logger;
   private readonly listeners: TransportListener[] = [];
   private state = TransportStatus.DISCONNECTED;
 
@@ -20,11 +19,15 @@ export class SimulatedTransport implements Transport {
       log: dummyLogger,
       ...options,
     };
-    this.log = this.options.log;
 
     // listen for simulated robot messages
     this.options.simulatedRobot.addMessageListener((message) => this.onMessageReceived(message));
   }
+
+  get log() {
+    return this.options.log;
+  }
+
   removeListener(_listener: TransportListener): void {
     throw new Error("Method not implemented.");
   }

@@ -5,7 +5,6 @@ import { TransportListener, TransportStatus } from "../lib/transport";
 import { multiTransport } from "../services/multiTransport";
 import { robot } from "../services/robot";
 import { activeTransportNameState } from "../state/activeTransportNameState";
-import { LogMessageType } from "../state/logMessagesState";
 import { timerState } from "../state/timerState";
 import { transportStatusState } from "../state/transportStatusState";
 import { useHandleCommand } from "./useHandleCommand";
@@ -30,11 +29,11 @@ export function useStateRouter() {
 
   useEffect(() => {
     // test log messages
-    log(LogMessageType.INFO, "info message");
-    log(LogMessageType.SEND, "send message");
-    log(LogMessageType.RECEIVE, "receive message");
-    log(LogMessageType.WARN, "warn message");
-    log(LogMessageType.ERROR, "error message");
+    log.info("info message");
+    log.send("send message");
+    log.receive("receive message");
+    log.warn("warn message");
+    log.error("error message");
 
     const currentTransportState = multiTransport.getState();
 
@@ -57,12 +56,12 @@ export function useStateRouter() {
           robot.requestState();
         }
 
-        log(LogMessageType.INFO, `${transport.getName()} state changed from ${previousStatus} to ${newStatus}`);
+        log.info(`${transport.getName()} state changed from ${previousStatus} to ${newStatus}`);
       },
 
       // called on transport error
       onError: (_transport, error) => {
-        log(LogMessageType.ERROR, `transport error occurred${error ? ` (${error.message})` : ""}`);
+        log.error(`transport error occurred${error ? ` (${error.message})` : ""}`);
       },
 
       // called when transport message is sent
@@ -72,13 +71,9 @@ export function useStateRouter() {
         // don't log blacklisted messages
         if (!config.log.ignoreSentCommands.includes(command)) {
           if (wasSentSuccessfully) {
-            log(
-              LogMessageType.SEND,
-              `${message}${!wasSentSuccessfully ? " [SENDING FAILED]" : ""}`,
-              transport.getName(),
-            );
+            log.send(`${message}${!wasSentSuccessfully ? " [SENDING FAILED]" : ""}`, transport.getName());
           } else {
-            log(LogMessageType.ERROR, `sending message "${message}" failed`, transport.getName());
+            log.error(`sending message "${message}" failed`, transport.getName());
           }
         }
       },
@@ -89,7 +84,7 @@ export function useStateRouter() {
 
         // don't blacklisted messages
         if (!config.log.ignoreReceivedCommands.includes(command)) {
-          log(LogMessageType.RECEIVE, message, transport.getName());
+          log.receive(message, transport.getName());
         }
 
         // handle the command

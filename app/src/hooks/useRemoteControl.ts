@@ -4,19 +4,21 @@ import { GamepadManager } from "../lib/gamepad";
 import { RemoteController } from "../lib/remote-controller";
 import { calculateControllerRate } from "../services/calculateControllerRate";
 import { robot } from "../services/robot";
+import { useLog } from "./useLog";
 
 export function useRemoteControl(isEnabled = true) {
   const [gamepadName, setGamepadName] = useState<string>();
+  const log = useLog();
 
   useEffect(() => {
     const remoteController = new RemoteController({
       robot,
       vehicleOptions: config.vehicle,
-      log: console,
+      log,
     });
 
     const gamepadManager = new GamepadManager({
-      log: console,
+      log,
       onConnect: (gamepad) => {
         setGamepadName(gamepad.id);
 
@@ -49,7 +51,7 @@ export function useRemoteControl(isEnabled = true) {
       gamepadManager.destroy();
       robot.stop();
     };
-  }, [isEnabled]);
+  }, [isEnabled, log]);
 
   return {
     gamepadName,

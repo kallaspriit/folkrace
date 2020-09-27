@@ -34,10 +34,9 @@ export const LogExperiment: React.FC = () => {
         </ListItem>
       </List>
       <Column expanded scrollable padded compact autoscroll>
-        {logMessages.map(({ type, message, transportName }, index) => (
+        {logMessages.map(({ type, message }, index) => (
           <P small key={index}>
-            [{type}] {transportName && `[${transportName}] `}
-            {message}
+            [{type}] {message}
           </P>
         ))}
       </Column>

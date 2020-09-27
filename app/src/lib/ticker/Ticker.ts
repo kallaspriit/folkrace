@@ -14,7 +14,6 @@ export interface TickInfo {
 
 export class Ticker {
   private readonly options: Required<TickerOptions>;
-  private readonly log: Logger;
   private isRunning = false;
   private frameNumber = 0;
   private scheduledAnimationFrame?: number;
@@ -26,11 +25,14 @@ export class Ticker {
       log: dummyLogger,
       ...options,
     };
-    this.log = this.options.log;
 
     if (this.options.autoStart) {
       this.start();
     }
+  }
+
+  get log() {
+    return this.options.log;
   }
 
   start() {

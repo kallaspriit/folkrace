@@ -13,7 +13,6 @@ import { useHandleSerialStatusCommand } from "../handlers/useHandleSerialCommand
 import { useHandleTargetSpeedCommand } from "../handlers/useHandleTargetSpeedCommand";
 import { useHandleUsbCommand } from "../handlers/useHandleUsbCommand";
 import { useHandleVoltageCommand } from "../handlers/useHandleVoltageCommand";
-import { LogMessageType } from "../state/logMessagesState";
 import { useLog } from "./useLog";
 
 type CommandHandlerFn = (args: string[]) => void;
@@ -79,7 +78,7 @@ export function useHandleCommand() {
     const handler = handlerMap[command];
 
     if (!handler) {
-      log(LogMessageType.WARN, `missing handler for command "${command}" (${args.join(", ")})`);
+      log.warn(`missing handler for command "${command}" (${args.join(", ")})`);
 
       return;
     }

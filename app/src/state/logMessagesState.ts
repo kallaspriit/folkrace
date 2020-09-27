@@ -13,7 +13,6 @@ export interface LogMessage {
   readonly type: LogMessageType;
   readonly message: string;
   readonly timestamp: number;
-  readonly transportName?: string;
 }
 
 export const logMessagesState = atom<LogMessage[]>({

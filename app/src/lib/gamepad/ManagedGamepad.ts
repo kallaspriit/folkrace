@@ -16,7 +16,6 @@ export class ManagedGamepad {
   private axisDeadzone: number[] = [];
   private defaultDeadzone: number = 0;
   private readonly options: Required<ManagedGamepadOptions>;
-  private readonly log: Logger;
   private updateListeners: HandleUpdateFn[] = [];
   private isPolling = false;
   private animationFrameRequest?: number;
@@ -29,7 +28,6 @@ export class ManagedGamepad {
     };
     this.index = this.options.index;
     this.defaultDeadzone = this.options.defaultDeadzone;
-    this.log = this.options.log;
 
     // get initial state
     this.poll();
@@ -37,6 +35,10 @@ export class ManagedGamepad {
 
   get id() {
     return this.options.id;
+  }
+
+  get log() {
+    return this.options.log;
   }
 
   setAxisDeadzone(axisIndex: number, deadzone: number) {

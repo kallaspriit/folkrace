@@ -20,7 +20,6 @@ export interface NativeTransportOptions {
 
 export class NativeTransport implements Transport {
   private readonly options: Required<NativeTransportOptions>;
-  private readonly log: Logger;
   private readonly listeners: TransportListener[] = [];
   private readonly bridgeExists: boolean;
   private state: TransportStatus = TransportStatus.DISCONNECTED;
@@ -31,8 +30,11 @@ export class NativeTransport implements Transport {
       log: dummyLogger,
       ...options,
     };
-    this.log = this.options.log;
     this.bridgeExists = window.native !== undefined;
+  }
+
+  get log() {
+    return this.options.log;
   }
 
   getName() {
@@ -141,13 +143,13 @@ export class NativeTransport implements Transport {
   private onMessageReceived(message: string) {
     this.log.info(`received: "${message}"`);
 
-    // notify the listeners of message received
-    this.listeners.forEach((listener) => listener.onMessageReceived(this, message));
-
     // handle handshake response
     if (message === "!handshake") {
       // consider connection successful
       this.setState(TransportStatus.CONNECTED);
+    } else {
+      // notify the listeners of message received
+      this.listeners.forEach((listener) => listener.onMessageReceived(this, message));
     }
   }
 }

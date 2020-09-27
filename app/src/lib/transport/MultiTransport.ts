@@ -7,7 +7,6 @@ export interface MultiTransportOptions {
 
 export class MultiTransport implements Transport {
   private readonly options: Required<MultiTransportOptions>;
-  private readonly log: Logger;
   private readonly listeners: TransportListener[] = [];
   private readonly transports: Transport[] = [];
 
@@ -16,7 +15,10 @@ export class MultiTransport implements Transport {
       log: dummyLogger,
       ...options,
     };
-    this.log = this.options.log;
+  }
+
+  get log() {
+    return this.options.log;
   }
 
   getName() {
