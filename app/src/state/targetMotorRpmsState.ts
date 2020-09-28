@@ -2,7 +2,7 @@ import { selector } from "recoil";
 import { encoderCountsPerSecondToRotationsPerMinute } from "../services/encoderCountsPerSecondToRotationsPerMinute";
 import { targetSpeedsState } from "./targetSpeedsState";
 
-// represents target motor speeds in ticks per second
+// represents target motor speeds in rotations per minute
 export interface TargetMotorRpmsState {
   readonly left: number;
   readonly right: number;

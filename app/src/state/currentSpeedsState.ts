@@ -1,6 +1,6 @@
 import { atom } from "recoil";
 
-// represents current motor speeds in ticks per second
+// represents current motor speeds in encoder counts per second (QPPS)
 export interface CurrentSpeedsState {
   readonly left: number;
   readonly right: number;

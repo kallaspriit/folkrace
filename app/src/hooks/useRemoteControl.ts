@@ -13,7 +13,6 @@ export function useRemoteControl(isEnabled = true) {
   useEffect(() => {
     const remoteController = new RemoteController({
       robot,
-      vehicleOptions: config.vehicle,
       log,
     });
 

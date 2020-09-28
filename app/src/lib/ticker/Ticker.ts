@@ -73,7 +73,7 @@ export class Ticker {
   }
 
   private scheduleNextFrame() {
-    this.scheduledAnimationFrame = window.requestAnimationFrame((newTime) => {
+    this.scheduledAnimationFrame = window.requestAnimationFrame(() => {
       this.scheduledAnimationFrame = undefined;
 
       if (!this.isRunning) {

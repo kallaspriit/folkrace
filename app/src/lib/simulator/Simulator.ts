@@ -1,5 +1,4 @@
 import { Logger } from "ts-log";
-import { config } from "../../config";
 import { drawRobot } from "../../services/drawRobot";
 import { robot } from "../../services/robot";
 import { FpsCounter } from "../fps-counter";
@@ -91,7 +90,6 @@ export class Simulator {
 
     // setup remote controller
     this.remoteController = new RemoteController({
-      vehicleOptions: config.vehicle,
       robot,
       log: this.options.log,
     });

@@ -221,19 +221,11 @@ export class Layer {
     this.ctx = ctx;
 
     // get dimensions
-    this.width = this.canvas.offsetWidth;
-    this.height = this.canvas.offsetHeight;
+    this.width = this.canvas.clientWidth;
+    this.height = this.canvas.clientHeight;
 
     // use minimum of width/height as size
     this.size = Math.min(this.width, this.height) - 2;
-
-    // set fixed canvas dimensions
-    this.canvas.setAttribute("width", `${this.width.toString()}px`);
-    this.canvas.setAttribute("height", `${this.height.toString()}px`);
-
-    // remove style dimension properties
-    this.canvas.style.removeProperty("width");
-    this.canvas.style.removeProperty("height");
 
     // mouse events should pass through if no listeners were set
     const passThroughMouseEvents =
@@ -483,7 +475,7 @@ export class Layer {
     }
   }
 
-  drawOccupancyGrid(options: DrawOccupancyGridOptions, style: DrawStyle = {}) {
+  drawOccupancyGrid(options: DrawOccupancyGridOptions, _style: DrawStyle = {}) {
     const opt: Required<DrawOccupancyGridOptions> = {
       origin: { x: 0, y: 0 },
       centered: false,

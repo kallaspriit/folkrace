@@ -1,4 +1,3 @@
-import { MotorValue } from "../robot";
 import { TrackedVehicleKinematics, TrackedVehicleOptions } from "./TrackedVehicleKinematics";
 
 const options: TrackedVehicleOptions = {

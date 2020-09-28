@@ -1,8 +1,6 @@
 import { withKnobs, boolean } from "@storybook/addon-knobs";
 import React from "react";
 import { ReactComponent as AppleIcon } from "../../theme/icons/apple-icon.svg";
-import { Column } from "../Column/Column";
-import { GridBox } from "../GridBox/GridBox";
 import { MockText } from "../MockText/MockText";
 import { P } from "../Paragraph/Paragraph";
 import { Flex } from "./Flex";

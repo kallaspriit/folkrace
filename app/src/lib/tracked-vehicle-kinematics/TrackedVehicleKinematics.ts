@@ -2,9 +2,6 @@ export interface TrackedVehicleOptions {
   trackWidth: number;
   maxSpeed: number;
   wheelDiameter: number;
-  // encoderCountsPerRotation: number;
-  // gearboxRatio: number;
-  // speedUpdateInterval: number;
 }
 
 export interface MotorValue {
@@ -75,7 +72,7 @@ export class TrackedVehicleKinematics {
   }
 
   // TODO: calculate actual kinematics
-  motionToSpeed(speed: number, omega: number): MotorValue {
+  motionToSpeeds(speed: number, omega: number): MotorValue {
     const speeds: MotorValue = {
       left: speed + omega,
       right: speed - omega,

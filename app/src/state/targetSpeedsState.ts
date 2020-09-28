@@ -1,6 +1,6 @@
 import { atom } from "recoil";
 
-// represents target motor speeds in ticks per second
+// represents target motor speeds in encoder counts per second (QPPS)
 export interface TargetSpeedsState {
   readonly left: number;
   readonly right: number;

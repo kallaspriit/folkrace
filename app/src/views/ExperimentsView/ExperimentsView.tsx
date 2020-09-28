@@ -8,6 +8,7 @@ import { MainMenuExperiment } from "./MainMenuExperiment";
 import { SoundExperiment } from "./SoundExperiment";
 import { StateExperiment } from "./StateExperiment";
 import { TransportExperiment } from "./TransportExperiment";
+import { VisualizerExperiment } from "./VisualizerExperiment";
 
 const pages: Page[] = [
   {
@@ -34,6 +35,11 @@ const pages: Page[] = [
     name: "main-menu",
     title: "Main menu experiment",
     page: <MainMenuExperiment />,
+  },
+  {
+    name: "visualizer",
+    title: "Visualizer experiment",
+    page: <VisualizerExperiment />,
   },
 ];
 

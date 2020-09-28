@@ -1,13 +1,28 @@
 import { Layer, LayerOptions } from "./Layer";
 
+export interface ContainerSize {
+  width: number;
+  height: number;
+}
+
 export class Visualizer {
   readonly layers: Layer[] = [];
 
   constructor(readonly container: HTMLElement) {}
 
   createLayer(options: LayerOptions) {
+    const containerSize: ContainerSize = {
+      width: this.container.clientWidth,
+      height: this.container.clientHeight,
+    };
+
     // create canvas and add it to DOM
-    const canvas = this.createCanvasElement();
+    const canvas = this.createCanvasElement(containerSize);
+
+    console.log({
+      containerSize,
+    });
+
     this.container.append(canvas);
 
     // create layer and register it
@@ -32,14 +47,11 @@ export class Visualizer {
     }
   }
 
-  private createCanvasElement() {
+  private createCanvasElement({ width, height }: ContainerSize) {
     const canvas = document.createElement("canvas");
 
-    canvas.style.position = "absolute";
-    canvas.style.width = "100%";
-    canvas.style.height = "100%";
-    canvas.style.left = "0";
-    canvas.style.right = "0";
+    canvas.width = width;
+    canvas.height = height;
 
     return canvas;
   }
