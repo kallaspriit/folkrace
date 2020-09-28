@@ -4,9 +4,13 @@ import { dummyLogger, Logger } from "ts-log";
 import { Robot } from "../robot";
 import { MotorValue, TrackedVehicleKinematics, TrackedVehicleOptions } from "../tracked-vehicle-kinematics";
 
+export interface RemoteControlVehicleOptions extends TrackedVehicleOptions {
+  speedUpdateInterval: number;
+}
+
 export interface RemoteControllerOptions {
   robot: Robot;
-  vehicleOptions: TrackedVehicleOptions;
+  vehicleOptions: RemoteControlVehicleOptions;
   log?: Logger;
 }
 
@@ -74,7 +78,7 @@ export class RemoteController {
 
     // only send the speed if different from last
     if (!this.lastSentTargetRpms || TrackedVehicleKinematics.isSpeedDifferent(motorRpms, this.lastSentTargetRpms)) {
-      this.robot.setMotorsTargetRpm(motorRpms.left, motorRpms.right);
+      this.robot.setMotorTargetRpms(motorRpms);
 
       this.lastSentTargetRpms = motorRpms;
     }

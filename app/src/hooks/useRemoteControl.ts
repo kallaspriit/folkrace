@@ -51,8 +51,12 @@ export function useRemoteControl(isEnabled = true) {
           const isPressedX = gamepad.buttons[0].pressed;
 
           // run fixed rpm experiment when X is pressed
+          // 60 rpm is one revolution per second
           if (isPressedX) {
-            robot.setMotorsTargetRpm(60, 60);
+            robot.setMotorTargetRpms({
+              left: 60,
+              right: 60,
+            });
 
             return;
           } else {

@@ -1,6 +1,11 @@
 import { rotationsPerMinuteToEncoderCountsPerSecond } from "../../services/rotationsPerMinuteToEncoderCountsPerSecond";
 import { Transport } from "../transport/Transport";
 
+export interface MotorValue {
+  readonly left: number;
+  readonly right: number;
+}
+
 export interface RobotConfig {
   targetLidarRpm?: number;
 }
@@ -31,19 +36,22 @@ export class Robot {
     this.send("state");
   }
 
-  setMotorsTargetRpm(leftRpm: number, rightRpm: number) {
-    const leftEncoderCountsPerSecond = rotationsPerMinuteToEncoderCountsPerSecond(leftRpm);
-    const rightEncoderCountsPerSecond = rotationsPerMinuteToEncoderCountsPerSecond(rightRpm);
-
-    this.setMotorsTargetEncoderCountsPerSecond(leftEncoderCountsPerSecond, rightEncoderCountsPerSecond);
+  setMotorTargetRpms(trackRpms: MotorValue) {
+    this.setMotorsTargetEncoderCountsPerSecond({
+      left: rotationsPerMinuteToEncoderCountsPerSecond(trackRpms.left),
+      right: rotationsPerMinuteToEncoderCountsPerSecond(trackRpms.right),
+    });
   }
 
-  setMotorsTargetEncoderCountsPerSecond(leftEncoderCountsPerSecond: number, rightEncoderCountsPerSecond: number) {
-    this.send("s", leftEncoderCountsPerSecond, rightEncoderCountsPerSecond);
+  setMotorsTargetEncoderCountsPerSecond(encoderCountsPerSecond: MotorValue) {
+    this.send("s", encoderCountsPerSecond.left, encoderCountsPerSecond.right);
   }
 
   stop() {
-    this.setMotorsTargetRpm(0, 0);
+    this.setMotorTargetRpms({
+      left: 0,
+      right: 0,
+    });
   }
 
   ping(transportOnly = false) {

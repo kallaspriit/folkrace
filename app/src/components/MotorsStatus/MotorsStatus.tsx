@@ -3,7 +3,7 @@ import { useRecoilValue } from "recoil";
 import { useRemoteControl } from "../../hooks/useRemoteControl";
 import { aliveState } from "../../state/aliveState";
 import { motorsConnectedState } from "../../state/motorsConnectedState";
-import { targetSpeedsState } from "../../state/targetSpeedsState";
+import { targetMotorRpmsState } from "../../state/targetMotorRpmsState";
 import { ReactComponent as MotorsIcon } from "../../theme/icons/motors-icon.svg";
 import { ReactComponent as RemoteIcon } from "../../theme/icons/remote-icon.svg";
 import { FlexProps } from "../Flex/Flex";
@@ -13,7 +13,7 @@ export const MotorsStatus: React.FC<FlexProps> = ({ onClick, ...rest }) => {
   const [isRemoteControlMode, setIsRemoteControlMode] = useState(false);
   const isAlive = useRecoilValue(aliveState);
   const motorsConnected = useRecoilValue(motorsConnectedState);
-  const targetSpeeds = useRecoilValue(targetSpeedsState);
+  const targetMotorRpms = useRecoilValue(targetMotorRpmsState);
   const { gamepadName } = useRemoteControl(isRemoteControlMode);
 
   const getTitle = () => {
@@ -37,11 +37,11 @@ export const MotorsStatus: React.FC<FlexProps> = ({ onClick, ...rest }) => {
       return "No controller";
     }
 
-    if (targetSpeeds.left === 0 && targetSpeeds.right === 0) {
+    if (targetMotorRpms.left === 0 && targetMotorRpms.right === 0) {
       return "Stopped";
     }
 
-    return `${targetSpeeds.left} / ${targetSpeeds.right}`;
+    return `${targetMotorRpms.left.toFixed(0)} / ${targetMotorRpms.right.toFixed(0)} RPM`;
   };
 
   const getStatus = (): StateStatus => {

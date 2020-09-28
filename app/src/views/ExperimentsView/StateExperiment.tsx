@@ -197,10 +197,18 @@ export const StateExperiment: React.FC = () => {
         </List>
       </Column>
       <ButtonGroup equalWidth>
-        <ButtonGroupButton tertiary onClick={() => robot.setMotorsTargetRpm(1000, 1000)}>
+        <ButtonGroupButton
+          tertiary
+          onClick={() =>
+            robot.setMotorTargetRpms({
+              left: 60,
+              right: 60,
+            })
+          }
+        >
           Start motors
         </ButtonGroupButton>
-        <ButtonGroupButton tertiary onClick={() => robot.setMotorsTargetRpm(0, 0)}>
+        <ButtonGroupButton tertiary onClick={() => robot.stop()}>
           Stop motors
         </ButtonGroupButton>
         <ButtonGroupButton tertiary onClick={() => robot.requestState()}>

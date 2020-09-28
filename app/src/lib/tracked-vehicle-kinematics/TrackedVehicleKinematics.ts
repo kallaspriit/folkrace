@@ -2,9 +2,9 @@ export interface TrackedVehicleOptions {
   trackWidth: number;
   maxSpeed: number;
   wheelDiameter: number;
-  encoderCountsPerRotation: number;
-  gearboxRatio: number;
-  speedUpdateInterval: number;
+  // encoderCountsPerRotation: number;
+  // gearboxRatio: number;
+  // speedUpdateInterval: number;
 }
 
 export interface MotorValue {
@@ -13,11 +13,11 @@ export interface MotorValue {
 }
 
 export interface Motion {
-  position: {
+  velocity: {
     x: number;
     y: number;
   };
-  angle: number;
+  omega: number;
 }
 
 // https://pdfs.semanticscholar.org/29ae/0bc974737b58afd63b6edb8d0837a3383321.pdf
@@ -38,27 +38,11 @@ export class TrackedVehicleKinematics {
     const maxRequestedSpeedMagnitude = Math.max(Math.abs(speed.left), Math.abs(speed.right));
     const normalizationFactor = Math.min(maxSpeed / maxRequestedSpeedMagnitude, 1.0);
 
-    // console.log("normalize", {
-    //   maxRequestedSpeedMagnitude,
-    //   normalizationFactor,
-    //   speeds,
-    //   maxSpeed,
-    // });
-
     return {
       left: speed.left * normalizationFactor,
       right: speed.right * normalizationFactor,
     };
   }
-
-  // getSpeedEncoderCount(speedMetersPerSecond: number) {
-  //   const circumference = this.options.wheelDiameter * Math.PI;
-  //   const gearedEncoderCountsPerRevolution = this.options.encoderCountsPerRotation * this.options.gearboxRatio;
-  //   const rotationsPerSecond = speedMetersPerSecond / circumference;
-  //   const targetEncoderCountsPerSecond = rotationsPerSecond * gearedEncoderCountsPerRevolution;
-
-  //   return Math.floor(targetEncoderCountsPerSecond);
-  // }
 
   speedToRpm(speedMetersPerSecond: number) {
     const circumference = this.options.wheelDiameter * Math.PI;
@@ -68,38 +52,30 @@ export class TrackedVehicleKinematics {
     return rotationPerMinute;
   }
 
-  speedsToRpms(speeds: MotorValue): MotorValue {
+  speedsToRpms(speedsMetersPerSecond: MotorValue): MotorValue {
     return {
-      left: this.speedToRpm(speeds.left),
-      right: this.speedToRpm(speeds.right),
+      left: this.speedToRpm(speedsMetersPerSecond.left),
+      right: this.speedToRpm(speedsMetersPerSecond.right),
     };
   }
 
-  // getEncoderCountSpeed(encoderCountsPerSecond: number) {
-  //   const circumference = this.options.wheelDiameter * Math.PI;
-  //   const gearedEncoderCountsPerRevolution = this.options.encoderCountsPerRotation * this.options.gearboxRatio;
-  //   const revolutionsPerSecond = encoderCountsPerSecond / gearedEncoderCountsPerRevolution;
-  //   const speed = revolutionsPerSecond / circumference;
+  rpmToSpeed(rotationPerMinute: number) {
+    const circumference = this.options.wheelDiameter * Math.PI;
+    const rotationsPerSecond = rotationPerMinute / 60;
+    const speedMetersPerSecond = rotationsPerSecond * circumference;
 
-  //   return speed;
-  // }
+    return speedMetersPerSecond;
+  }
 
-  // motorToEncoderSpeed(motorSpeed: MotorValue): MotorValue {
-  //   return {
-  //     left: this.getSpeedEncoderCount(motorSpeed.left),
-  //     right: this.getSpeedEncoderCount(motorSpeed.right),
-  //   };
-  // }
+  rpmsToSpeeds(rotationsPerMinute: MotorValue): MotorValue {
+    return {
+      left: this.rpmToSpeed(rotationsPerMinute.left),
+      right: this.rpmToSpeed(rotationsPerMinute.right),
+    };
+  }
 
-  // encoderToMotorSpeed(encoderSpeed: MotorValue): MotorValue {
-  //   return {
-  //     left: this.getEncoderCountSpeed(encoderSpeed.left),
-  //     right: this.getEncoderCountSpeed(encoderSpeed.right),
-  //   };
-  // }
-
+  // TODO: calculate actual kinematics
   motionToSpeed(speed: number, omega: number): MotorValue {
-    // TODO: calculate actual kinematics
     const speeds: MotorValue = {
       left: speed + omega,
       right: speed - omega,
@@ -108,18 +84,47 @@ export class TrackedVehicleKinematics {
     return TrackedVehicleKinematics.getLimitedSpeed(speeds, this.options.maxSpeed);
   }
 
-  speedToMotion(_encoderSpeed: MotorValue): Motion {
+  /**
+   * The local frame of the vehicle is assumed to have its origin on the center of the area defined by both tracks, and
+   * its Y axis is aligned with the forward motion direction.
+   *
+   * Instantaneous Center of Rotation (ICR) of a vehicle, considered as a rigid body, is defined as the point in the
+   * plane where the motion of the vehicle can be represented by a rotation and no translation occurs.
+   *
+   * @param trackRpms Rotational speeds of the tracks
+   */
+  calculateMotion(trackRpms: MotorValue): Motion {
     // TODO: convert encoder speeds to track speeds in meters per second
     // const motorSpeed = this.encoderToMotorSpeed(encoderSpeed);
+    const trackSpeeds = this.rpmsToSpeeds(trackRpms);
+
+    // TODO: this is not really true, only for perfect differential drive
+    const icrY = 0;
+    const icrXLeft = -this.options.trackWidth / 2;
+    const icrXRight = this.options.trackWidth / 2;
+
+    const velocityX = ((trackSpeeds.right - trackSpeeds.left) / (icrXRight - icrXLeft)) * icrY;
+    const velocityY =
+      (trackSpeeds.right + trackSpeeds.left) / 2 -
+      ((trackSpeeds.right - trackSpeeds.left) / (icrXRight - icrXLeft)) * ((icrXRight + icrXLeft) / 2);
+    const omega = (trackSpeeds.right - trackSpeeds.left) / (icrXRight - icrXLeft);
+
+    console.log({
+      trackRpms,
+      trackSpeeds,
+      velocityX,
+      velocityY,
+      omega,
+    });
 
     // const velocityX =
 
     return {
-      position: {
-        x: 0,
-        y: 0,
+      velocity: {
+        x: velocityX,
+        y: velocityY,
       },
-      angle: 0,
+      omega: omega,
     };
   }
 }
