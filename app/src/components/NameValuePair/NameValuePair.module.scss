@@ -1,0 +1,9 @@
+@import "../../theme/functions/grid";
+
+.name-value-pair {
+  margin-top: grid(1);
+
+  &:first-child {
+    margin-top: 0;
+  }
+}

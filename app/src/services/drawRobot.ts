@@ -11,7 +11,7 @@ export function drawRobot({ center, angle, layer }: { center: Coordinates; angle
       const arrowScale = 0.5;
 
       // draw body
-      ctx.fillStyle = "#000";
+      ctx.fillStyle = "#900";
       ctx.fillRect(-screenSize.x / 2, -screenSize.y / 2, screenSize.x, screenSize.y);
 
       // draw direction arrow

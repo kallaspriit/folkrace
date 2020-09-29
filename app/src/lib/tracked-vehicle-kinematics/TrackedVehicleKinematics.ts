@@ -35,6 +35,7 @@ export class TrackedVehicleKinematics {
     const maxRequestedSpeedMagnitude = Math.max(Math.abs(speed.left), Math.abs(speed.right));
     const normalizationFactor = Math.min(maxSpeed / maxRequestedSpeedMagnitude, 1.0);
 
+    // TODO: does not really work..
     return {
       left: speed.left * normalizationFactor,
       right: speed.right * normalizationFactor,
@@ -95,16 +96,22 @@ export class TrackedVehicleKinematics {
     // const motorSpeed = this.encoderToMotorSpeed(encoderSpeed);
     const trackSpeeds = this.rpmsToSpeeds(trackRpms);
 
+    // find by testing? larger values make rotation slower
+    const trackIcrMultiplier = 1.19;
+
     // TODO: this is not really true, only for perfect differential drive
     const icrY = 0;
-    const icrXLeft = -this.options.trackWidth / 2;
-    const icrXRight = this.options.trackWidth / 2;
+    const icrXLeft = -this.options.trackWidth * trackIcrMultiplier;
+    const icrXRight = this.options.trackWidth * trackIcrMultiplier;
 
     const velocityX = ((trackSpeeds.right - trackSpeeds.left) / (icrXRight - icrXLeft)) * icrY;
     const velocityY =
       (trackSpeeds.right + trackSpeeds.left) / 2 -
       ((trackSpeeds.right - trackSpeeds.left) / (icrXRight - icrXLeft)) * ((icrXRight + icrXLeft) / 2);
     const omega = (trackSpeeds.right - trackSpeeds.left) / (icrXRight - icrXLeft);
+
+    // simpler calculation for differential drive vehicle but should be similar..
+    // const velocity = (trackSpeeds.left + trackSpeeds.right) / 2;
 
     // console.log({
     //   trackRpms,

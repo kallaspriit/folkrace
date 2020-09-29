@@ -76,6 +76,7 @@ export interface DrawStyle {
   fillStyle?: ColorStyle;
   strokeStyle?: ColorStyle;
   lineWidth?: number;
+  lineCap?: "butt" | "round" | "square";
   font?: string;
   textAlign?: CanvasTextAlign;
   textBaseline?: CanvasTextBaseline;
@@ -158,7 +159,7 @@ export interface DrawObjectOptions {
   center: Coordinates;
   size: Size;
   angle: number;
-  draw?(ctx: CanvasRenderingContext2D, options: Required<DrawObjectOptions> & { layer: Layer }): void;
+  draw(ctx: CanvasRenderingContext2D, options: Required<DrawObjectOptions> & { layer: Layer }): void;
 }
 
 export interface DrawGraphOptions {
@@ -735,40 +736,14 @@ export class Layer {
   }
 
   drawObject(options: DrawObjectOptions) {
-    const opt: Required<DrawObjectOptions> = {
-      ...options,
-      size: {
-        x: this.size / 50 / this.getScale(),
-        y: this.size / 50 / this.getScale(),
-      },
-      draw: (ctx, { size }) => {
-        const screenSize = this.worldToScreen(size);
-
-        // draw body
-        ctx.fillStyle = "#900";
-        ctx.fillRect(-screenSize.x / 2, -screenSize.y / 2, screenSize.x, screenSize.y);
-
-        // draw direction arrow
-        const arrowScale = 0.5;
-        const arrowSize = Math.min(screenSize.x, screenSize.y) * arrowScale;
-
-        ctx.fillStyle = "#FFF";
-        ctx.beginPath();
-        ctx.moveTo(-arrowSize / 2, -arrowSize / 2);
-        ctx.lineTo(0, arrowSize / 2);
-        ctx.lineTo(arrowSize / 2, -arrowSize / 2);
-        ctx.lineTo(-arrowSize / 2, -arrowSize / 2);
-        ctx.fill();
-      },
-    };
-    const screenCenter = this.worldToScreen(opt.center);
+    const screenCenter = this.worldToScreen(options.center);
 
     this.ctx.save();
 
     this.ctx.translate(screenCenter.x, screenCenter.y);
-    this.ctx.rotate(opt.angle);
+    this.ctx.rotate(options.angle);
 
-    opt.draw(this.ctx, { ...opt, layer: this });
+    options.draw(this.ctx, { ...options, layer: this });
 
     this.ctx.restore();
   }
@@ -865,6 +840,10 @@ export class Layer {
 
     if (options.lineWidth) {
       this.ctx.lineWidth = options.lineWidth;
+    }
+
+    if (options.lineCap) {
+      this.ctx.lineCap = options.lineCap;
     }
 
     if (options.font) {

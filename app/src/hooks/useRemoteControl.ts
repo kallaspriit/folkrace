@@ -41,19 +41,27 @@ export function useRemoteControl(isEnabled = true) {
         const omega = calculateControllerRate(gamepad.axes[0], config.rates);
 
         if (haveButtonsChanged) {
-          const pressedButtonIndexes = gamepad.buttons
-            .filter((button) => button.pressed)
-            .map((pressedButton) => gamepad.buttons.indexOf(pressedButton));
+          // const pressedButtonIndexes = gamepad.buttons
+          //   .filter((button) => button.pressed)
+          //   .map((pressedButton) => gamepad.buttons.indexOf(pressedButton));
 
-          log.info(`pressed: ${pressedButtonIndexes.length > 0 ? pressedButtonIndexes.join(", ") : "none"}`);
+          // log.info(`pressed: ${pressedButtonIndexes.length > 0 ? pressedButtonIndexes.join(", ") : "none"}`);
 
-          const isPressedX = gamepad.buttons[0].pressed;
+          const isPressedA = gamepad.buttons[0].pressed;
+          const isPressedX = gamepad.buttons[2].pressed;
 
-          // run fixed rpm experiment when X is pressed
-          // 60 rpm is one revolution per second
-          if (isPressedX) {
+          if (isPressedA) {
+            // run fixed rpm experiment when X is pressed (60 rpm is one revolution per second)
             robot.setMotorTargetRpms({
-              left: 60,
+              left: 30,
+              right: 30,
+            });
+
+            return;
+          } else if (isPressedX) {
+            // rotate to the left at fixed rpm
+            robot.setMotorTargetRpms({
+              left: -60,
               right: 60,
             });
 

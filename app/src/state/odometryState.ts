@@ -28,5 +28,5 @@ export const initialOdometryStep: OdometryStep = {
 
 export const odometryState = atom<OdometryStep[]>({
   key: "odometryState",
-  default: [],
+  default: [initialOdometryStep],
 });

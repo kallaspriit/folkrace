@@ -68,6 +68,7 @@ export const TransportStatus: React.FC<FlexProps> = ({ ...rest }) => {
       description={getDescription()}
       status={getStatus()}
       icon={<TransportIcon />}
+      onClick={() => window.location.reload()}
       {...rest}
     />
   );

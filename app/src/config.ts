@@ -14,13 +14,13 @@ export const config = {
     low: 15.0,
     // critical: 13.9,
     // TODO: using higher threshold for testing
-    critical: 14.5,
+    critical: 14.0,
     alarmInterval: 5000,
   },
   vehicle: {
     trackWidth: 0.12, // meters
     maxSpeed: 1, // meters per second
-    wheelDiameter: 0.039, // meters
+    wheelDiameter: 0.046, // meters
     encoderCountsPerRotation: 20, // encoder pulse count per revolution
     gearboxRatio: 25, // 25/1 gearbox ratio
     speedUpdateInterval: 1000 / 60, // 60Hz

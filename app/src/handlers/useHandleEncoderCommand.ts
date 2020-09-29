@@ -45,23 +45,39 @@ export function useHandleEncoderCommand() {
     const motion = kinematics.calculateMotion(trackRpms);
 
     // maximum number of odometry steps to record
-    const maxOdometryLength = 100;
+    const maxOdometryLength = 1000;
+    const coordinateSystemRotation = Math.PI / 2;
 
     setOdometry((currentOdometrySteps) => {
       // resove previous odometry step (use all-zeroes initial step if none)
       const previousStep: OdometryStep =
         currentOdometrySteps.length > 0 ? currentOdometrySteps[currentOdometrySteps.length - 1] : initialOdometryStep;
 
+      const angleChange = motion.omega * dt;
+      const angle = previousStep.angle + angleChange;
+
+      // the robot can't really drift from side to side
+      const longitudinalVelocity = motion.velocity.y;
+
+      const positionChange = {
+        x: longitudinalVelocity * Math.cos(previousStep.angle + angleChange / 2 + coordinateSystemRotation) * dt,
+        y: longitudinalVelocity * Math.sin(previousStep.angle + angleChange / 2 + coordinateSystemRotation) * dt,
+      };
+
+      const position = {
+        x: previousStep.position.x + positionChange.x,
+        y: previousStep.position.y + positionChange.y,
+      };
+
+      // console.log("odometry", motion.velocity, position, angle);
+
       // add new odometry step
       return [
         ...currentOdometrySteps.slice(Math.max(currentOdometrySteps.length - maxOdometryLength - 1, 0)),
         {
           motion,
-          position: {
-            x: previousStep.position.x + motion.velocity.x * dt,
-            y: previousStep.position.y + motion.velocity.y * dt,
-          },
-          angle: previousStep.angle + motion.omega * dt,
+          angle,
+          position,
         },
       ];
     });

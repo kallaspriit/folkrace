@@ -44,7 +44,7 @@ export class Robot {
   }
 
   setMotorsTargetEncoderCountsPerSecond(encoderCountsPerSecond: MotorValue) {
-    this.send("s", encoderCountsPerSecond.left, encoderCountsPerSecond.right);
+    this.send("s", Math.round(encoderCountsPerSecond.left), Math.round(encoderCountsPerSecond.right));
   }
 
   stop() {
