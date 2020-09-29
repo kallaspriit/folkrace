@@ -17,7 +17,7 @@ export class Visualizer {
     };
 
     // create canvas and add it to DOM
-    const canvas = this.createCanvasElement(containerSize);
+    const canvas = this.createCanvasElement(containerSize, this.layers.length);
 
     console.log({
       containerSize,
@@ -47,11 +47,17 @@ export class Visualizer {
     }
   }
 
-  private createCanvasElement({ width, height }: ContainerSize) {
+  private createCanvasElement({ width, height }: ContainerSize, index: number) {
     const canvas = document.createElement("canvas");
 
     canvas.width = width;
     canvas.height = height;
+
+    // consecutive canvas layers need to be positioned on top of each other
+    if (index > 0) {
+      canvas.style.position = "relative";
+      canvas.style.top = `${-height}px`;
+    }
 
     return canvas;
   }

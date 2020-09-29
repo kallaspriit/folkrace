@@ -4,10 +4,12 @@ import Vector from "victor";
 import { map } from "../../services/map";
 import { Ticker, TickInfo } from "../ticker";
 
+export type RenderLayerFn = (info: FrameInfo) => void;
+
 export interface LayerOptions {
   readonly defaultStyle?: DrawStyle;
   getTransform?(layer: Layer): Transform;
-  render?(info: FrameInfo): void;
+  render?: RenderLayerFn;
   onMouseDownEvent?(event: LayerMouseDownEvent): void;
   onMouseUpEvent?(event: LayerMouseUpEvent): void;
   onMouseMoveEvent?(event: LayerMouseMoveEvent): void;

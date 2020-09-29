@@ -106,15 +106,13 @@ export class TrackedVehicleKinematics {
       ((trackSpeeds.right - trackSpeeds.left) / (icrXRight - icrXLeft)) * ((icrXRight + icrXLeft) / 2);
     const omega = (trackSpeeds.right - trackSpeeds.left) / (icrXRight - icrXLeft);
 
-    console.log({
-      trackRpms,
-      trackSpeeds,
-      velocityX,
-      velocityY,
-      omega,
-    });
-
-    // const velocityX =
+    // console.log({
+    //   trackRpms,
+    //   trackSpeeds,
+    //   velocityX,
+    //   velocityY,
+    //   omega,
+    // });
 
     return {
       velocity: {

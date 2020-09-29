@@ -18,7 +18,9 @@ export function useHandleEncoderCommand() {
     const leftCountsSinceLastUpdate = parseInt(args[0], 10);
     const rightCountsSinceLastUpdate = parseInt(args[1], 10);
     const timeSinceLastEncoderReportUs = parseInt(args[2], 10);
-    const timeSinceLastEncodersReportSeconds = timeSinceLastEncoderReportUs / 1000000;
+
+    // time since last encoders report in seconds
+    const dt = timeSinceLastEncoderReportUs / 1000000;
 
     setEncoders({
       left: leftCountsSinceLastUpdate,
@@ -26,8 +28,8 @@ export function useHandleEncoderCommand() {
     });
 
     const currentSpeeds = {
-      left: leftCountsSinceLastUpdate / timeSinceLastEncodersReportSeconds,
-      right: rightCountsSinceLastUpdate / timeSinceLastEncodersReportSeconds,
+      left: leftCountsSinceLastUpdate / dt,
+      right: rightCountsSinceLastUpdate / dt,
     };
 
     // current speed is in encoder counts per second (QPPS)
@@ -42,6 +44,9 @@ export function useHandleEncoderCommand() {
     // calculate kinematic motion
     const motion = kinematics.calculateMotion(trackRpms);
 
+    // maximum number of odometry steps to record
+    const maxOdometryLength = 100;
+
     setOdometry((currentOdometrySteps) => {
       // resove previous odometry step (use all-zeroes initial step if none)
       const previousStep: OdometryStep =
@@ -49,14 +54,14 @@ export function useHandleEncoderCommand() {
 
       // add new odometry step
       return [
-        ...currentOdometrySteps,
+        ...currentOdometrySteps.slice(Math.max(currentOdometrySteps.length - maxOdometryLength - 1, 0)),
         {
           motion,
           position: {
-            x: previousStep.position.x + motion.velocity.x,
-            y: previousStep.position.y + motion.velocity.y,
+            x: previousStep.position.x + motion.velocity.x * dt,
+            y: previousStep.position.y + motion.velocity.y * dt,
           },
-          angle: previousStep.angle + motion.omega,
+          angle: previousStep.angle + motion.omega * dt,
         },
       ];
     });
