@@ -14,21 +14,28 @@ import { Visualizer, LayerOptions, RenderLayerFn } from "../../lib/visualizer";
 import { drawRobot } from "../../services/drawRobot";
 import { Point2D, getEuclideanDistance } from "../../services/getEuclideanDistance";
 import { radiansToDegrees } from "../../services/radiansToDegrees";
-import { odometryState, OdometryStep } from "../../state/odometryState";
+import { odometryPositionState, OdometryPosition, initialOdometryPosition } from "../../state/odometryPositionState";
+import { odometryStepsState, OdometryStep, initialOdometryStep } from "../../state/odometryStepsState";
 
-let odometrySteps: OdometryStep[] = [];
+// TODO: think of a proper way to update canvas state
+let _odometryPosition: OdometryPosition = initialOdometryPosition;
+let _odometrySteps: OdometryStep[] = [initialOdometryStep];
 
 export const RemoteView: React.FC = () => {
   const history = useHistory();
   const visualizerContainerRef = useRef<FlexElement>(null);
   const { gamepadName } = useRemoteControl();
-  const odometry = useRecoilValue(odometryState);
-  const resetOdometry = useResetRecoilState(odometryState);
+  const odometryPosition = useRecoilValue(odometryPositionState);
+  const odometrySteps = useRecoilValue(odometryStepsState);
+  const resetOdometry = useResetRecoilState(odometryStepsState);
 
-  // TODO: uncool..
+  // TODO: think of a proper way to update canvas state
   useEffect(() => {
-    odometrySteps = odometry;
-  }, [odometry]);
+    _odometryPosition = odometryPosition;
+  }, [odometryPosition]);
+  useEffect(() => {
+    _odometrySteps = odometrySteps;
+  }, [odometrySteps]);
 
   const setupVisualizer = useCallback((visualizer: Visualizer) => {
     const options = {
@@ -161,117 +168,83 @@ export const RemoteView: React.FC = () => {
     const renderOdometry: RenderLayerFn = ({ layer }) => {
       layer.clear();
 
-      let previousRenderedLinePosition: Point2D | undefined = undefined;
+      // draw odometry steps
+      _odometrySteps.forEach((odometryStep, index) => {
+        const previousStep = index > 0 ? _odometrySteps[index - 1] : undefined;
 
-      odometrySteps.forEach((odometryStep, index) => {
-        const isLastStep = index === odometrySteps.length - 1;
-        const previousStep = index > 0 ? odometrySteps[index - 1] : undefined;
-
-        if (isLastStep) {
-          // draw last line
-          if (previousRenderedLinePosition) {
-            layer.drawLine(
-              {
-                from: previousRenderedLinePosition,
-                to: odometryStep.position,
-              },
-              {
-                strokeStyle: `rgba(0, 200, 0, ${index / odometrySteps.length})`,
-                lineWidth: 5,
-              },
-            );
-          }
-
-          // draw robot
-          drawRobot({
-            center: odometryStep.position,
-            angle: odometryStep.angle,
-            layer,
-          });
-
-          // draw robot info
-          layer.drawText(
-            {
-              origin: odometryStep.position,
-              text: `X: ${odometryStep.position.x.toFixed(2)}`,
-              offset: { x: 20, y: 0 },
-            },
-            { fillStyle: "#FFF", textBaseline: "middle" },
-          );
-          layer.drawText(
-            {
-              origin: odometryStep.position,
-              text: `Y: ${odometryStep.position.y.toFixed(2)}`,
-              offset: { x: 20, y: 20 },
-            },
-            { fillStyle: "#FFF", textBaseline: "middle" },
-          );
-          layer.drawText(
-            {
-              origin: odometryStep.position,
-              text: `Angle: ${radiansToDegrees(odometryStep.angle).toFixed(1)}°`,
-              offset: { x: 20, y: 40 },
-            },
-            { fillStyle: "#FFF", textBaseline: "middle" },
-          );
-          layer.drawText(
-            {
-              origin: odometryStep.position,
-              text: `Speed: ${odometryStep.motion.velocity.y.toFixed(1)} m/s`,
-              offset: { x: 20, y: 60 },
-            },
-            { fillStyle: "#FFF", textBaseline: "middle" },
-          );
-        } else if (previousStep !== undefined) {
-          // layer.drawBox(
-          //   {
-          //     origin: odometryStep.position,
-          //     width: 0.05,
-          //     height: 0.05,
-          //     centered: true,
-          //   },
-          //   {
-          //     fillStyle: "#0F0",
-          //   },
-          // );
-
-          const distance =
-            previousRenderedLinePosition !== undefined
-              ? getEuclideanDistance(odometryStep.position, previousRenderedLinePosition)
-              : Number.POSITIVE_INFINITY;
-
-          // TODO: instead only add points if sufficiently far away from last?
-          // TODO: instead of individual lines, draw one long path? could use gradient?
-          if (distance >= 0.05 || isLastStep) {
-            layer.drawLine(
-              {
-                from: previousRenderedLinePosition ? previousRenderedLinePosition : previousStep.position,
-                to: odometryStep.position,
-              },
-              {
-                strokeStyle: `rgba(0, 200, 0, ${index / odometrySteps.length})`,
-                lineWidth: 5,
-                // lineCap: "round",
-              },
-            );
-
-            previousRenderedLinePosition = odometryStep.position;
-          }
+        if (!previousStep) {
+          return;
         }
+
+        layer.drawLine(
+          {
+            from: previousStep.position,
+            to: odometryStep.position,
+          },
+          {
+            strokeStyle: `rgba(0, 200, 0, ${index / _odometrySteps.length})`,
+            lineWidth: 5,
+            // lineCap: "round",
+          },
+        );
       });
+
+      // draw robot
+      drawRobot({
+        center: _odometryPosition.position,
+        angle: _odometryPosition.angle,
+        layer,
+      });
+
+      // draw robot info
+      layer.drawText(
+        {
+          origin: _odometryPosition.position,
+          text: `X: ${_odometryPosition.position.x.toFixed(2)}`,
+          offset: { x: 20, y: 0 },
+        },
+        { fillStyle: "#FFF", textBaseline: "middle" },
+      );
+      layer.drawText(
+        {
+          origin: _odometryPosition.position,
+          text: `Y: ${_odometryPosition.position.y.toFixed(2)}`,
+          offset: { x: 20, y: 20 },
+        },
+        { fillStyle: "#FFF", textBaseline: "middle" },
+      );
+      layer.drawText(
+        {
+          origin: _odometryPosition.position,
+          text: `Angle: ${radiansToDegrees(_odometryPosition.angle).toFixed(1)}°`,
+          offset: { x: 20, y: 40 },
+        },
+        { fillStyle: "#FFF", textBaseline: "middle" },
+      );
+      layer.drawText(
+        {
+          origin: _odometryPosition.position,
+          text: `Speed: ${_odometryPosition.velocity.y.toFixed(1)} m/s`,
+          offset: { x: 20, y: 60 },
+        },
+        { fillStyle: "#FFF", textBaseline: "middle" },
+      );
     };
 
+    // map layer is rendered once with grid etc
     visualizer.createLayer({
       ...mapLayerOptions,
       render: renderBackground,
     });
 
+    // odometry layer is rendered for every frame with odometry details
     visualizer.createLayer({
       ...mapLayerOptions,
       render: renderOdometry,
     });
   }, []);
 
+  // setup visualizer
   useVisualizer(visualizerContainerRef, setupVisualizer);
 
   return (

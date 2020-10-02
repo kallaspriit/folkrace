@@ -6,7 +6,7 @@ export interface RateConfig {
   superRate: number;
 }
 
-export function calculateControllerRate(
+export function getControllerRate(
   value: number,
   { rcRate = 1.0, expoRate = 0.0, superRate = 0.7 }: RateConfig,
 ): number {
@@ -35,7 +35,7 @@ export function calculateControllerRate(
   }
 
   // calculate max output for value of 1
-  const maxValue = calculateControllerRate(Number.POSITIVE_INFINITY, {
+  const maxValue = getControllerRate(Number.POSITIVE_INFINITY, {
     rcRate,
     expoRate,
     superRate,

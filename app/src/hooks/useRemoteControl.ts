@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { config } from "../config";
 import { GamepadManager } from "../lib/gamepad";
 import { RemoteController } from "../lib/remote-controller";
-import { calculateControllerRate } from "../services/calculateControllerRate";
+import { getControllerRate } from "../services/getControllerRate";
 import { robot } from "../services/robot";
 import { useLog } from "./useLog";
 
@@ -37,8 +37,8 @@ export function useRemoteControl(isEnabled = true) {
         }
 
         // use rate inputs to have better control around center axes
-        const speed = calculateControllerRate(gamepad.axes[3] * -1, config.rates);
-        const omega = calculateControllerRate(gamepad.axes[0], config.rates);
+        const speed = getControllerRate(gamepad.axes[3] * -1, config.rates);
+        const omega = getControllerRate(gamepad.axes[0], config.rates);
 
         if (haveButtonsChanged) {
           // const pressedButtonIndexes = gamepad.buttons

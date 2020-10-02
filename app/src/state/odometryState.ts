@@ -1,32 +1,22 @@
-import { atom } from "recoil";
-import { Motion } from "../lib/tracked-vehicle-kinematics";
+import { selector } from "recoil";
+import { OdometryPosition, odometryPositionState } from "./odometryPositionState";
+import { OdometryStep, odometryStepsState } from "./odometryStepsState";
 
-// represents one odometry step
-export interface OdometryStep {
-  readonly motion: Motion;
-  readonly position: {
-    readonly x: number;
-    readonly y: number;
-  };
-  readonly angle: number;
-}
-
-export const initialOdometryStep: OdometryStep = {
-  motion: {
-    velocity: {
-      x: 0,
-      y: 0,
-    },
-    omega: 0,
-  },
-  position: {
-    x: 0,
-    y: 0,
-  },
-  angle: 0,
-};
-
-export const odometryState = atom<OdometryStep[]>({
+// combines odometry position and steps because they need to be updated at the same time
+export const odometryState = selector<[OdometryPosition, OdometryStep[]]>({
   key: "odometryState",
-  default: [initialOdometryStep],
+  get: ({ get }) => {
+    const odometryPosition = get(odometryPositionState);
+    const odometrySteps = get(odometryStepsState);
+
+    return [odometryPosition, odometrySteps];
+  },
+  set: ({ get, set }, args) => {
+    const [odometryPosition, odometrySteps] = args as [OdometryPosition, OdometryStep[]];
+
+    console.log("set odometryState", { get, set, odometryPosition, odometrySteps });
+
+    set(odometryPositionState, odometryPosition);
+    set(odometryStepsState, odometrySteps);
+  },
 });

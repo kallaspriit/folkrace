@@ -5,8 +5,8 @@ export interface TrackedVehicleOptions {
 }
 
 export interface MotorValue {
-  readonly left: number;
-  readonly right: number;
+  left: number;
+  right: number;
 }
 
 export interface Motion {
@@ -15,6 +15,16 @@ export interface Motion {
     y: number;
   };
   omega: number;
+}
+
+export interface Position {
+  x: number;
+  y: number;
+}
+
+export interface Pose {
+  position: Position;
+  angle: number;
 }
 
 // https://pdfs.semanticscholar.org/29ae/0bc974737b58afd63b6edb8d0837a3383321.pdf
@@ -39,6 +49,31 @@ export class TrackedVehicleKinematics {
     return {
       left: speed.left * normalizationFactor,
       right: speed.right * normalizationFactor,
+    };
+  }
+
+  static getPoseChange(motion: Motion, angle: number, dt: number): Pose {
+    // calculate angle change and updated angle
+    const angleChange = motion.omega * dt;
+    const updatedAngle = angle + angleChange / 2;
+
+    // our coordinate system is rotated by 90 degrees
+    // TODO: any way this is not needed?
+    const coordinateSystemRotation = Math.PI / 2;
+
+    // calculate position change, x speed is applied at 90 degrees (PI/2) offset
+    const positionChange = {
+      x:
+        motion.velocity.y * Math.cos(updatedAngle + coordinateSystemRotation) * dt -
+        motion.velocity.x * Math.cos(updatedAngle + coordinateSystemRotation + Math.PI / 2) * dt,
+      y:
+        motion.velocity.y * Math.sin(updatedAngle + coordinateSystemRotation) * dt -
+        motion.velocity.x * Math.sin(updatedAngle + coordinateSystemRotation + Math.PI / 2) * dt,
+    };
+
+    return {
+      position: positionChange,
+      angle: angleChange,
     };
   }
 
@@ -91,7 +126,7 @@ export class TrackedVehicleKinematics {
    *
    * @param trackRpms Rotational speeds of the tracks
    */
-  calculateMotion(trackRpms: MotorValue): Motion {
+  getMotionFromMotorRpms(trackRpms: MotorValue): Motion {
     // TODO: convert encoder speeds to track speeds in meters per second
     // const motorSpeed = this.encoderToMotorSpeed(encoderSpeed);
     const trackSpeeds = this.rpmsToSpeeds(trackRpms);
@@ -104,7 +139,10 @@ export class TrackedVehicleKinematics {
     const icrXLeft = -this.options.trackWidth * trackIcrMultiplier;
     const icrXRight = this.options.trackWidth * trackIcrMultiplier;
 
+    // velocity in x direction (side to side) is zero if Y ICR is zero
     const velocityX = ((trackSpeeds.right - trackSpeeds.left) / (icrXRight - icrXLeft)) * icrY;
+
+    // longitudinal velocity (forward velocity)
     const velocityY =
       (trackSpeeds.right + trackSpeeds.left) / 2 -
       ((trackSpeeds.right - trackSpeeds.left) / (icrXRight - icrXLeft)) * ((icrXRight + icrXLeft) / 2);

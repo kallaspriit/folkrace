@@ -1,10 +1,12 @@
 import { useSetRecoilState } from "recoil";
 import { assertArgumentCount } from "../services/assertArgumentCount";
 import { encoderCountsPerSecondToRotationsPerMinute } from "../services/encoderCountsPerSecondToRotationsPerMinute";
+import { getEuclideanDistance } from "../services/getEuclideanDistance";
 import { kinematics } from "../services/kinematics";
 import { currentSpeedsState } from "../state/currentSpeedsState";
 import { encodersState } from "../state/encodersState";
-import { odometryState, OdometryStep, initialOdometryStep } from "../state/odometryState";
+import { odometryState } from "../state/odometryState";
+import { OdometryStep } from "../state/odometryStepsState";
 
 export function useHandleEncoderCommand() {
   const setEncoders = useSetRecoilState(encodersState);
@@ -15,6 +17,7 @@ export function useHandleEncoderCommand() {
   return (args: string[]) => {
     assertArgumentCount(args, 3);
 
+    // get arguments
     const leftCountsSinceLastUpdate = parseInt(args[0], 10);
     const rightCountsSinceLastUpdate = parseInt(args[1], 10);
     const timeSinceLastEncoderReportUs = parseInt(args[2], 10);
@@ -22,11 +25,13 @@ export function useHandleEncoderCommand() {
     // time since last encoders report in seconds
     const dt = timeSinceLastEncoderReportUs / 1000000;
 
+    // update encoder values
     setEncoders({
       left: leftCountsSinceLastUpdate,
       right: rightCountsSinceLastUpdate,
     });
 
+    // calculate current speeds in encoder counts per second
     const currentSpeeds = {
       left: leftCountsSinceLastUpdate / dt,
       right: rightCountsSinceLastUpdate / dt,
@@ -42,43 +47,77 @@ export function useHandleEncoderCommand() {
     };
 
     // calculate kinematic motion
-    const motion = kinematics.calculateMotion(trackRpms);
+    const motion = kinematics.getMotionFromMotorRpms(trackRpms);
 
-    // maximum number of odometry steps to record
-    const maxOdometryLength = 1000;
+    // our coordinate system is rotated by 90 degrees
+    // TODO: any way this is not needed?
     const coordinateSystemRotation = Math.PI / 2;
 
-    setOdometry((currentOdometrySteps) => {
-      // resove previous odometry step (use all-zeroes initial step if none)
-      const previousStep: OdometryStep =
-        currentOdometrySteps.length > 0 ? currentOdometrySteps[currentOdometrySteps.length - 1] : initialOdometryStep;
-
+    setOdometry(([currentOdometryPosition, currentOdometrySteps]) => {
+      // calculate angle change and updated angle
       const angleChange = motion.omega * dt;
-      const angle = previousStep.angle + angleChange;
+      const updatedAngle = currentOdometryPosition.angle + angleChange / 2;
 
-      // the robot can't really drift from side to side
-      const longitudinalVelocity = motion.velocity.y;
-
+      // calculate position change, x speed is applied at 90 degrees (PI/2) offset
       const positionChange = {
-        x: longitudinalVelocity * Math.cos(previousStep.angle + angleChange / 2 + coordinateSystemRotation) * dt,
-        y: longitudinalVelocity * Math.sin(previousStep.angle + angleChange / 2 + coordinateSystemRotation) * dt,
+        x:
+          motion.velocity.y * Math.cos(updatedAngle + coordinateSystemRotation) * dt -
+          motion.velocity.x * Math.cos(updatedAngle + coordinateSystemRotation + Math.PI / 2) * dt,
+        y:
+          motion.velocity.y * Math.sin(updatedAngle + coordinateSystemRotation) * dt -
+          motion.velocity.x * Math.sin(updatedAngle + coordinateSystemRotation + Math.PI / 2) * dt,
       };
 
-      const position = {
-        x: previousStep.position.x + positionChange.x,
-        y: previousStep.position.y + positionChange.y,
+      // calculate update position
+      const updatedPosition = {
+        x: currentOdometryPosition.position.x + positionChange.x,
+        y: currentOdometryPosition.position.y + positionChange.y,
       };
 
-      // console.log("odometry", motion.velocity, position, angle);
+      // resove previous odometry step (there's always zero position/velocity initial step available)
+      const previousOdometryStep: OdometryStep = currentOdometrySteps[currentOdometrySteps.length - 1];
 
-      // add new odometry step
-      return [
-        ...currentOdometrySteps.slice(Math.max(currentOdometrySteps.length - maxOdometryLength - 1, 0)),
-        {
+      // calculate distance from new to previous step position
+      const distance = getEuclideanDistance(updatedPosition, previousOdometryStep.position);
+
+      // start with same steps as before
+      const updatedOdometrySteps = [...currentOdometrySteps];
+
+      // odometry steps configuration
+      const maxOdometryLength = 1000;
+      const odometryStepMinimumDistanceMeters = 0.05;
+
+      // don't add new odometry step if distance from last is too small
+      if (distance >= odometryStepMinimumDistanceMeters) {
+        console.log("setOdometrySteps add", {
+          velocity: motion.velocity,
+          positionChange,
+          updatedPosition,
+          distance,
+          currentOdometrySteps,
+        });
+
+        // remove first odometry step if maximum number of steps has been reached
+        if (updatedOdometrySteps.length + 1 > maxOdometryLength) {
+          updatedOdometrySteps.shift();
+        }
+
+        // add new odometry step
+        updatedOdometrySteps.push({
           motion,
-          angle,
-          position,
+          angle: updatedAngle,
+          position: updatedPosition,
+        });
+      }
+
+      // update odometry position info
+      return [
+        {
+          velocity: motion.velocity,
+          position: updatedPosition,
+          angle: updatedAngle,
         },
+        updatedOdometrySteps,
       ];
     });
   };
