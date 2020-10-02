@@ -1,3 +1,5 @@
+import { config } from "../../config";
+
 export interface TrackedVehicleOptions {
   trackWidth: number;
   maxSpeed: number;
@@ -9,22 +11,23 @@ export interface MotorValue {
   right: number;
 }
 
-export interface Motion {
-  velocity: {
-    x: number;
-    y: number;
-  };
-  omega: number;
-}
-
-export interface Position {
+export interface VectorCoordinates {
   x: number;
   y: number;
 }
 
+export type Position = VectorCoordinates;
+export type Velocity = VectorCoordinates;
+
 export interface Pose {
   position: Position;
+  velocity: Position;
   angle: number;
+}
+
+export interface Motion {
+  velocity: Velocity;
+  omega: number;
 }
 
 // https://pdfs.semanticscholar.org/29ae/0bc974737b58afd63b6edb8d0837a3383321.pdf
@@ -52,10 +55,10 @@ export class TrackedVehicleKinematics {
     };
   }
 
-  static getPoseChange(motion: Motion, angle: number, dt: number): Pose {
+  static getUpdatedPose(currentPose: Pose, motion: Motion, dt: number): Pose {
     // calculate angle change and updated angle
     const angleChange = motion.omega * dt;
-    const updatedAngle = angle + angleChange / 2;
+    const updatedAngle = currentPose.angle + angleChange;
 
     // our coordinate system is rotated by 90 degrees
     // TODO: any way this is not needed?
@@ -64,16 +67,20 @@ export class TrackedVehicleKinematics {
     // calculate position change, x speed is applied at 90 degrees (PI/2) offset
     const positionChange = {
       x:
-        motion.velocity.y * Math.cos(updatedAngle + coordinateSystemRotation) * dt -
-        motion.velocity.x * Math.cos(updatedAngle + coordinateSystemRotation + Math.PI / 2) * dt,
+        motion.velocity.y * Math.cos(currentPose.angle + angleChange / 2 + coordinateSystemRotation) * dt -
+        motion.velocity.x * Math.cos(currentPose.angle + angleChange / 2 + coordinateSystemRotation + Math.PI / 2) * dt,
       y:
-        motion.velocity.y * Math.sin(updatedAngle + coordinateSystemRotation) * dt -
-        motion.velocity.x * Math.sin(updatedAngle + coordinateSystemRotation + Math.PI / 2) * dt,
+        motion.velocity.y * Math.sin(currentPose.angle + angleChange / 2 + coordinateSystemRotation) * dt -
+        motion.velocity.x * Math.sin(currentPose.angle + angleChange / 2 + coordinateSystemRotation + Math.PI / 2) * dt,
     };
 
     return {
-      position: positionChange,
-      angle: angleChange,
+      position: {
+        x: currentPose.position.x + positionChange.x,
+        y: currentPose.position.y + positionChange.y,
+      },
+      angle: updatedAngle,
+      velocity: motion.velocity,
     };
   }
 
@@ -130,14 +137,10 @@ export class TrackedVehicleKinematics {
     // TODO: convert encoder speeds to track speeds in meters per second
     // const motorSpeed = this.encoderToMotorSpeed(encoderSpeed);
     const trackSpeeds = this.rpmsToSpeeds(trackRpms);
-
-    // find by testing? larger values make rotation slower
-    const trackIcrMultiplier = 1.19;
-
     // TODO: this is not really true, only for perfect differential drive
     const icrY = 0;
-    const icrXLeft = -this.options.trackWidth * trackIcrMultiplier;
-    const icrXRight = this.options.trackWidth * trackIcrMultiplier;
+    const icrXLeft = -this.options.trackWidth * config.vehicle.trackIcrMultiplier;
+    const icrXRight = this.options.trackWidth * config.vehicle.trackIcrMultiplier;
 
     // velocity in x direction (side to side) is zero if Y ICR is zero
     const velocityX = ((trackSpeeds.right - trackSpeeds.left) / (icrXRight - icrXLeft)) * icrY;

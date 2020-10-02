@@ -20,7 +20,8 @@ export const config = {
   vehicle: {
     trackWidth: 0.12, // meters
     maxSpeed: 1, // meters per second
-    wheelDiameter: 0.046, // meters
+    wheelDiameter: 0.047, // meters
+    trackIcrMultiplier: 1.2, // need to find by testing rotation speed, larger values make rotation slower
     encoderCountsPerRotation: 20, // encoder pulse count per revolution
     gearboxRatio: 25, // 25/1 gearbox ratio
     speedUpdateInterval: 1000 / 60, // 60Hz
@@ -29,6 +30,10 @@ export const config = {
     rcRate: 1.0,
     expoRate: 0.0,
     superRate: 0.7,
+  },
+  odometry: {
+    maxStepCount: 1000,
+    minimumStepDistanceMeters: 0.05,
   },
   log: {
     ignoreSentCommands: ["s"],

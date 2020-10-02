@@ -1,4 +1,6 @@
 import { useSetRecoilState } from "recoil";
+import { config } from "../config";
+import { MotorValue, TrackedVehicleKinematics } from "../lib/tracked-vehicle-kinematics";
 import { assertArgumentCount } from "../services/assertArgumentCount";
 import { encoderCountsPerSecondToRotationsPerMinute } from "../services/encoderCountsPerSecondToRotationsPerMinute";
 import { getEuclideanDistance } from "../services/getEuclideanDistance";
@@ -6,7 +8,6 @@ import { kinematics } from "../services/kinematics";
 import { currentSpeedsState } from "../state/currentSpeedsState";
 import { encodersState } from "../state/encodersState";
 import { odometryState } from "../state/odometryState";
-import { OdometryStep } from "../state/odometryStepsState";
 
 export function useHandleEncoderCommand() {
   const setEncoders = useSetRecoilState(encodersState);
@@ -41,84 +42,40 @@ export function useHandleEncoderCommand() {
     setCurrentSpeeds(currentSpeeds);
 
     // convert speeds from encoder counts per second to rotation per minute
-    const trackRpms = {
+    const motorRpms: MotorValue = {
       left: encoderCountsPerSecondToRotationsPerMinute(currentSpeeds.left),
       right: encoderCountsPerSecondToRotationsPerMinute(currentSpeeds.right),
     };
 
-    // calculate kinematic motion
-    const motion = kinematics.getMotionFromMotorRpms(trackRpms);
+    // calculate kinematic motion based on track motor rpms
+    const motion = kinematics.getMotionFromMotorRpms(motorRpms);
 
-    // our coordinate system is rotated by 90 degrees
-    // TODO: any way this is not needed?
-    const coordinateSystemRotation = Math.PI / 2;
+    setOdometry(([currentOdometryPose, currentOdometrySteps]) => {
+      // calculate updated pose based on motion
+      const updatedPose = TrackedVehicleKinematics.getUpdatedPose(currentOdometryPose, motion, dt);
 
-    setOdometry(([currentOdometryPosition, currentOdometrySteps]) => {
-      // calculate angle change and updated angle
-      const angleChange = motion.omega * dt;
-      const updatedAngle = currentOdometryPosition.angle + angleChange / 2;
-
-      // calculate position change, x speed is applied at 90 degrees (PI/2) offset
-      const positionChange = {
-        x:
-          motion.velocity.y * Math.cos(updatedAngle + coordinateSystemRotation) * dt -
-          motion.velocity.x * Math.cos(updatedAngle + coordinateSystemRotation + Math.PI / 2) * dt,
-        y:
-          motion.velocity.y * Math.sin(updatedAngle + coordinateSystemRotation) * dt -
-          motion.velocity.x * Math.sin(updatedAngle + coordinateSystemRotation + Math.PI / 2) * dt,
-      };
-
-      // calculate update position
-      const updatedPosition = {
-        x: currentOdometryPosition.position.x + positionChange.x,
-        y: currentOdometryPosition.position.y + positionChange.y,
-      };
-
-      // resove previous odometry step (there's always zero position/velocity initial step available)
-      const previousOdometryStep: OdometryStep = currentOdometrySteps[currentOdometrySteps.length - 1];
+      // resove previous odometry step (there's always initial step available)
+      const previousOdometryStep = currentOdometrySteps[currentOdometrySteps.length - 1];
 
       // calculate distance from new to previous step position
-      const distance = getEuclideanDistance(updatedPosition, previousOdometryStep.position);
+      const distance = getEuclideanDistance(updatedPose.position, previousOdometryStep.position);
 
-      // start with same steps as before
+      // start with same odometry steps as before
       const updatedOdometrySteps = [...currentOdometrySteps];
 
-      // odometry steps configuration
-      const maxOdometryLength = 1000;
-      const odometryStepMinimumDistanceMeters = 0.05;
-
       // don't add new odometry step if distance from last is too small
-      if (distance >= odometryStepMinimumDistanceMeters) {
-        console.log("setOdometrySteps add", {
-          velocity: motion.velocity,
-          positionChange,
-          updatedPosition,
-          distance,
-          currentOdometrySteps,
-        });
-
+      if (distance >= config.odometry.minimumStepDistanceMeters) {
         // remove first odometry step if maximum number of steps has been reached
-        if (updatedOdometrySteps.length + 1 > maxOdometryLength) {
+        if (updatedOdometrySteps.length + 1 > config.odometry.maxStepCount) {
           updatedOdometrySteps.shift();
         }
 
         // add new odometry step
-        updatedOdometrySteps.push({
-          motion,
-          angle: updatedAngle,
-          position: updatedPosition,
-        });
+        updatedOdometrySteps.push(updatedPose);
       }
 
       // update odometry position info
-      return [
-        {
-          velocity: motion.velocity,
-          position: updatedPosition,
-          angle: updatedAngle,
-        },
-        updatedOdometrySteps,
-      ];
+      return [updatedPose, updatedOdometrySteps];
     });
   };
 }

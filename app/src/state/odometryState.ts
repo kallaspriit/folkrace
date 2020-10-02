@@ -1,22 +1,23 @@
 import { selector } from "recoil";
-import { OdometryPosition, odometryPositionState } from "./odometryPositionState";
-import { OdometryStep, odometryStepsState } from "./odometryStepsState";
+import { Pose } from "../lib/tracked-vehicle-kinematics";
+import { odometryPoseState } from "./odometryPoseState";
+import { odometryStepsState } from "./odometryStepsState";
 
 // combines odometry position and steps because they need to be updated at the same time
-export const odometryState = selector<[OdometryPosition, OdometryStep[]]>({
+export const odometryState = selector<[Pose, Pose[]]>({
   key: "odometryState",
   get: ({ get }) => {
-    const odometryPosition = get(odometryPositionState);
+    const odometryPose = get(odometryPoseState);
     const odometrySteps = get(odometryStepsState);
 
-    return [odometryPosition, odometrySteps];
+    return [odometryPose, odometrySteps];
   },
   set: ({ get, set }, args) => {
-    const [odometryPosition, odometrySteps] = args as [OdometryPosition, OdometryStep[]];
+    const [odometryPose, odometrySteps] = args as [Pose, Pose[]];
 
-    console.log("set odometryState", { get, set, odometryPosition, odometrySteps });
+    console.log("set odometryState", { get, set, odometryPose, odometrySteps });
 
-    set(odometryPositionState, odometryPosition);
+    set(odometryPoseState, odometryPose);
     set(odometryStepsState, odometrySteps);
   },
 });
