@@ -37,7 +37,7 @@ export function useRemoteControl(isEnabled = true) {
         }
 
         // use rate inputs to have better control around center axes
-        const speed = getControllerRate(gamepad.axes[3] * -1, config.rates);
+        const speed = getControllerRate(gamepad.axes[3] * -1, config.rates) * config.vehicle.maxSpeed;
         const omega = getControllerRate(gamepad.axes[0], config.rates);
 
         if (haveButtonsChanged) {

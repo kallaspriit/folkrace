@@ -19,10 +19,6 @@ export class Visualizer {
     // create canvas and add it to DOM
     const canvas = this.createCanvasElement(containerSize, this.layers.length);
 
-    console.log({
-      containerSize,
-    });
-
     this.container.append(canvas);
 
     // create layer and register it

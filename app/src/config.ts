@@ -19,7 +19,7 @@ export const config = {
   },
   vehicle: {
     trackWidth: 0.12, // meters
-    maxSpeed: 1, // meters per second
+    maxSpeed: 1.5, // meters per second
     wheelDiameter: 0.047, // meters
     trackIcrMultiplier: 1.2, // need to find by testing rotation speed, larger values make rotation slower
     encoderCountsPerRotation: 20, // encoder pulse count per revolution

@@ -14,31 +14,35 @@ import { Pose } from "../../lib/tracked-vehicle-kinematics";
 import { Visualizer, LayerOptions, RenderLayerFn } from "../../lib/visualizer";
 import { drawRobot } from "../../services/drawRobot";
 import { getVectorLength } from "../../services/getVectorLength";
-import { metersInSecondToKilometersPerHour } from "../../services/metersInSecondToKilometersPerHour";
 import { radiansToDegrees } from "../../services/radiansToDegrees";
 import { odometryPoseState, initialOdometryPose } from "../../state/odometryPoseState";
 import { odometryStepsState } from "../../state/odometryStepsState";
 
-// TODO: think of a proper way to update canvas state
+// odometry pose and steps used by visualizer
 let _odometryPose: Pose = initialOdometryPose;
 let _odometrySteps: Pose[] = [initialOdometryPose];
 
-export const RemoteView: React.FC = () => {
-  const history = useHistory();
-  const visualizerContainerRef = useRef<FlexElement>(null);
-  const { gamepadName } = useRemoteControl();
+// subscribes to odometry state and exposes it to the visualizer
+const StateSubscription: React.FC = () => {
   const odometryPose = useRecoilValue(odometryPoseState);
   const odometrySteps = useRecoilValue(odometryStepsState);
-  const resetOdometrySteps = useResetRecoilState(odometryStepsState);
-  const resetOdometryPose = useResetRecoilState(odometryPoseState);
 
-  // TODO: think of a proper way to update canvas state
   useEffect(() => {
     _odometryPose = odometryPose;
   }, [odometryPose]);
   useEffect(() => {
     _odometrySteps = odometrySteps;
   }, [odometrySteps]);
+
+  return null;
+};
+
+export const RemoteView: React.FC = () => {
+  const history = useHistory();
+  const visualizerContainerRef = useRef<FlexElement>(null);
+  const { gamepadName } = useRemoteControl();
+  const resetOdometrySteps = useResetRecoilState(odometryStepsState);
+  const resetOdometryPose = useResetRecoilState(odometryPoseState);
 
   const setupVisualizer = useCallback((visualizer: Visualizer) => {
     const options = {
@@ -83,8 +87,8 @@ export const RemoteView: React.FC = () => {
         {
           cellWidth: options.cellSize,
           cellHeight: options.cellSize,
-          columns: 2 * Math.ceil(layer.height / layer.getScale() / options.cellSize / 2),
-          rows: 2 * Math.ceil(layer.width / layer.getScale() / options.cellSize / 2),
+          columns: 2 * Math.ceil(layer.width / layer.getScale() / options.cellSize / 2),
+          rows: 2 * Math.ceil(layer.height / layer.getScale() / options.cellSize / 2),
           centered: true,
         },
         { strokeStyle: "#333" },
@@ -95,26 +99,12 @@ export const RemoteView: React.FC = () => {
         {
           cellWidth: options.cellSize * 5,
           cellHeight: options.cellSize * 5,
-          columns: 2 * Math.ceil(layer.height / layer.getScale() / options.cellSize / 5 / 2),
-          rows: 2 * Math.ceil(layer.width / layer.getScale() / options.cellSize / 5 / 2),
+          columns: 2 * Math.ceil(layer.width / layer.getScale() / options.cellSize / 5 / 2),
+          rows: 2 * Math.ceil(layer.height / layer.getScale() / options.cellSize / 5 / 2),
           centered: true,
         },
         { strokeStyle: "#444" },
       );
-
-      // draw map sized active grid
-      // const gridSize = (options.radius * 2) / options.cellSize;
-
-      // layer.drawGrid(
-      //   {
-      //     rows: gridSize,
-      //     columns: gridSize,
-      //     cellWidth: options.cellSize,
-      //     cellHeight: options.cellSize,
-      //     centered: true,
-      //   },
-      //   { strokeStyle: "#333" },
-      // );
 
       // draw radius circles
       for (let circleRadius = circleStep; circleRadius <= options.radius; circleRadius += circleStep) {
@@ -202,7 +192,8 @@ export const RemoteView: React.FC = () => {
       layer.drawText(
         {
           origin: _odometryPose.position,
-          text: `Speed: ${speed.toFixed(1)} m/s ${metersInSecondToKilometersPerHour(speed).toFixed(1)} km/h`,
+          // text: `Speed: ${speed.toFixed(1)} m/s ${metersInSecondToKilometersPerHour(speed).toFixed(1)} km/h`,
+          text: `Speed: ${speed.toFixed(1)} m/s`,
           offset: { x: 20, y: 60 },
         },
         { fillStyle: "#FFF", textBaseline: "middle" },
@@ -226,28 +217,31 @@ export const RemoteView: React.FC = () => {
   useVisualizer(visualizerContainerRef, setupVisualizer);
 
   return (
-    <Flex cover>
-      <TitleBar title="Remote controller" onBack={() => history.goBack()} />
+    <>
+      <Flex cover>
+        <TitleBar title="Remote controller" onBack={() => history.goBack()} />
 
-      <Stack expanded>
-        <Flex expanded ref={visualizerContainerRef} />
-        <Column padded compact>
-          <NameValuePair vertical name="Controller">
-            {gamepadName ?? "No gamepad available"}
-          </NameValuePair>
-          <Expanded />
-          <BlockButton
-            tertiary
-            onClick={() => {
-              // reset both pose and steps
-              resetOdometryPose();
-              resetOdometrySteps();
-            }}
-          >
-            Reset odometry
-          </BlockButton>
-        </Column>
-      </Stack>
-    </Flex>
+        <Stack expanded>
+          <Flex expanded ref={visualizerContainerRef} />
+          <Column padded compact>
+            <NameValuePair vertical name="Controller">
+              {gamepadName ?? "No gamepad available"}
+            </NameValuePair>
+            <Expanded />
+            <BlockButton
+              tertiary
+              onClick={() => {
+                // reset both pose and steps
+                resetOdometryPose();
+                resetOdometrySteps();
+              }}
+            >
+              Reset odometry
+            </BlockButton>
+          </Column>
+        </Stack>
+      </Flex>
+      <StateSubscription />
+    </>
   );
 };

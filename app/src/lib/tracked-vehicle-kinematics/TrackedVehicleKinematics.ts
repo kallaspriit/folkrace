@@ -38,21 +38,39 @@ export class TrackedVehicleKinematics {
     const leftDifference = Math.abs(a.left - b.left);
     const rightDifference = Math.abs(a.right - b.right);
 
-    const isLeftDifferent = leftDifference <= threshold;
-    const isRightDifferent = rightDifference <= threshold;
+    const isLeftDifferent = leftDifference > threshold;
+    const isRightDifferent = rightDifference > threshold;
 
-    return !isLeftDifferent && !isRightDifferent;
+    return isLeftDifferent || isRightDifferent;
   }
 
   static getLimitedSpeed(speed: MotorValue, maxSpeed: number): MotorValue {
     const maxRequestedSpeedMagnitude = Math.max(Math.abs(speed.left), Math.abs(speed.right));
-    const normalizationFactor = Math.min(maxSpeed / maxRequestedSpeedMagnitude, 1.0);
 
-    // TODO: does not really work..
-    return {
+    // preserve omega no matter what
+    // const excessSpeed = Math.max(maxRequestedSpeedMagnitude - maxSpeed, 0);
+    // const limitedSpeed: MotorValue = {
+    //   left: speed.left - excessSpeed * Math.sign(speed.left),
+    //   right: speed.right - excessSpeed * Math.sign(speed.right),
+    // };
+
+    /// reduces speed and omega together
+    const normalizationFactor = Math.min(maxSpeed / maxRequestedSpeedMagnitude, 1.0);
+    const limitedSpeed: MotorValue = {
       left: speed.left * normalizationFactor,
       right: speed.right * normalizationFactor,
     };
+
+    // console.log("getLimitedSpeed", {
+    //   speed,
+    //   maxSpeed,
+    //   maxRequestedSpeedMagnitude,
+    //   excessSpeed,
+    //   // normalizationFactor,
+    //   limitedSpeed,
+    // });
+
+    return limitedSpeed;
   }
 
   static getUpdatedPose(currentPose: Pose, motion: Motion, dt: number): Pose {
@@ -120,6 +138,8 @@ export class TrackedVehicleKinematics {
       left: speed + omega,
       right: speed - omega,
     };
+
+    // return speeds;
 
     return TrackedVehicleKinematics.getLimitedSpeed(speeds, this.options.maxSpeed);
   }

@@ -12,10 +12,8 @@ export const odometryState = selector<[Pose, Pose[]]>({
 
     return [odometryPose, odometrySteps];
   },
-  set: ({ get, set }, args) => {
+  set: ({ /*get, */ set }, args) => {
     const [odometryPose, odometrySteps] = args as [Pose, Pose[]];
-
-    console.log("set odometryState", { get, set, odometryPose, odometrySteps });
 
     set(odometryPoseState, odometryPose);
     set(odometryStepsState, odometrySteps);
