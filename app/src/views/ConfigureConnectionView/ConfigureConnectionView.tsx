@@ -29,7 +29,7 @@ export const ConfigureConnectionView: React.FC = () => {
   const [isHostUpdated, setIsHostUpdated] = useState(false);
   const transportStatus = useRecoilValue(transportStatusState);
   const [websocketHost, setWebsocketHost] = useRecoilState(websocketHostState);
-  const { register, handleSubmit, errors } = useForm<ConnectionFormValues>();
+  const { register, handleSubmit, formState } = useForm<ConnectionFormValues>();
 
   const onSubmit = ({ websocketHost }: ConnectionFormValues) => {
     // update state, store the new setting, mark updated
@@ -47,14 +47,13 @@ export const ConfigureConnectionView: React.FC = () => {
       <Form scrollable padded expanded onSubmit={handleSubmit(onSubmit)}>
         <Field
           type="text"
-          name="websocketHost"
           label="Websocket host"
           defaultValue={websocketHost}
           leading={<NetworkIcon className={styles.icon} />}
           trailing={isHostUpdated && <TickIcon />}
           onChange={() => setIsHostUpdated(false)}
-          error={errors.websocketHost}
-          register={register({ required: "Hostname is required" })}
+          error={formState.errors.websocketHost}
+          register={register("websocketHost", { required: "Hostname is required" })}
         />
         <GridBox half />
         <NameValuePair name="Transport status">{transportStatus}</NameValuePair>

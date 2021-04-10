@@ -21,7 +21,7 @@ interface LoginFormValues {
 }
 
 export const Example = () => {
-  const { register, handleSubmit, errors, formState } = useForm<LoginFormValues>();
+  const { register, handleSubmit, formState } = useForm<LoginFormValues>();
   const [submittedData, setSubmittedData] = useState<LoginFormValues | undefined>(undefined);
 
   const onSubmit = (data: LoginFormValues) => {
@@ -32,26 +32,24 @@ export const Example = () => {
     <Form onSubmit={handleSubmit(onSubmit)}>
       <Field
         type="email"
-        name="email"
         label="Email"
         leading={<EmailIcon />}
-        error={errors.email}
-        register={register({ required: "Email is required", validate: validateEmail })}
+        error={formState.errors.email}
+        register={register("email", { required: "Email is required", validate: validateEmail })}
       />
       <Field
         type="password"
-        name="password"
         label="Password"
         leading={<PasswordIcon />}
-        error={errors.password}
-        register={register({ validate: validateMinimumLength(8) })}
+        error={formState.errors.password}
+        register={register("password", { validate: validateMinimumLength(8) })}
       />
       <GridBox half />
       <BlockButton inline tertiary type="submit" onClick={handleSubmit(onSubmit)}>
         Log In
       </BlockButton>
       <Debug title="Form" omit={["ref"]}>
-        {{ submittedData, errors, formState }}
+        {{ submittedData, formState }}
       </Debug>
     </Form>
   );

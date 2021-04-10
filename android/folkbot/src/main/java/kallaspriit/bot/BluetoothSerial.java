@@ -124,7 +124,7 @@ public class BluetoothSerial extends AbstractSerial {
     }
 
     // find device with name matching the configured prefix
-    BluetoothDevice device = pairedDevices.stream().filter(item -> item.getName().toUpperCase().startsWith(devicePrefix.toUpperCase())).findFirst().orElse(null);
+    BluetoothDevice device = pairedDevices.stream().filter(item -> item.getName() != null && item.getName().toUpperCase().startsWith(devicePrefix.toUpperCase())).findFirst().orElse(null);
 
     if (device == null) {
       Log.w(TAG, "there is no paired device starting with '" + devicePrefix + "'");

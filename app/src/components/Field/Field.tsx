@@ -1,6 +1,6 @@
 import classNames from "classnames";
 import React, { useState } from "react";
-import { UseFormMethods, FieldError } from "react-hook-form";
+import { FieldError, UseFormRegisterReturn } from "react-hook-form";
 import { ReactComponent as PasswordHideIcon } from "../../theme/icons/password-hide-icon.svg";
 import { ReactComponent as PasswordShowIcon } from "../../theme/icons/password-show-icon.svg";
 import { Container } from "../Container/Container";
@@ -11,13 +11,13 @@ import styles from "./Field.module.scss";
 
 export interface FieldProps extends React.ComponentPropsWithoutRef<"input"> {
   requiresActivation?: boolean;
-  name: string;
   label: string;
+  name?: string;
   defaultValue?: string;
   leading?: React.ReactNode;
   trailing?: React.ReactNode;
   error?: FieldError;
-  register?: UseFormMethods["register"] | React.Ref<HTMLInputElement>;
+  register?: UseFormRegisterReturn;
   expandTrailing?: boolean;
   withoutBorder?: boolean;
 }
@@ -112,7 +112,6 @@ export const Field = React.forwardRef<HTMLInputElement, FieldProps>(function Fie
         )}
         <Container expanded>
           <input
-            ref={register}
             id={name}
             type={showPassword ? "text" : type}
             name={name}
@@ -146,6 +145,7 @@ export const Field = React.forwardRef<HTMLInputElement, FieldProps>(function Fie
                 onBlur(e);
               }
             }}
+            {...register}
             className={styles.input}
             {...rest}
           />
